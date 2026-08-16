@@ -602,7 +602,7 @@
     const slides = Array.from(slideMap.values());
     const tags = VCBG.listTags();
     setMeta("ViCamBachGiai — Thư viện Bách Hợp", VCBG.settings().tagline);
-    const banner = (featured.length ? featured : slides).slice(0, 8);
+    const banner = slides;
     const stackCards = banner
       .map((s, idx) => {
         const chips = ["Bách hợp"].concat((s.genres || []).slice(0, 2).map((g) => g.name));
@@ -664,11 +664,9 @@
     if (!heroEl || !n) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const HOLD = 2700;
-    const ANIM = reduced ? 0 : 620;
     let i = 0;
     let timer = null;
     let paused = false;
-    let busy = false;
     const rel = (k) => {
       let d = k - i;
       if (d > n / 2) d -= n;
@@ -684,9 +682,12 @@
     const place = () => {
       $$(".stack-card", heroEl).forEach((el, k) => {
         const d = rel(k);
+        const abs = Math.abs(d);
         el.dataset.d = String(d);
+        el.style.setProperty("--d", d);
+        el.style.setProperty("--abs", abs);
         el.classList.toggle("is-active", d === 0);
-        el.style.zIndex = String(30 - Math.abs(d) * 2);
+        el.style.zIndex = String(40 - abs);
         el.setAttribute("aria-hidden", d === 0 ? "false" : "true");
       });
       $$("[data-dot]", heroEl).forEach((el, k) => el.classList.toggle("on", k === i));
@@ -700,29 +701,15 @@
     const schedule = () => {
       stop();
       if (paused || n < 2) return;
-      timer = setTimeout(() => go(1, false), HOLD);
+      timer = setTimeout(() => go(1), HOLD);
     };
-    const go = (dir, manual) => {
-      if (n < 2 || busy) return;
+    const go = (dir) => {
+      if (n < 2) return;
       const next = (((i + dir) % n) + n) % n;
       if (next === i) return;
-      busy = true;
-      const fromEl = $(`.stack-card[data-i="${i}"]`, heroEl);
-      if (fromEl && !reduced) {
-        fromEl.classList.remove("is-draw-next", "is-draw-prev");
-        void fromEl.offsetWidth;
-        fromEl.classList.add(dir > 0 ? "is-draw-next" : "is-draw-prev");
-      }
       i = next;
       place();
-      setTimeout(() => {
-        $$(".is-draw-next, .is-draw-prev", heroEl).forEach((el) => {
-          el.classList.remove("is-draw-next", "is-draw-prev");
-        });
-        busy = false;
-        if (manual) schedule();
-        else schedule();
-      }, ANIM);
+      schedule();
     };
     $$("[data-dot]", heroEl).forEach((b) => {
       b.onclick = () => {
@@ -730,11 +717,11 @@
         if (t === i) return;
         const fwd = (t - i + n) % n;
         const back = (i - t + n) % n;
-        go(fwd <= back ? fwd : -back, true);
+        go(fwd <= back ? fwd : -back);
       };
     });
     $$("[data-dir]", heroEl).forEach((b) => {
-      b.onclick = () => go(Number(b.dataset.dir), true);
+      b.onclick = () => go(Number(b.dataset.dir));
     });
     heroEl.addEventListener("mouseenter", () => {
       if (window.matchMedia("(hover: hover)").matches) {
@@ -761,7 +748,7 @@
       (e) => {
         const dx = e.changedTouches[0].clientX - sx;
         const dy = e.changedTouches[0].clientY - sy;
-        if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1, true);
+        if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
       },
       { passive: true }
     );

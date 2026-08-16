@@ -157,6 +157,15 @@
     return run;
   }
 
+  let bgQueue = Promise.resolve();
+  function persistBg(fn) {
+    const run = bgQueue.then(fn);
+    bgQueue = run.catch((err) => {
+      console.error("[VCBG persist bg]", err);
+    });
+    return run;
+  }
+
   function normalizeRole(role) {
     return role === "admin" ? "admin" : "reader";
   }
@@ -167,20 +176,24 @@
 
   function currentUser() {
     if (!sessionUser) return null;
-    const p = cache.profiles.find((x) => x.id === sessionUser.id);
-    if (!p || p.status !== "active") return null;
+    const p = cache.profiles.find((x) => x.id === sessionUser.id || x.user_id === sessionUser.id);
+    if (p && p.status && p.status !== "active") return null;
+    const id = (p && (p.id || p.user_id)) || sessionUser.id;
+    const email = (p && p.email) || sessionUser.email || "";
+    const role = normalizeRole(p && p.role);
+    const display = (p && p.display_name) || email.split("@")[0] || "Độc giả";
     return {
-      id: p.id,
-      email: p.email,
-      role: normalizeRole(p.role),
-      status: p.status,
-      created_at: p.created_at,
+      id,
+      email,
+      role,
+      status: (p && p.status) || "active",
+      created_at: p && p.created_at,
       profile: {
-        id: p.id,
-        user_id: p.id,
-        display_name: p.display_name,
-        avatar: p.avatar,
-        bio: p.bio,
+        id,
+        user_id: id,
+        display_name: display,
+        avatar: (p && p.avatar) || display.slice(0, 1).toUpperCase(),
+        bio: (p && p.bio) || "",
       },
     };
   }
@@ -257,6 +270,32 @@
     return data || [];
   }
 
+  let bootstrapped = false;
+  let bootPromise = null;
+
+  async function loadOwnProfile() {
+    if (!sessionUser) return;
+    try {
+      const mine = await loadTable("profiles", (q) => q.eq("user_id", sessionUser.id));
+      if (mine && mine[0]) {
+        const p = {
+          ...mine[0],
+          id: mine[0].user_id,
+          user_id: mine[0].user_id,
+          created_at: toMs(mine[0].created_at),
+        };
+        cache.profiles = cache.profiles.filter((x) => x.id !== p.id && x.user_id !== p.id).concat([p]);
+        cache.users = cache.profiles.map((x) => ({
+          id: x.id,
+          email: x.email,
+          role: x.role,
+          status: x.status || "active",
+          created_at: x.created_at,
+        }));
+      }
+    } catch (_) {}
+  }
+
   async function refresh() {
     const [
       profiles,
@@ -281,7 +320,13 @@
       loadTable("stories"),
       loadTable("story_genres"),
       loadTable("story_tags"),
-      loadTable("chapters"),
+      sb
+        .from("chapters")
+        .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at")
+        .then(({ data, error }) => {
+          if (error) throwHttp(error, "Không tải được chapters");
+          return data || [];
+        }),
       loadTable("comments"),
       loadTable("comment_replies"),
       loadTable("comment_likes"),
@@ -374,25 +419,7 @@
 
     if (sessionUser) {
       const uid_ = sessionUser.id;
-      try {
-        const mine = await loadTable("profiles", (q) => q.eq("user_id", uid_));
-        if (mine && mine[0]) {
-          const p = {
-            ...mine[0],
-            id: mine[0].user_id,
-            user_id: mine[0].user_id,
-            created_at: toMs(mine[0].created_at),
-          };
-          cache.profiles = cache.profiles.filter((x) => x.id !== p.id).concat([p]);
-          cache.users = cache.profiles.map((x) => ({
-            id: x.id,
-            email: x.email,
-            role: x.role,
-            status: x.status,
-            created_at: x.created_at,
-          }));
-        }
-      } catch (_) {}
+      await loadOwnProfile();
       if (isAdmin()) {
         try {
           const all = await loadTable("profiles");
@@ -473,11 +500,20 @@
   }
 
   async function syncSession() {
-    const { data, error } = await sb.auth.getSession();
-    if (error) console.warn(error);
-    sessionUser = (data && data.session && data.session.user) || null;
+    try {
+      const { data, error } = await sb.auth.getSession();
+      if (error) {
+        console.warn(error);
+        return sessionUser;
+      }
+      sessionUser = (data && data.session && data.session.user) || null;
+    } catch (err) {
+      console.warn(err);
+      return sessionUser;
+    }
     if (sessionUser) storeSet(SESSION_KEY, JSON.stringify({ userId: sessionUser.id, at: now() }));
     else storeDel(SESSION_KEY);
+    return sessionUser;
   }
 
   function client() {
@@ -499,11 +535,25 @@
 
     async init() {
       client();
+      if (bootstrapped) return;
       await syncSession();
+      if (bootstrapped) return;
+      if (bootPromise) {
+        await bootPromise;
+        return;
+      }
+      bootPromise = (async () => {
+        try {
+          await sb.rpc("publish_due_chapters");
+        } catch (_) {}
+        await refresh();
+        bootstrapped = true;
+      })();
       try {
-        await sb.rpc("publish_due_chapters");
-      } catch (_) {}
-      await refresh();
+        await bootPromise;
+      } finally {
+        bootPromise = null;
+      }
     },
 
     settings() {
@@ -570,18 +620,19 @@
       if (error) throwHttp(error, "Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
       sessionUser = data.user;
       try {
-        await refresh();
+        await loadOwnProfile();
+        if (!bootstrapped) await refresh();
+        else await loadOwnProfile();
       } catch (err) {
-        await sb.auth.signOut();
-        sessionUser = null;
-        throw publicError(err, "Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
+        console.error("[VCBG login refresh]", err);
       }
       const u = currentUser();
-      if (!u) {
+      if (u && u.status && u.status !== "active") {
         await sb.auth.signOut();
         sessionUser = null;
         throw new Error("Tài khoản đã bị khóa.");
       }
+      if (!u) throw new Error("Không thể đăng nhập. Vui lòng thử lại.");
       return u;
     },
 
@@ -707,6 +758,15 @@
     getChapterById(id) {
       return cache.chapters.find((c) => c.id === id) || null;
     },
+    async ensureChapterBody(ch) {
+      if (!ch || (ch.body != null && ch.body !== "")) return ch;
+      const { data, error } = await sb.from("chapters").select("id,content,body").eq("id", ch.id).maybeSingle();
+      if (error) throwHttp(error, "Không tải được chương.");
+      if (data) {
+        ch.body = data.body != null ? data.body : data.content || "";
+      }
+      return ch;
+    },
 
     recordView(storyId, chapterId) {
       const u = currentUser();
@@ -715,7 +775,7 @@
       if (recent) return;
       const rec = { id: uid(), key, story_id: storyId, chapter_id: chapterId, user_id: u ? u.id : null, at: now() };
       cache.views.push(rec);
-      persist(async () => {
+      persistBg(async () => {
         const { error } = await sb.from("views").insert({
           id: rec.id,
           key: rec.key,
@@ -755,7 +815,7 @@
       };
       cache.reading_history.unshift(hist);
       cache.reading_history = cache.reading_history.slice(0, 400);
-      persist(async () => {
+      persistBg(async () => {
         const { error } = await sb.from("reading_progress").upsert({
           user_id: rec.user_id,
           story_id: rec.story_id,
@@ -1144,20 +1204,29 @@
       };
       const gRows = (data.genre_ids || []).map((gid) => ({ story_id: story.id, genre_id: gid }));
       const tRows = (data.tag_ids || []).map((tid) => ({ story_id: story.id, tag_id: tid }));
-      await persist(async () => {
-        const { error } = await sb.from("stories").upsert(row);
-        if (error) throw error;
-        await sb.from("story_genres").delete().eq("story_id", story.id);
-        await sb.from("story_tags").delete().eq("story_id", story.id);
-        if (gRows.length) {
-          const { error: e2 } = await sb.from("story_genres").insert(gRows);
-          if (e2) throw e2;
+      try {
+        await persist(async () => {
+          const { error } = await sb.from("stories").upsert(row);
+          if (error) throw error;
+          await sb.from("story_genres").delete().eq("story_id", story.id);
+          await sb.from("story_tags").delete().eq("story_id", story.id);
+          if (gRows.length) {
+            const { error: e2 } = await sb.from("story_genres").insert(gRows);
+            if (e2) throw e2;
+          }
+          if (tRows.length) {
+            const { error: e3 } = await sb.from("story_tags").insert(tRows);
+            if (e3) throw e3;
+          }
+        });
+      } catch (err) {
+        if (!data.id) {
+          cache.stories = cache.stories.filter((s) => s.id !== story.id);
+          cache.story_genres = cache.story_genres.filter((x) => x.story_id !== story.id);
+          cache.story_tags = cache.story_tags.filter((x) => x.story_id !== story.id);
         }
-        if (tRows.length) {
-          const { error: e3 } = await sb.from("story_tags").insert(tRows);
-          if (e3) throw e3;
-        }
-      });
+        throw publicError(err, "Không lưu được truyện.");
+      }
       return hydrateStory(story);
     },
 

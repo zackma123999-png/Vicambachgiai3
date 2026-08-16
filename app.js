@@ -54,13 +54,18 @@
       .join("");
   }
   function toast(msg) {
-    const wrap = $("#toasts");
-    if (!wrap) return;
+    let wrap = $("#toasts");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = "toasts";
+      wrap.className = "toast-wrap";
+      document.body.appendChild(wrap);
+    }
     const el = document.createElement("div");
     el.className = "toast";
     el.textContent = msg;
     wrap.appendChild(el);
-    setTimeout(() => el.remove(), 2800);
+    setTimeout(() => el.remove(), 3200);
   }
   function fmtDate(ts) {
     if (!ts) return "";
@@ -116,8 +121,11 @@
     try {
       location.hash = "#" + path;
     } catch (_) {}
-    render();
-    navigating = false;
+    const p = render();
+    Promise.resolve(p).finally(() => {
+      navigating = false;
+    });
+    return p;
   }
 
   const READ_KEY = "vicambachgiai.reader.v2";
@@ -1020,7 +1028,7 @@
       };
   }
 
-  function pageRead(route) {
+  async function pageRead(route) {
     const s = VCBG.getStoryBySlug(route.slug);
     if (!s) {
       app().innerHTML = `<div class="empty">Không tìm thấy truyện.</div>`;
@@ -1029,6 +1037,13 @@
     const ch = VCBG.getChapter(s.id, route.number);
     if (!ch) {
       app().innerHTML = header() + `<div class="empty">Chương chưa xuất bản hoặc không tồn tại.</div>` + footer();
+      bindChrome();
+      return;
+    }
+    try {
+      await VCBG.ensureChapterBody(ch);
+    } catch (err) {
+      app().innerHTML = header() + `<div class="empty">${esc(err.message || "Không tải được chương.")}</div>` + footer();
       bindChrome();
       return;
     }
@@ -1110,11 +1125,13 @@
       if (window.getSelection && String(window.getSelection()).trim()) return;
       bump();
     };
+    let progT = 0;
     window.onscroll = () => {
-      VCBG.saveProgress(s.id, ch.id, ch.number, window.scrollY);
       updateProg();
       if (!page.classList.contains("is-immersed")) immerse(true);
       clearTimeout(hideT);
+      clearTimeout(progT);
+      progT = setTimeout(() => VCBG.saveProgress(s.id, ch.id, ch.number, window.scrollY), 400);
     };
     updateProg();
     $("#btnSet").onclick = (e) => {
@@ -1242,7 +1259,11 @@
     });
     body.addEventListener("pointerup", () => clearTimeout(holdT));
     body.addEventListener("pointercancel", () => clearTimeout(holdT));
-    document.addEventListener("selectionchange", () => {
+    if (window.__vcbgSel) document.removeEventListener("selectionchange", window.__vcbgSel);
+    let selT = 0;
+    window.__vcbgSel = () => {
+      clearTimeout(selT);
+      selT = setTimeout(() => {
       const sel = window.getSelection();
       const t = sel && String(sel).trim();
       $$(".quote-pop").forEach((n) => n.remove());
@@ -1259,7 +1280,9 @@
         $$(".quote-pop").forEach((n) => n.remove());
       };
       document.body.appendChild(pop);
-    });
+      }, 180);
+    };
+    document.addEventListener("selectionchange", window.__vcbgSel);
   }
   function overlay(html, side) {
     const host = $("#rDraw") || app();
@@ -1488,12 +1511,22 @@
     };
     const submitLogin = async (email, password) => {
       showErr("");
+      const btn = $("#aForm button[type=submit]");
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Đang đăng nhập…";
+      }
       try {
         await VCBG.login({ email, password });
         toast("Đăng nhập thành công.");
-        go("/");
+        await go("/");
       } catch (err) {
-        showErr("Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
+        showErr(err.message || "Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Đăng nhập";
+        }
       }
     };
     $("#aForm").onsubmit = async (e) => {
@@ -1654,7 +1687,7 @@
       .map(([h, l]) => `<a class="${on === h ? "on" : ""}" href="#/admin${h}">${l}</a>`)
       .join("")}</nav>`;
   }
-  function pageAdmin(route) {
+  async function pageAdmin(route) {
     if (!needAdmin()) return;
     const sub = route.parts[1] || "";
     setMeta("Quản trị — ViCamBachGiai", "Bảng điều khiển.");
@@ -2016,6 +2049,11 @@
     $("#stForm").onsubmit = async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
+      const btn = e.target.querySelector('button[type="submit"]');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Đang lưu…";
+      }
       try {
         const rec = await VCBG.upsertStory({
           id: id && id !== "moi" ? id : undefined,
@@ -2036,12 +2074,24 @@
         go("/admin/truyen/" + rec.id);
       } catch (err) {
         toast(err.message || "Không lưu được truyện.");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Lưu truyện";
+        }
       }
     };
   }
   let editorTimer = null;
-  function adminChapterForm(id, storyId) {
+  async function adminChapterForm(id, storyId) {
     const ch = id ? VCBG.getChapterById(id) : null;
+    if (ch) {
+      try {
+        await VCBG.ensureChapterBody(ch);
+      } catch (err) {
+        toast(err.message || "Không tải được nội dung chương.");
+      }
+    }
     const stories = VCBG.adminListStories();
     const sid = (ch && ch.story_id) || storyId || (stories[0] && stories[0].id);
     const num = ch ? ch.number : sid ? VCBG.nextChapterNumber(sid) : 1;
@@ -2238,7 +2288,13 @@
     };
   }
 
+  let renderLock = Promise.resolve();
   async function render() {
+    const mine = renderLock.then(runRender);
+    renderLock = mine.catch(() => {});
+    return mine;
+  }
+  async function runRender() {
     try {
       await VCBG.init();
     } catch (e) {
@@ -2250,14 +2306,14 @@
     if (route.name === "home") pageHome();
     else if (route.name === "explore") pageExplore(route);
     else if (route.name === "story") pageStory(route);
-    else if (route.name === "read") pageRead(route);
+    else if (route.name === "read") await pageRead(route);
     else if (route.name === "login") pageAuth("login");
     else if (route.name === "register") pageAuth("register");
     else if (route.name === "forgot") pageAuth("forgot");
     else if (route.name === "library") pageLibrary();
     else if (route.name === "account") pageAccount();
     else if (route.name === "notifs") pageNotifs();
-    else if (route.name === "admin") pageAdmin(route);
+    else if (route.name === "admin") await pageAdmin(route);
     else pageHome();
   }
 

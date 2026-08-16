@@ -150,12 +150,11 @@
   }
 
   function persist(fn) {
-    persistQueue = persistQueue
-      .then(fn)
-      .catch((err) => {
-        console.error("[VCBG persist]", err);
-      });
-    return persistQueue;
+    const run = persistQueue.then(fn);
+    persistQueue = run.catch((err) => {
+      console.error("[VCBG persist]", err);
+    });
+    return run;
   }
 
   function normalizeRole(role) {
@@ -1095,7 +1094,7 @@
         .map(hydrateStory);
     },
 
-    upsertStory(data) {
+    async upsertStory(data) {
       requireAdmin();
       const t = now();
       let story = data.id ? cache.stories.find((s) => s.id === data.id) : null;
@@ -1109,9 +1108,16 @@
       story.author = String(data.author || "").trim();
       story.editor = String(data.editor || "").trim();
       story.synopsis = String(data.synopsis || "");
-      story.status = data.status || "ongoing";
+      let status = data.status || "ongoing";
+      let upcoming = !!data.upcoming;
+      if (status === "upcoming") {
+        status = "ongoing";
+        upcoming = true;
+      }
+      if (status !== "ongoing" && status !== "completed" && status !== "paused") status = "ongoing";
+      story.status = status;
       story.featured = !!data.featured;
-      story.upcoming = !!data.upcoming;
+      story.upcoming = upcoming;
       story.accent = data.accent || "#8a6a4a";
       if (data.cover) story.cover = data.cover;
       if (!story.cover) story.cover = "";
@@ -1138,7 +1144,7 @@
       };
       const gRows = (data.genre_ids || []).map((gid) => ({ story_id: story.id, genre_id: gid }));
       const tRows = (data.tag_ids || []).map((tid) => ({ story_id: story.id, tag_id: tid }));
-      persist(async () => {
+      await persist(async () => {
         const { error } = await sb.from("stories").upsert(row);
         if (error) throw error;
         await sb.from("story_genres").delete().eq("story_id", story.id);
@@ -1172,7 +1178,7 @@
       });
     },
 
-    upsertChapter(data) {
+    async upsertChapter(data) {
       requireAdmin();
       const t = now();
       let ch = data.id ? cache.chapters.find((c) => c.id === data.id) : null;
@@ -1203,7 +1209,7 @@
         published_at: iso(ch.published_at),
         updated_at: iso(ch.updated_at),
       };
-      persist(async () => {
+      await persist(async () => {
         const { error } = await sb.from("chapters").upsert(row);
         if (error) throw error;
         if (story) await sb.from("stories").update({ updated_at: iso(t) }).eq("id", story.id);

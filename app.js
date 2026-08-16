@@ -2013,11 +2013,11 @@
       };
       r.readAsDataURL(f);
     };
-    $("#stForm").onsubmit = (e) => {
+    $("#stForm").onsubmit = async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       try {
-        const rec = VCBG.upsertStory({
+        const rec = await VCBG.upsertStory({
           id: id && id !== "moi" ? id : undefined,
           title: fd.get("title"),
           slug: fd.get("slug"),
@@ -2035,7 +2035,7 @@
         toast("Đã lưu truyện.");
         go("/admin/truyen/" + rec.id);
       } catch (err) {
-        toast(err.message);
+        toast(err.message || "Không lưu được truyện.");
       }
     };
   }
@@ -2213,12 +2213,12 @@
         }
       };
     });
-    $("#chForm").onsubmit = (e) => {
+    $("#chForm").onsubmit = async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const at = fd.get("publish_at") ? new Date(fd.get("publish_at")).getTime() : null;
       try {
-        VCBG.upsertChapter({
+        await VCBG.upsertChapter({
           id: ch ? ch.id : undefined,
           story_id: fd.get("story_id"),
           number: fd.get("number"),
@@ -2233,7 +2233,7 @@
         toast(fd.get("status") === "published" ? "Xuất bản thành công." : "Đã lưu chương.");
         go("/admin/chuong?story=" + fd.get("story_id"));
       } catch (err) {
-        toast(err.message);
+        toast(err.message || "Không lưu được chương.");
       }
     };
   }

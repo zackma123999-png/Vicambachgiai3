@@ -128,11 +128,12 @@
     return 1.22;
   }
   function readPrefs() {
-    const base = { theme: "dark", size: defaultReadSize() };
+    const base = { theme: "dark", size: defaultReadSize(), font: "serif" };
     try {
       const saved = JSON.parse(localStorage.getItem(READ_KEY) || "{}");
       if (saved.theme) base.theme = saved.theme;
       if (saved.size) base.size = Number(saved.size);
+      if (saved.font === "sans" || saved.font === "serif") base.font = saved.font;
       return base;
     } catch {
       return base;
@@ -1044,21 +1045,42 @@
     if (!lastProg || lastProg.chapter_id !== ch.id) {
       VCBG.saveProgress(s.id, ch.id, ch.number, 0);
     }
-    app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" style="--rsize:${prefs.size}rem">
-      <div class="reader-chrome reader-top">
-        <a class="icon-btn" href="#/truyen/${esc(s.slug)}" aria-label="Về trang truyện">←</a>
-        <div class="reader-title">${esc(s.title)} · Ch. ${ch.number}${ch.title ? " — " + esc(ch.title) : ""}</div>
-        <button class="icon-btn" id="btnSet" aria-label="Cỡ chữ và nền">Aa</button>
-      </div>
+    const comments = VCBG.listComments(ch.id);
+    const rating = VCBG.getStory(s.id);
+    const ratingAvg = (rating && rating.stats && rating.stats.rating_avg) || 0;
+    const ratingN = (rating && rating.stats && rating.stats.rating_count) || 0;
+    const mine = VCBG.myRating(s.id);
+    const favOn = VCBG.isFavorite(s.id);
+    const bodyHtml = decorateParagraphs(sanitize(ch.body), comments);
+    const chLabel = `Chương ${ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
+    app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
+      <header class="reader-chrome reader-top" id="rTop">
+        <a class="r-ico" href="#/truyen/${esc(s.slug)}" aria-label="Về trang truyện">←</a>
+        <div class="r-head-copy">
+          <div class="r-story">${esc(s.title)}</div>
+          <div class="r-sub">${chLabel}</div>
+        </div>
+        <button class="r-ico" id="btnBm" aria-label="Bookmark" aria-pressed="${favOn}">${favOn ? "★" : "☆"}</button>
+        <button class="r-ico" id="btnSet" aria-label="Cỡ chữ và nền">Aa</button>
+        <div class="r-progress"><span id="rBar"></span></div>
+        <span class="r-pct" id="rPct">0%</span>
+      </header>
       <article class="reader-body" id="rbody">
         <h2>Chương ${ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
-        ${sanitize(ch.body)}
+        <div class="r-orn" aria-hidden="true"></div>
+        ${bodyHtml}
+        <section class="r-engage" id="rEngage">
+          <button type="button" id="btnLikeCh" class="${liked ? "on" : ""}"><span>♡</span><b>Thích chương này</b><em>${likeN}</em></button>
+          <button type="button" id="btnRate"><span>☆</span><b>Đánh giá</b><em>${ratingAvg ? ratingAvg + " ★" : "—"}</em></button>
+          <button type="button" id="btnCmtAll"><span>💬</span><b>Bình luận</b><em>${comments.length}</em></button>
+        </section>
       </article>
-      <div class="reader-chrome reader-bot">
-        ${prev ? `<a class="icon-btn nav-arr" href="#/truyen/${esc(s.slug)}/chuong-${prev.number}" aria-label="Chương trước">‹</a>` : `<span class="icon-btn nav-arr" aria-disabled="true">‹</span>`}
-        <button class="icon-btn" id="btnToc" aria-label="Mục lục">☰</button>
-        ${next ? `<a class="icon-btn nav-arr" href="#/truyen/${esc(s.slug)}/chuong-${next.number}" aria-label="Chương sau">›</a>` : `<span class="icon-btn nav-arr" aria-disabled="true">›</span>`}
-      </div>
+      <nav class="reader-chrome reader-bot" id="rBot">
+        ${prev ? `<a class="r-nav" href="#/truyen/${esc(s.slug)}/chuong-${prev.number}">‹ Chương trước</a>` : `<span class="r-nav is-off">‹ Chương trước</span>`}
+        <button type="button" class="r-toc" id="btnToc" aria-label="Mục lục"><span></span></button>
+        ${next ? `<a class="r-nav r-nav-r" href="#/truyen/${esc(s.slug)}/chuong-${next.number}">Chương sau ›</a>` : `<span class="r-nav r-nav-r is-off">Chương sau ›</span>`}
+      </nav>
+      <p class="r-hint">Chạm màn hình để hiện / ẩn thanh công cụ</p>
       <div id="rDraw"></div>
     </div>`;
     const page = $("#reader");
@@ -1072,40 +1094,177 @@
     const bump = () => {
       immerse(false);
       clearTimeout(hideT);
-      hideT = setTimeout(() => immerse(true), 2800);
+      hideT = setTimeout(() => immerse(true), 3000);
+    };
+    const updateProg = () => {
+      const el = document.documentElement;
+      const max = Math.max(1, el.scrollHeight - el.clientHeight);
+      const pct = Math.min(100, Math.round((window.scrollY / max) * 100));
+      const bar = $("#rBar");
+      const lab = $("#rPct");
+      if (bar) bar.style.width = pct + "%";
+      if (lab) lab.textContent = pct + "%";
     };
     page.onclick = (e) => {
-      if (e.target.closest("a,button,.drawer,.drawer-bg,#rDraw")) return;
+      if (e.target.closest("a,button,.drawer,.drawer-bg,#rDraw,.p-bubble,.p-menu,.r-engage")) return;
       if (window.getSelection && String(window.getSelection()).trim()) return;
       bump();
     };
     window.onscroll = () => {
       VCBG.saveProgress(s.id, ch.id, ch.number, window.scrollY);
+      updateProg();
+      if (!page.classList.contains("is-immersed")) immerse(true);
+      clearTimeout(hideT);
     };
-    let quote = "";
-    document.onselectionchange = () => {
+    updateProg();
+    $("#btnSet").onclick = (e) => {
+      e.stopPropagation();
+      openSettings(page);
+    };
+    $("#btnToc").onclick = (e) => {
+      e.stopPropagation();
+      openToc(s, all, ch.number);
+    };
+    $("#btnBm").onclick = (e) => {
+      e.stopPropagation();
+      try {
+        const r = VCBG.toggleFavorite(s.id);
+        $("#btnBm").textContent = r.on ? "★" : "☆";
+        $("#btnBm").setAttribute("aria-pressed", r.on);
+        toast(r.on ? "Đã lưu vào tủ truyện." : "Đã bỏ lưu.");
+      } catch (err) {
+        if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+        else toast(err.message);
+      }
+    };
+    $("#btnLikeCh").onclick = () => {
+      try {
+        const r = VCBG.toggleChapterLike(ch.id);
+        $("#btnLikeCh").classList.toggle("on", r.on);
+        $("#btnLikeCh").querySelector("em").textContent = r.count;
+      } catch (err) {
+        if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+        else toast(err.message);
+      }
+    };
+    $("#btnRate").onclick = () => {
+      if (!VCBG.currentUser()) return go("/dang-nhap");
+      overlay(
+        `<div class="aa-pad">
+          <p class="set-lab">Đánh giá truyện</p>
+          <div class="aa-row">${[1, 2, 3, 4, 5]
+            .map((n) => `<button type="button" class="aa-chip${mine === n ? " on" : ""}" data-star="${n}">${"★".repeat(n)}</button>`)
+            .join("")}</div>
+        </div>`,
+        "sheet"
+      );
+      $$("[data-star]").forEach((b) => {
+        b.onclick = () => {
+          try {
+            const st = VCBG.rateStory(s.id, Number(b.dataset.star));
+            $("#btnRate").querySelector("em").textContent = (st.rating_avg || 0) + " ★";
+            toast("Đã ghi đánh giá.");
+            $("#rDraw").innerHTML = "";
+          } catch (err) {
+            toast(err.message);
+          }
+        };
+      });
+    };
+    $("#btnCmtAll").onclick = () => openComments(s, ch, "", "");
+    bindParagraphComments(s, ch, comments);
+  }
+  function decorateParagraphs(html, comments) {
+    const box = document.createElement("div");
+    box.innerHTML = html || "";
+    const counts = {};
+    (comments || []).forEach((c) => {
+      const k = c.para_key || hashQuote(c.quote);
+      if (!k) return;
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    let n = 0;
+    box.querySelectorAll("p").forEach((p) => {
+      const key = "p" + n++;
+      p.dataset.pk = key;
+      p.classList.add("r-p");
+      const nC = counts[key] || counts[hashQuote(p.textContent)] || 0;
+      const bub = document.createElement("button");
+      bub.type = "button";
+      bub.className = "p-bubble" + (nC ? " has" : "");
+      bub.dataset.pk = key;
+      bub.setAttribute("aria-label", "Bình luận đoạn");
+      bub.textContent = nC ? String(nC) : "";
+      p.appendChild(bub);
+    });
+    return box.innerHTML;
+  }
+  function hashQuote(q) {
+    const t = String(q || "").replace(/\s+/g, " ").trim();
+    if (!t) return "";
+    let h = 0;
+    for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+    return "q" + (h >>> 0).toString(36);
+  }
+  function bindParagraphComments(s, ch, comments) {
+    const body = $("#rbody");
+    if (!body) return;
+    const closeMenu = () => $$(".p-menu").forEach((n) => n.remove());
+    body.addEventListener("click", (e) => {
+      const bub = e.target.closest(".p-bubble");
+      if (bub) {
+        e.stopPropagation();
+        const p = bub.closest("p");
+        const key = p && p.dataset.pk;
+        const quote = p ? p.childNodes[0] && p.childNodes[0].textContent : "";
+        openComments(s, ch, String(quote || "").trim().slice(0, 500), key);
+        return;
+      }
+    });
+    let holdT;
+    body.addEventListener("pointerdown", (e) => {
+      const p = e.target.closest("p.r-p");
+      if (!p || e.target.closest(".p-bubble,a,button")) return;
+      holdT = setTimeout(() => {
+        closeMenu();
+        const menu = document.createElement("div");
+        menu.className = "p-menu";
+        menu.innerHTML = `<button type="button" data-act="cmt">Bình luận</button><button type="button" data-act="quote">Trích dẫn</button>`;
+        p.appendChild(menu);
+        menu.onclick = (ev) => {
+          ev.stopPropagation();
+          const act = ev.target.dataset.act;
+          const quote = String(p.innerText || "").replace(/\d+$/, "").trim().slice(0, 500);
+          closeMenu();
+          if (act) openComments(s, ch, quote, p.dataset.pk);
+        };
+      }, 420);
+    });
+    body.addEventListener("pointerup", () => clearTimeout(holdT));
+    body.addEventListener("pointercancel", () => clearTimeout(holdT));
+    document.addEventListener("selectionchange", () => {
       const sel = window.getSelection();
       const t = sel && String(sel).trim();
       $$(".quote-pop").forEach((n) => n.remove());
       if (!t || t.length < 4 || !body.contains(sel.anchorNode)) return;
       const r = sel.getRangeAt(0).getBoundingClientRect();
-      const pop = document.createElement("button");
-      pop.className = "quote-pop";
-      pop.textContent = "Trích dẫn / Bình luận đoạn này";
+      const pop = document.createElement("div");
+      pop.className = "p-menu quote-pop";
+      pop.innerHTML = `<button type="button" data-act="cmt">Bình luận</button><button type="button" data-act="quote">Trích dẫn</button>`;
       pop.style.left = Math.max(8, r.left + window.scrollX) + "px";
-      pop.style.top = r.top + window.scrollY - 40 + "px";
-      pop.onclick = () => {
-        quote = t.slice(0, 500);
-        openComments(s, ch, quote);
+      pop.style.top = r.top + window.scrollY - 44 + "px";
+      pop.onclick = (ev) => {
+        const p = sel.anchorNode && sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest("p.r-p");
+        openComments(s, ch, t.slice(0, 500), p && p.dataset.pk);
+        $$(".quote-pop").forEach((n) => n.remove());
       };
       document.body.appendChild(pop);
-    };
-    $("#btnSet").onclick = () => openSettings(page);
-    $("#btnToc").onclick = () => openToc(s, all, ch.number);
+    });
   }
   function overlay(html, side) {
     const host = $("#rDraw") || app();
-    host.innerHTML = `<div class="drawer-bg" id="obg"></div><aside class="drawer ${side || "bottom"}" role="dialog">${html}</aside>`;
+    const kind = side === "sheet" ? "sheet" : side === "side" ? "side" : "sheet";
+    host.innerHTML = `<div class="drawer-bg" id="obg"></div><aside class="drawer ${kind}" role="dialog">${html}</aside>`;
     const close = () => (host.innerHTML = "");
     $("#obg").onclick = close;
     const x = $("#btnCloseDraw");
@@ -1113,24 +1272,34 @@
   }
   function openSettings(page) {
     const p = readPrefs();
-    overlay(`<div class="drawer-pad read-set">
-      <h3>Đọc</h3>
-      <p class="set-lab">Cỡ chữ</p>
-      <div class="action-row">
-        <button class="btn btn-ghost" data-sz="-">A−</button>
-        <button class="btn btn-ghost" data-sz="+">A+</button>
-      </div>
-      <p class="set-lab">Nền</p>
-      <div class="action-row">
-        <button class="btn btn-ghost" data-th="dark">Tối</button>
-        <button class="btn btn-ghost" data-th="light">Sáng</button>
-        <button class="btn btn-ghost" data-th="sepia">Kem</button>
-      </div>
-    </div>`, "bottom");
+    overlay(
+      `<div class="aa-pad">
+        <p class="set-lab">Cỡ chữ</p>
+        <div class="aa-row">
+          <button type="button" class="aa-chip" data-sz="-">A−</button>
+          <button type="button" class="aa-chip" data-sz="+">A+</button>
+        </div>
+        <p class="set-lab">Kiểu chữ</p>
+        <div class="aa-row">
+          <button type="button" class="aa-chip${p.font !== "sans" ? " on" : ""}" data-ft="serif">Serif</button>
+          <button type="button" class="aa-chip${p.font === "sans" ? " on" : ""}" data-ft="sans">Sans</button>
+        </div>
+        <p class="set-lab">Màu nền</p>
+        <div class="aa-row">
+          <button type="button" class="aa-chip${p.theme === "dark" ? " on" : ""}" data-th="dark">Tối</button>
+          <button type="button" class="aa-chip${p.theme === "light" ? " on" : ""}" data-th="light">Sáng</button>
+          <button type="button" class="aa-chip${p.theme === "sepia" ? " on" : ""}" data-th="sepia">Kem</button>
+        </div>
+      </div>`,
+      "sheet"
+    );
     const apply = () => {
       savePrefs(p);
       page.dataset.theme = p.theme;
+      page.dataset.font = p.font || "serif";
       page.style.setProperty("--rsize", p.size + "rem");
+      $$(".aa-chip[data-th]").forEach((b) => b.classList.toggle("on", b.dataset.th === p.theme));
+      $$(".aa-chip[data-ft]").forEach((b) => b.classList.toggle("on", b.dataset.ft === (p.font || "serif")));
     };
     $$("[data-sz]").forEach(
       (b) =>
@@ -1146,30 +1315,43 @@
           apply();
         })
     );
+    $$("[data-ft]").forEach(
+      (b) =>
+        (b.onclick = () => {
+          p.font = b.dataset.ft;
+          apply();
+        })
+    );
   }
   function openToc(s, all, cur) {
     overlay(
-      `<div class="drawer-pad">
+      `<div class="aa-pad toc-pad">
         <div class="drawer-head">
-          <button type="button" class="icon-btn" id="btnCloseDraw" aria-label="Quay lại chương">←</button>
           <h3>Mục lục</h3>
+          <button type="button" class="r-ico" id="btnCloseDraw" aria-label="Đóng">×</button>
         </div>
         <ul class="chapter-list">${all
           .map(
             (c) =>
-              `<li><a href="#/truyen/${esc(s.slug)}/chuong-${c.number}"><span class="num">${c.number}</span><span>${esc(c.title || "")}</span>${c.number === cur ? "<span>•</span>" : ""}</a></li>`
+              `<li><a class="${c.number === cur ? "on" : ""}" href="#/truyen/${esc(s.slug)}/chuong-${c.number}"><span class="num">${c.number}</span><span>${esc(c.title || "")}</span></a></li>`
           )
           .join("")}</ul>
       </div>`,
-      "side"
+      "sheet"
     );
   }
-  function openComments(s, ch, quote) {
+  function openComments(s, ch, quote, paraKey) {
     const u = VCBG.currentUser();
-    const list = VCBG.listComments(ch.id);
+    let list = VCBG.listComments(ch.id);
+    if (paraKey) {
+      list = list.filter((c) => c.para_key === paraKey || hashQuote(c.quote) === paraKey);
+    }
     overlay(
-      `<div class="drawer-pad">
-        <h3>Bình luận chương ${ch.number}</h3>
+      `<div class="aa-pad toc-pad">
+        <div class="drawer-head">
+          <h3>${paraKey ? "Bình luận đoạn" : "Bình luận chương " + ch.number}</h3>
+          <button type="button" class="r-ico" id="btnCloseDraw" aria-label="Đóng">×</button>
+        </div>
         ${
           u
             ? `<form id="cForm">
@@ -1188,10 +1370,9 @@
       form.onsubmit = (e) => {
         e.preventDefault();
         try {
-          VCBG.addComment({ chapterId: ch.id, storyId: s.id, body: form.body.value, quote });
+          VCBG.addComment({ chapterId: ch.id, storyId: s.id, body: form.body.value, quote, para_key: paraKey || "" });
           toast("Đăng bình luận thành công.");
-          quote = "";
-          openComments(s, ch, "");
+          openComments(s, ch, "", paraKey || "");
         } catch (err) {
           toast(err.message);
         }

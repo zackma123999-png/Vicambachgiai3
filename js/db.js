@@ -965,7 +965,7 @@
       return !!(c && c.likes && c.likes.includes(u.id));
     },
 
-    addComment({ chapterId, storyId, body, quote }) {
+    addComment({ chapterId, storyId, body, quote, para_key }) {
       const u = requireUser();
       if (!cache.site_settings.allow_comments) throw new Error("Bình luận đang tạm khóa.");
       body = String(body || "").trim();
@@ -979,13 +979,14 @@
         chapter_id: chapterId,
         body,
         quote: quote ? String(quote).slice(0, 500) : "",
+        para_key: para_key ? String(para_key).slice(0, 40) : "",
         status: "visible",
         likes: [],
         created_at: now(),
       };
       cache.comments.unshift(rec);
       persist(async () => {
-        const { error } = await sb.from("comments").insert({
+        const row = {
           id: rec.id,
           user_id: rec.user_id,
           story_id: rec.story_id,
@@ -993,7 +994,9 @@
           body: rec.body,
           quote: rec.quote,
           status: rec.status,
-        });
+        };
+        if (rec.para_key) row.para_key = rec.para_key;
+        const { error } = await sb.from("comments").insert(row);
         if (error) throw error;
       });
       return rec;

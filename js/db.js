@@ -52,8 +52,29 @@
     return Date.now();
   }
 
-  function uid(prefix) {
-    return prefix + "_" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36);
+  function uuid() {
+    if (global.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+    });
+  }
+
+  function uid() {
+    return uuid();
+  }
+
+  function toMs(v) {
+    if (v == null || v === "") return 0;
+    if (typeof v === "number") return v < 1e12 ? Math.round(v * 1000) : v;
+    const t = Date.parse(v);
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function iso(ms) {
+    if (!ms) return null;
+    const n = typeof ms === "number" ? ms : toMs(ms);
+    return n ? new Date(n).toISOString() : null;
   }
 
   function slugify(s) {
@@ -238,7 +259,7 @@
       poll_votes,
       settingsRows,
     ] = await Promise.all([
-      loadTable("profiles"),
+      loadTable("public_profiles").catch(() => loadTable("profiles")),
       loadTable("genres"),
       loadTable("tags"),
       loadTable("stories"),
@@ -255,10 +276,15 @@
       loadTable("site_settings"),
     ]);
 
-    cache.profiles = (profiles || []).map((p) => ({
-      ...p,
-      user_id: p.id,
-    }));
+    cache.profiles = (profiles || []).map((p) => {
+      const id = p.user_id || p.id;
+      return {
+        ...p,
+        id,
+        user_id: id,
+        created_at: toMs(p.created_at),
+      };
+    });
     cache.users = cache.profiles.map((p) => ({
       id: p.id,
       email: p.email,
@@ -268,20 +294,51 @@
     }));
     cache.genres = genres;
     cache.tags = tags;
-    cache.stories = stories;
+    cache.stories = (stories || []).map((s) => ({
+      ...s,
+      cover: s.cover || s.cover_url || "",
+      created_at: toMs(s.created_at),
+      updated_at: toMs(s.updated_at),
+    }));
     cache.story_genres = story_genres;
     cache.story_tags = story_tags;
-    cache.chapters = chapters;
+    cache.chapters = (chapters || []).map((c) => ({
+      ...c,
+      number: Number(c.number || c.chapter_number || 0),
+      body: c.body != null ? c.body : c.content || "",
+      publish_at: c.publish_at ? toMs(c.publish_at) : null,
+      published_at: c.published_at ? toMs(c.published_at) : null,
+      created_at: toMs(c.created_at),
+      updated_at: toMs(c.updated_at),
+    }));
     cache.comments = (comments || []).map((c) => ({
       ...c,
       likes: (comment_likes || []).filter((l) => l.comment_id === c.id).map((l) => l.user_id),
+      created_at: toMs(c.created_at),
     }));
-    cache.comment_replies = comment_replies;
+    cache.comment_replies = (comment_replies || []).map((r) => ({
+      ...r,
+      created_at: toMs(r.created_at),
+    }));
     cache.comment_likes = comment_likes;
-    cache.chapter_likes = chapter_likes;
-    cache.ratings = ratings;
-    cache.views = views;
-    cache.poll_votes = poll_votes;
+    cache.chapter_likes = (chapter_likes || []).map((l) => ({
+      ...l,
+      id: l.id || l.user_id + ":" + l.chapter_id,
+      at: toMs(l.at || l.created_at),
+    }));
+    cache.ratings = (ratings || []).map((r) => ({
+      ...r,
+      id: r.id || r.user_id + ":" + r.story_id,
+      at: toMs(r.at || r.created_at),
+    }));
+    cache.views = (views || []).map((v) => ({
+      ...v,
+      at: toMs(v.at || v.created_at),
+    }));
+    cache.poll_votes = (poll_votes || []).map((v) => ({
+      ...v,
+      at: toMs(v.at || v.created_at),
+    }));
 
     const row = (settingsRows && settingsRows[0]) || {};
     cache.site_settings = Object.assign(emptySettings(), {
@@ -297,6 +354,43 @@
 
     if (sessionUser) {
       const uid_ = sessionUser.id;
+      try {
+        const mine = await loadTable("profiles", (q) => q.eq("user_id", uid_));
+        if (mine && mine[0]) {
+          const p = {
+            ...mine[0],
+            id: mine[0].user_id,
+            user_id: mine[0].user_id,
+            created_at: toMs(mine[0].created_at),
+          };
+          cache.profiles = cache.profiles.filter((x) => x.id !== p.id).concat([p]);
+          cache.users = cache.profiles.map((x) => ({
+            id: x.id,
+            email: x.email,
+            role: x.role,
+            status: x.status,
+            created_at: x.created_at,
+          }));
+        }
+      } catch (_) {}
+      if (isAdmin()) {
+        try {
+          const all = await loadTable("profiles");
+          cache.profiles = (all || []).map((p) => ({
+            ...p,
+            id: p.user_id || p.id,
+            user_id: p.user_id || p.id,
+            created_at: toMs(p.created_at),
+          }));
+          cache.users = cache.profiles.map((x) => ({
+            id: x.id,
+            email: x.email,
+            role: x.role,
+            status: x.status,
+            created_at: x.created_at,
+          }));
+        } catch (_) {}
+      }
       const [favorites, follows, reading_progress, reading_history, notifications, inbox] =
         await Promise.all([
           loadTable("favorites", (q) => q.eq("user_id", uid_)),
@@ -306,12 +400,36 @@
           loadTable("notifications", (q) => q.eq("user_id", uid_).order("at", { ascending: false }).limit(60)),
           isAdmin() ? loadTable("inbox", (q) => q.order("at", { ascending: false }).limit(300)) : Promise.resolve([]),
         ]);
-      cache.favorites = favorites;
-      cache.follows = follows;
-      cache.reading_progress = reading_progress;
-      cache.reading_history = reading_history;
-      cache.notifications = notifications;
-      cache.inbox = inbox || [];
+      cache.favorites = (favorites || []).map((f) => ({
+        ...f,
+        id: f.id || f.user_id + ":" + f.story_id,
+        at: toMs(f.at || f.created_at),
+      }));
+      cache.follows = (follows || []).map((f) => ({
+        ...f,
+        id: f.id || f.user_id + ":" + f.story_id,
+        at: toMs(f.at || f.created_at),
+      }));
+      cache.reading_progress = (reading_progress || []).map((p) => ({
+        ...p,
+        id: p.id || p.user_id + ":" + p.story_id,
+        chapter_number: Number(p.chapter_number || 0),
+        scroll: Number(p.scroll || 0),
+        at: toMs(p.at || p.updated_at),
+      }));
+      cache.reading_history = (reading_history || []).map((h) => ({
+        ...h,
+        chapter_number: Number(h.chapter_number || 0),
+        at: toMs(h.at || h.read_at),
+      }));
+      cache.notifications = (notifications || []).map((n) => ({
+        ...n,
+        at: toMs(n.at || n.created_at),
+      }));
+      cache.inbox = (inbox || []).map((m) => ({
+        ...m,
+        at: toMs(m.at || m.created_at),
+      }));
     } else {
       cache.favorites = [];
       cache.follows = [];
@@ -404,14 +522,13 @@
       sessionUser = (data && data.user) || (data && data.session && data.session.user) || null;
       if (!sessionUser) throw new Error("Đăng ký xong nhưng cần xác nhận email trước khi vào thư viện.");
       await sb.from("profiles").upsert({
-        id: sessionUser.id,
+        user_id: sessionUser.id,
         email,
         display_name,
         avatar: display_name.slice(0, 1).toUpperCase(),
         bio: "",
         role: "reader",
         status: "active",
-        created_at: now(),
       });
       await refresh();
       return currentUser();
@@ -473,7 +590,7 @@
         const { error } = await sb
           .from("profiles")
           .update({ display_name: p.display_name, bio: p.bio, avatar: p.avatar })
-          .eq("id", u.id);
+          .eq("user_id", u.id);
         if (error) throw error;
       });
       return currentUser();
@@ -561,10 +678,17 @@
       const key = (u ? u.id : "guest") + ":" + chapterId;
       const recent = cache.views.find((v) => v.key === key && now() - v.at < 30 * 60 * 1000);
       if (recent) return;
-      const rec = { id: uid("v"), key, story_id: storyId, chapter_id: chapterId, user_id: u ? u.id : null, at: now() };
+      const rec = { id: uid(), key, story_id: storyId, chapter_id: chapterId, user_id: u ? u.id : null, at: now() };
       cache.views.push(rec);
       persist(async () => {
-        const { error } = await sb.from("views").insert(rec);
+        const { error } = await sb.from("views").insert({
+          id: rec.id,
+          key: rec.key,
+          story_id: rec.story_id,
+          chapter_id: rec.chapter_id,
+          user_id: rec.user_id,
+          at: iso(rec.at),
+        });
         if (error) throw error;
       });
     },
@@ -579,7 +703,7 @@
       }
       let rec = cache.reading_progress.find((p) => p.user_id === u.id && p.story_id === storyId);
       if (!rec) {
-        rec = { id: uid("rp"), user_id: u.id, story_id: storyId };
+        rec = { id: u.id + ":" + storyId, user_id: u.id, story_id: storyId };
         cache.reading_progress.push(rec);
       }
       rec.chapter_id = chapterId;
@@ -587,7 +711,7 @@
       rec.scroll = scroll || 0;
       rec.at = now();
       const hist = {
-        id: uid("rh"),
+        id: uid(),
         user_id: u.id,
         story_id: storyId,
         chapter_id: chapterId,
@@ -598,16 +722,22 @@
       cache.reading_history = cache.reading_history.slice(0, 400);
       persist(async () => {
         const { error } = await sb.from("reading_progress").upsert({
-          id: rec.id,
           user_id: rec.user_id,
           story_id: rec.story_id,
           chapter_id: rec.chapter_id,
           chapter_number: rec.chapter_number,
           scroll: rec.scroll,
-          at: rec.at,
+          updated_at: iso(rec.at),
         });
         if (error) throw error;
-        const { error: e2 } = await sb.from("reading_history").insert(hist);
+        const { error: e2 } = await sb.from("reading_history").insert({
+          id: hist.id,
+          user_id: hist.user_id,
+          story_id: hist.story_id,
+          chapter_id: hist.chapter_id,
+          chapter_number: hist.chapter_number,
+          read_at: iso(hist.at),
+        });
         if (e2) throw e2;
       });
     },
@@ -633,15 +763,18 @@
       if (i >= 0) {
         const gone = cache.favorites.splice(i, 1)[0];
         persist(async () => {
-          const { error } = await sb.from("favorites").delete().eq("id", gone.id);
+          const { error } = await sb.from("favorites").delete().eq("user_id", gone.user_id).eq("story_id", gone.story_id);
           if (error) throw error;
         });
         return { on: false };
       }
-      const rec = { id: uid("fav"), user_id: u.id, story_id: storyId, at: now() };
+      const rec = { id: u.id + ":" + storyId, user_id: u.id, story_id: storyId, at: now() };
       cache.favorites.push(rec);
       persist(async () => {
-        const { error } = await sb.from("favorites").insert(rec);
+        const { error } = await sb.from("favorites").insert({
+          user_id: rec.user_id,
+          story_id: rec.story_id,
+        });
         if (error) throw error;
       });
       return { on: true };
@@ -653,15 +786,18 @@
       if (i >= 0) {
         const gone = cache.follows.splice(i, 1)[0];
         persist(async () => {
-          const { error } = await sb.from("follows").delete().eq("id", gone.id);
+          const { error } = await sb.from("follows").delete().eq("user_id", gone.user_id).eq("story_id", gone.story_id);
           if (error) throw error;
         });
         return { on: false };
       }
-      const rec = { id: uid("fol"), user_id: u.id, story_id: storyId, at: now() };
+      const rec = { id: u.id + ":" + storyId, user_id: u.id, story_id: storyId, at: now() };
       cache.follows.push(rec);
       persist(async () => {
-        const { error } = await sb.from("follows").insert(rec);
+        const { error } = await sb.from("follows").insert({
+          user_id: rec.user_id,
+          story_id: rec.story_id,
+        });
         if (error) throw error;
       });
       return { on: true };
@@ -717,16 +853,14 @@
       let rec = cache.ratings.find((r) => r.user_id === u.id && r.story_id === storyId);
       if (rec) rec.stars = stars;
       else {
-        rec = { id: uid("rt"), user_id: u.id, story_id: storyId, stars, at: now() };
+        rec = { id: u.id + ":" + storyId, user_id: u.id, story_id: storyId, stars, at: now() };
         cache.ratings.push(rec);
       }
       persist(async () => {
         const { error } = await sb.from("ratings").upsert({
-          id: rec.id,
           user_id: rec.user_id,
           story_id: rec.story_id,
           stars: rec.stars,
-          at: now(),
         });
         if (error) throw error;
       });
@@ -746,15 +880,18 @@
       if (i >= 0) {
         const gone = cache.chapter_likes.splice(i, 1)[0];
         persist(async () => {
-          const { error } = await sb.from("chapter_likes").delete().eq("id", gone.id);
+          const { error } = await sb.from("chapter_likes").delete().eq("user_id", gone.user_id).eq("chapter_id", gone.chapter_id);
           if (error) throw error;
         });
         return { on: false, count: this.chapterLikeCount(chapterId) };
       }
-      const rec = { id: uid("lk"), user_id: u.id, chapter_id: chapterId, at: now() };
+      const rec = { id: u.id + ":" + chapterId, user_id: u.id, chapter_id: chapterId, at: now() };
       cache.chapter_likes.push(rec);
       persist(async () => {
-        const { error } = await sb.from("chapter_likes").insert(rec);
+        const { error } = await sb.from("chapter_likes").insert({
+          user_id: rec.user_id,
+          chapter_id: rec.chapter_id,
+        });
         if (error) throw error;
       });
       return { on: true, count: this.chapterLikeCount(chapterId) };
@@ -800,7 +937,7 @@
       if (body.length > 2000) throw new Error("Tối đa 2000 ký tự.");
       if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
       const rec = {
-        id: uid("c"),
+        id: uid(),
         user_id: u.id,
         story_id: storyId,
         chapter_id: chapterId,
@@ -812,8 +949,15 @@
       };
       cache.comments.unshift(rec);
       persist(async () => {
-        const { likes, ...row } = rec;
-        const { error } = await sb.from("comments").insert(row);
+        const { error } = await sb.from("comments").insert({
+          id: rec.id,
+          user_id: rec.user_id,
+          story_id: rec.story_id,
+          chapter_id: rec.chapter_id,
+          body: rec.body,
+          quote: rec.quote,
+          status: rec.status,
+        });
         if (error) throw error;
       });
       return rec;
@@ -826,10 +970,16 @@
       if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
       const parent = cache.comments.find((c) => c.id === commentId);
       if (!parent) throw new Error("Không tìm thấy bình luận.");
-      const rec = { id: uid("cr"), comment_id: commentId, user_id: u.id, body, status: "visible", created_at: now() };
+      const rec = { id: uid(), comment_id: commentId, user_id: u.id, body, status: "visible", created_at: now() };
       cache.comment_replies.push(rec);
       persist(async () => {
-        const { error } = await sb.from("comment_replies").insert(rec);
+        const { error } = await sb.from("comment_replies").insert({
+          id: rec.id,
+          comment_id: rec.comment_id,
+          user_id: rec.user_id,
+          body: rec.body,
+          status: rec.status,
+        });
         if (error) throw error;
       });
       return rec;
@@ -911,7 +1061,7 @@
       const t = now();
       let story = data.id ? cache.stories.find((s) => s.id === data.id) : null;
       if (!story) {
-        story = { id: uid("st"), created_at: t, views_seed: 0 };
+        story = { id: uid(), created_at: t, views_seed: 0 };
         cache.stories.push(story);
       }
       story.title = String(data.title || "").trim();
@@ -938,13 +1088,14 @@
         author: story.author,
         editor: story.editor,
         synopsis: story.synopsis,
+        description: story.synopsis,
         status: story.status,
         featured: story.featured,
         upcoming: story.upcoming,
         accent: story.accent,
-        cover: story.cover,
-        created_at: story.created_at,
-        updated_at: story.updated_at,
+        cover_url: story.cover,
+        published: story.status !== "draft",
+        updated_at: iso(story.updated_at),
       };
       const gRows = (data.genre_ids || []).map((gid) => ({ story_id: story.id, genre_id: gid }));
       const tRows = (data.tag_ids || []).map((tid) => ({ story_id: story.id, tag_id: tid }));
@@ -987,7 +1138,7 @@
       const t = now();
       let ch = data.id ? cache.chapters.find((c) => c.id === data.id) : null;
       if (!ch) {
-        ch = { id: uid("ch"), created_at: t };
+        ch = { id: uid(), created_at: t };
         cache.chapters.push(ch);
       }
       ch.story_id = data.story_id;
@@ -1005,18 +1156,18 @@
         id: ch.id,
         story_id: ch.story_id,
         number: ch.number,
+        chapter_number: ch.number,
         title: ch.title,
-        body: ch.body,
+        content: ch.body,
         status: ch.status,
-        publish_at: ch.publish_at,
-        published_at: ch.published_at || null,
-        created_at: ch.created_at,
-        updated_at: ch.updated_at,
+        publish_at: iso(ch.publish_at),
+        published_at: iso(ch.published_at),
+        updated_at: iso(ch.updated_at),
       };
       persist(async () => {
         const { error } = await sb.from("chapters").upsert(row);
         if (error) throw error;
-        if (story) await sb.from("stories").update({ updated_at: t }).eq("id", story.id);
+        if (story) await sb.from("stories").update({ updated_at: iso(t) }).eq("id", story.id);
       });
       if (ch.status === "published" && !wasPublished && story) {
         this.notifyFollowers(
@@ -1101,7 +1252,7 @@
       user.status = status;
       p.status = status;
       persist(async () => {
-        const { error } = await sb.from("profiles").update({ status }).eq("id", id);
+        const { error } = await sb.from("profiles").update({ status }).eq("user_id", id);
         if (error) throw error;
       });
     },
@@ -1116,7 +1267,7 @@
       user.role = next;
       p.role = next;
       persist(async () => {
-        const { error } = await sb.from("profiles").update({ role: next }).eq("id", id);
+        const { error } = await sb.from("profiles").update({ role: next }).eq("user_id", id);
         if (error) throw error;
       });
     },
@@ -1126,7 +1277,7 @@
       const slug = slugify(name);
       let g = cache.genres.find((x) => x.slug === slug);
       if (!g) {
-        g = { id: uid("g"), name, slug };
+        g = { id: uid(), name, slug };
         cache.genres.push(g);
         persist(async () => {
           const { error } = await sb.from("genres").insert(g);
@@ -1141,7 +1292,7 @@
       const slug = slugify(name);
       let t = cache.tags.find((x) => x.slug === slug);
       if (!t) {
-        t = { id: uid("tg"), name, slug };
+        t = { id: uid(), name, slug };
         cache.tags.push(t);
         persist(async () => {
           const { error } = await sb.from("tags").insert(t);
@@ -1203,13 +1354,12 @@
         if (error) throw error;
         const t = now();
         const rows = (data || []).map((f) => ({
-          id: uid("n"),
+          id: uid(),
           user_id: f.user_id,
           title,
           body,
           href,
           read: false,
-          at: t,
         }));
         if (!rows.length) return;
         const { error: e2 } = await sb.from("notifications").insert(rows);
@@ -1356,7 +1506,7 @@
       const prev = (cache.site_settings.poll && cache.site_settings.poll.story_ids) || [];
       const changed = JSON.stringify(prev) !== JSON.stringify(next);
       cache.site_settings.poll = {
-        id: changed ? uid("poll") : (cache.site_settings.poll && cache.site_settings.poll.id) || uid("poll"),
+        id: changed ? "poll_" + Date.now().toString(36) : (cache.site_settings.poll && cache.site_settings.poll.id) || "poll_home",
         title: title || "Bạn muốn ViCam ưu tiên truyện nào?",
         story_ids: next,
       };
@@ -1372,10 +1522,15 @@
       if (cache.poll_votes.some((v) => v.poll_id === poll.id && v.user_id === u.id))
         throw new Error("Bạn đã bình chọn đợt này.");
       if (!hitRate("poll:" + u.id, 3, 60 * 1000)) throw new Error("Thử lại sau.");
-      const rec = { id: uid("pv"), poll_id: poll.id, user_id: u.id, story_id: storyId, at: now() };
+      const rec = { id: uid(), poll_id: poll.id, user_id: u.id, story_id: storyId, at: now() };
       cache.poll_votes.push(rec);
       persist(async () => {
-        const { error } = await sb.from("poll_votes").insert(rec);
+        const { error } = await sb.from("poll_votes").insert({
+          id: rec.id,
+          poll_id: rec.poll_id,
+          user_id: rec.user_id,
+          story_id: rec.story_id,
+        });
         if (error) throw error;
       });
       return this.pollState();
@@ -1386,7 +1541,7 @@
       if (body.length < 4) throw new Error("Nội dung quá ngắn.");
       const u = currentUser();
       const rec = {
-        id: uid("in"),
+        id: uid(),
         type: type === "report" ? "report" : "message",
         body,
         name: String(name || (u && u.profile && u.profile.display_name) || "Khách").slice(0, 80),
@@ -1399,7 +1554,16 @@
       cache.inbox.unshift(rec);
       cache.inbox = cache.inbox.slice(0, 300);
       persist(async () => {
-        const { error } = await sb.from("inbox").insert(rec);
+        const { error } = await sb.from("inbox").insert({
+          id: rec.id,
+          type: rec.type,
+          body: rec.body,
+          name: rec.name,
+          email: rec.email,
+          story: rec.story,
+          user_id: rec.user_id,
+          read: rec.read,
+        });
         if (error) throw error;
       });
       return { ok: true };

@@ -88,20 +88,19 @@ as $$
 declare
   act text;
   rid text;
+  rec jsonb;
 begin
   if not public.is_admin() then
     return coalesce(new, old);
   end if;
   act := lower(tg_op) || '_' || tg_table_name;
-  if tg_op = 'DELETE' then
-    rid := coalesce(old.id::text, old.user_id::text);
-    insert into public.admin_audit_log (actor_id, action, resource, resource_id)
-    values (auth.uid(), act, tg_table_name, rid);
-    return old;
-  end if;
-  rid := coalesce(new.id::text, new.user_id::text);
+  rec := to_jsonb(case when tg_op = 'DELETE' then old else new end);
+  rid := coalesce(rec->>'id', rec->>'user_id');
   insert into public.admin_audit_log (actor_id, action, resource, resource_id)
   values (auth.uid(), act, tg_table_name, rid);
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
   return new;
 end;
 $$;

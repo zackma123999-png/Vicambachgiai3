@@ -1250,10 +1250,7 @@
           <p class="auth-error" id="aErr"></p>
           <button class="btn btn-cyan" type="submit">${kind === "login" ? "Đăng nhập" : kind === "register" ? "Đăng ký" : "Tiếp tục"}</button>
         </form>
-        ${kind === "login" ? `<div class="demo-logins">
-          <button type="button" class="btn btn-ghost" id="fillReader">Đăng nhập độc giả mẫu</button>
-          <button type="button" class="btn btn-ghost" id="fillAdmin">Đăng nhập quản trị mẫu</button>
-        </div>` : ""}
+        ${""}
         <p style="margin-top:1rem">${kind !== "login" ? `<a href="#/dang-nhap">Đăng nhập</a> · ` : ""}
         ${kind !== "register" ? `<a href="#/dang-ky">Đăng ký</a> · ` : ""}
         <a href="#/quen-mat-khau">Quên mật khẩu</a></p>
@@ -1273,7 +1270,7 @@
         toast("Đăng nhập thành công.");
         go("/");
       } catch (err) {
-        showErr(err.message || "Không đăng nhập được.");
+        showErr("Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
       }
     };
     $("#aForm").onsubmit = async (e) => {
@@ -1300,10 +1297,7 @@
         showErr(err.message || "Không thực hiện được.");
       }
     };
-    const fillReader = $("#fillReader");
-    const fillAdmin = $("#fillAdmin");
-    if (fillReader) fillReader.onclick = () => submitLogin("docgia@vicambachgiai.local", "Docgia123!");
-    if (fillAdmin) fillAdmin.onclick = () => submitLogin("admin@vicambachgiai.local", "Admin123!");
+
   }
   function pageLibrary() {
     if (!needUser()) return;

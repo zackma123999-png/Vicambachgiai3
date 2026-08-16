@@ -34,6 +34,7 @@
     chapter_likes: [],
     ratings: [],
     views: [],
+    story_stats: {},
     notifications: [],
     poll_votes: [],
     inbox: [],
@@ -133,12 +134,19 @@
     return true;
   }
 
+  function publicError(err, fallback) {
+    const raw = String((err && (err.message || err.error_description || err.msg)) || "");
+    const leaked =
+      /column |relation |permission denied|row-level security|PGRST|inbox\.|does not exist|JWT|apikey/i.test(
+        raw
+      );
+    const e = new Error(leaked ? fallback || "Không thực hiện được." : raw || fallback || "Không thực hiện được.");
+    if (err && err.code && !leaked) e.code = err.code;
+    return e;
+  }
+
   function throwHttp(err, fallback) {
-    const msg =
-      (err && (err.message || err.error_description || err.msg)) || fallback || "Không thực hiện được.";
-    const e = new Error(msg);
-    if (err && err.code) e.code = err.code;
-    throw e;
+    throw publicError(err, fallback);
   }
 
   function persist(fn) {
@@ -205,10 +213,19 @@
 
   function storyStats(storyId) {
     const chapters = cache.chapters.filter((c) => c.story_id === storyId && c.status === "published");
-    const likes = cache.chapter_likes.filter((l) => chapters.some((c) => c.id === l.chapter_id)).length;
+    const rpc = cache.story_stats[storyId] || {};
+    const likes =
+      rpc.likes != null
+        ? Number(rpc.likes)
+        : cache.chapter_likes.filter((l) => chapters.some((c) => c.id === l.chapter_id)).length;
     const ratings = cache.ratings.filter((r) => r.story_id === storyId);
-    const avg = ratings.length === 0 ? 0 : ratings.reduce((a, r) => a + r.stars, 0) / ratings.length;
-    const views = cache.views.filter((v) => v.story_id === storyId).length;
+    const avg =
+      rpc.rating_avg != null
+        ? Number(rpc.rating_avg)
+        : ratings.length === 0
+          ? 0
+          : ratings.reduce((a, r) => a + r.stars, 0) / ratings.length;
+    const views = rpc.views != null ? Number(rpc.views) : cache.views.filter((v) => v.story_id === storyId).length;
     const last = chapters.slice().sort((a, b) => b.number - a.number)[0];
     return {
       chapter_count: chapters.length,
@@ -255,9 +272,9 @@
       comment_likes,
       chapter_likes,
       ratings,
-      views,
       poll_votes,
       settingsRows,
+      storyStatsRows,
     ] = await Promise.all([
       loadTable("public_profiles").catch(() => loadTable("profiles")),
       loadTable("genres"),
@@ -271,9 +288,12 @@
       loadTable("comment_likes"),
       loadTable("chapter_likes"),
       loadTable("ratings"),
-      loadTable("views"),
       loadTable("poll_votes"),
       loadTable("site_settings"),
+      sb.rpc("get_story_stats").then(({ data, error }) => {
+        if (error) throwHttp(error, "Không tải được thống kê.");
+        return data || [];
+      }),
     ]);
 
     cache.profiles = (profiles || []).map((p) => {
@@ -331,10 +351,11 @@
       id: r.id || r.user_id + ":" + r.story_id,
       at: toMs(r.at || r.created_at),
     }));
-    cache.views = (views || []).map((v) => ({
-      ...v,
-      at: toMs(v.at || v.created_at),
-    }));
+    cache.story_stats = {};
+    (storyStatsRows || []).forEach((row) => {
+      cache.story_stats[row.story_id] = row;
+    });
+    cache.views = [];
     cache.poll_votes = (poll_votes || []).map((v) => ({
       ...v,
       at: toMs(v.at || v.created_at),
@@ -430,6 +451,17 @@
         ...m,
         at: toMs(m.at || m.created_at),
       }));
+      if (isAdmin()) {
+        try {
+          const views = await loadTable("views");
+          cache.views = (views || []).map((v) => ({
+            ...v,
+            at: toMs(v.at || v.created_at),
+          }));
+        } catch (_) {
+          cache.views = [];
+        }
+      }
     } else {
       cache.favorites = [];
       cache.follows = [];
@@ -527,8 +559,6 @@
         display_name,
         avatar: display_name.slice(0, 1).toUpperCase(),
         bio: "",
-        role: "reader",
-        status: "active",
       });
       await refresh();
       return currentUser();
@@ -538,9 +568,15 @@
       email = String(email || "").trim().toLowerCase();
       if (!hitRate("login:" + email, 8, 10 * 60 * 1000)) throw new Error("Quá nhiều lần thử. Đợi vài phút.");
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throwHttp(error, "Email hoặc mật khẩu không đúng.");
+      if (error) throwHttp(error, "Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
       sessionUser = data.user;
-      await refresh();
+      try {
+        await refresh();
+      } catch (err) {
+        await sb.auth.signOut();
+        sessionUser = null;
+        throw publicError(err, "Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
+      }
       const u = currentUser();
       if (!u) {
         await sb.auth.signOut();
@@ -1390,13 +1426,11 @@
     },
 
     weeklyRanking(limit) {
-      const since = now() - 7 * 24 * 60 * 60 * 1000;
-      const counts = {};
-      cache.views.forEach((v) => {
-        if (v.at >= since) counts[v.story_id] = (counts[v.story_id] || 0) + 1;
-      });
       const rows = cache.stories
-        .map((s) => ({ story: hydrateStory(s), week: counts[s.id] || 0 }))
+        .map((s) => ({
+          story: hydrateStory(s),
+          week: Number((cache.story_stats[s.id] && cache.story_stats[s.id].week_views) || 0),
+        }))
         .filter((r) => r.story)
         .sort((a, b) => b.week - a.week || b.story.stats.views - a.story.stats.views)
         .slice(0, limit || 3);

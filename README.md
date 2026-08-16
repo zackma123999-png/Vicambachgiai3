@@ -12,12 +12,7 @@ Thư viện Bách Hợp độc lập: frontend tĩnh trên Vercel, dữ liệu d
 
 ## Tài khoản
 
-Tạo admin lần đầu bằng script seed (`scripts/seed_catalog.py`) hoặc đăng ký trên site rồi đổi `profiles.role = 'admin'` trong SQL Editor.
-
-Mẫu (nếu seed chạy thành công):
-
-- Admin: `admin@vicambachgiai.local` / `Admin123!`
-- Độc giả: `docgia@vicambachgiai.local` / `Docgia123!`
+Tạo admin bằng SQL Editor trên Supabase (`profiles.role = 'admin'`), không cấp admin từ form đăng ký.
 
 Supabase có thể yêu cầu email thật nếu Confirm email đang bật. Tắt **Authentication → Providers → Email → Confirm email** khi dev, hoặc dùng email bạn kiểm soát được.
 

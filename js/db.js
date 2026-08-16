@@ -396,9 +396,9 @@
           loadTable("favorites", (q) => q.eq("user_id", uid_)),
           loadTable("follows", (q) => q.eq("user_id", uid_)),
           loadTable("reading_progress", (q) => q.eq("user_id", uid_)),
-          loadTable("reading_history", (q) => q.eq("user_id", uid_).order("at", { ascending: false }).limit(80)),
-          loadTable("notifications", (q) => q.eq("user_id", uid_).order("at", { ascending: false }).limit(60)),
-          isAdmin() ? loadTable("inbox", (q) => q.order("at", { ascending: false }).limit(300)) : Promise.resolve([]),
+          loadTable("reading_history", (q) => q.eq("user_id", uid_).order("read_at", { ascending: false }).limit(80)),
+          loadTable("notifications", (q) => q.eq("user_id", uid_).order("created_at", { ascending: false }).limit(60)),
+          isAdmin() ? loadTable("inbox", (q) => q.order("created_at", { ascending: false }).limit(300)) : Promise.resolve([]),
         ]);
       cache.favorites = (favorites || []).map((f) => ({
         ...f,

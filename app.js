@@ -602,41 +602,40 @@
     const slides = Array.from(slideMap.values());
     const tags = VCBG.listTags();
     setMeta("ViCamBachGiai — Thư viện Bách Hợp", VCBG.settings().tagline);
-    const hero = slides
-      .map((s, i) => {
-        const chips = ["Bách hợp"]
-          .concat((s.genres || []).map((g) => g.name))
-          .concat((s.tags || []).slice(0, 2).map((t) => t.name));
-        return `<article class="hero-slide ${i === 0 ? "is-on" : ""}" data-i="${i}" style="--tone:${esc(s.accent || "#4c1d95")}">
-        <div class="hero-wash"></div>
-        <div class="hero-inner">
-          <div class="hero-copy">
-            <h1 class="hero-title">${esc(s.title)}</h1>
-            <div class="hero-meta"><span>✎ ${esc(s.author)}</span><span>☰ ${s.stats.chapter_count} chương</span></div>
-            <p class="hero-tags">${esc(chips.join(" · "))}</p>
-            <p class="hero-syn">${esc(s.synopsis)}</p>
-            <div class="hero-actions">
-              <a class="btn btn-cyan" href="#/truyen/${esc(s.slug)}/chuong-1">Đọc ngay ›</a>
-              <button type="button" class="btn btn-ghost" data-fol="${esc(s.id)}">${VCBG.isFollow(s.id) ? "♥ Đang theo dõi" : "♡ Theo dõi"}</button>
+    const banner = (featured.length ? featured : slides).slice(0, 8);
+    const stackCards = banner
+      .map((s, idx) => {
+        const chips = ["Bách hợp"].concat((s.genres || []).slice(0, 2).map((g) => g.name));
+        const first = VCBG.listChapters(s.id, { sort: "asc" })[0];
+        const readHref = first ? `#/truyen/${esc(s.slug)}/chuong-${first.number}` : `#/truyen/${esc(s.slug)}`;
+        const syn = String(s.synopsis || "").replace(/\s+/g, " ").trim();
+        return `<article class="stack-card${idx === 0 ? " is-active" : ""}" data-i="${idx}" data-d="${idx}" style="--tone:${esc(s.accent || "#7c5cbf")}">
+          <img class="stack-cover" src="${esc(s.cover)}" alt="" ${idx < 2 ? "" : "loading=\"lazy\""}>
+          <div class="stack-shade"></div>
+          <div class="stack-body">
+            <p class="stack-chips">${chips.map((c) => `<span>${esc(c)}</span>`).join("")}</p>
+            <h2 class="stack-title">${esc(s.title)}</h2>
+            <p class="stack-author"><span class="stack-ico" aria-hidden="true">☺</span>${esc(s.author)}</p>
+            <p class="stack-syn">${esc(syn)}</p>
+            <div class="stack-actions">
+              <a class="btn btn-cyan" href="${readHref}">Đọc ngay →</a>
+              <a class="btn btn-ghost" href="#/truyen/${esc(s.slug)}">Chi tiết</a>
             </div>
+            <p class="stack-foot">${String(s.stats.chapter_count || 0).padStart(2, "0")} chương</p>
           </div>
-          <div class="hero-art">
-            <img class="hero-cover" src="${esc(s.cover)}" alt="Bìa ${esc(s.title)}">
-          </div>
-        </div>
-      </article>`;
+        </article>`;
       })
       .join("");
-    const dots = slides
-      .map((_, i) => `<button type="button" data-dot="${i}" class="${i === 0 ? "on" : ""}" aria-label="Slide ${i + 1}"></button>`)
+    const dots = banner
+      .map((_, idx) => `<button type="button" data-dot="${idx}" class="${idx === 0 ? "on" : ""}" aria-label="Thẻ ${idx + 1}"></button>`)
       .join("");
     app().innerHTML =
       header("home") +
-      `<section class="hero" id="hero">${hero}
-        <div class="hero-nav">
-          <div class="hero-dots">${dots}</div>
-          <span class="hero-count" id="heroCount">01 / ${String(slides.length).padStart(2, "0")}</span>
-        </div>
+      `<section class="hero stack-hero" id="hero" aria-roledescription="carousel">
+        <button type="button" class="stack-arrow stack-prev" data-dir="-1" aria-label="Thẻ trước">‹</button>
+        <div class="stack-stage" id="stackStage">${stackCards}</div>
+        <button type="button" class="stack-arrow stack-next" data-dir="1" aria-label="Thẻ sau">›</button>
+        <div class="hero-nav"><div class="hero-dots">${dots}</div></div>
       </section>
       <div class="wrap">${socialStrip()}</div>
       <section class="wrap explore-head">
@@ -659,68 +658,124 @@
       footer();
     bindChrome();
     bindRails();
-    $$("[data-fol]").forEach((b) => {
+    const deck = banner;
+    const n = deck.length;
+    const heroEl = $("#hero");
+    if (!heroEl || !n) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const HOLD = 2700;
+    const ANIM = reduced ? 0 : 620;
+    let i = 0;
+    let timer = null;
+    let paused = false;
+    let busy = false;
+    const rel = (k) => {
+      let d = k - i;
+      if (d > n / 2) d -= n;
+      if (d < -n / 2) d += n;
+      return d;
+    };
+    const preload = (idx) => {
+      const s = deck[idx];
+      if (!s || !s.cover) return;
+      const im = new Image();
+      im.src = s.cover;
+    };
+    const place = () => {
+      $$(".stack-card", heroEl).forEach((el, k) => {
+        const d = rel(k);
+        el.dataset.d = String(d);
+        el.classList.toggle("is-active", d === 0);
+        el.style.zIndex = String(30 - Math.abs(d) * 2);
+        el.setAttribute("aria-hidden", d === 0 ? "false" : "true");
+      });
+      $$("[data-dot]", heroEl).forEach((el, k) => el.classList.toggle("on", k === i));
+      preload((i + 1) % n);
+      preload((i + 2) % n);
+    };
+    const stop = () => {
+      clearTimeout(timer);
+      timer = null;
+    };
+    const schedule = () => {
+      stop();
+      if (paused || n < 2) return;
+      timer = setTimeout(() => go(1, false), HOLD);
+    };
+    const go = (dir, manual) => {
+      if (n < 2 || busy) return;
+      const next = (((i + dir) % n) + n) % n;
+      if (next === i) return;
+      busy = true;
+      const fromEl = $(`.stack-card[data-i="${i}"]`, heroEl);
+      if (fromEl && !reduced) {
+        fromEl.classList.remove("is-draw-next", "is-draw-prev");
+        void fromEl.offsetWidth;
+        fromEl.classList.add(dir > 0 ? "is-draw-next" : "is-draw-prev");
+      }
+      i = next;
+      place();
+      setTimeout(() => {
+        $$(".is-draw-next, .is-draw-prev", heroEl).forEach((el) => {
+          el.classList.remove("is-draw-next", "is-draw-prev");
+        });
+        busy = false;
+        if (manual) schedule();
+        else schedule();
+      }, ANIM);
+    };
+    $$("[data-dot]", heroEl).forEach((b) => {
       b.onclick = () => {
-        try {
-          const r = VCBG.toggleFollow(b.getAttribute("data-fol"));
-          toast(r.on ? "Đã theo dõi truyện." : "Đã bỏ theo dõi.");
-          b.textContent = r.on ? "♥ Đang theo dõi" : "♡ Theo dõi";
-        } catch (err) {
-          if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
-          else toast(err.message);
-        }
+        const t = Number(b.dataset.dot);
+        if (t === i) return;
+        const fwd = (t - i + n) % n;
+        const back = (i - t + n) % n;
+        go(fwd <= back ? fwd : -back, true);
       };
     });
-    let i = 0;
-    const heroEl = $("#hero");
-    const HERO_MS = 2400;
-    const restartBar = () => {
-      const bar = $("#heroProg");
-      if (!bar) return;
-      bar.style.animation = "none";
-      void bar.offsetWidth;
-      bar.style.animation = `heroFill ${HERO_MS}ms linear forwards`;
-    };
-    const show = (n) => {
-      if (!slides.length) return;
-      i = ((n % slides.length) + slides.length) % slides.length;
-      $$(".hero-slide", heroEl).forEach((el, k) => el.classList.toggle("is-on", k === i));
-      $$("[data-dot]", heroEl).forEach((el, k) => el.classList.toggle("on", k === i));
-      const c = $("#heroCount");
-      if (c) c.textContent = String(i + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0");
-      restartBar();
-    };
-    let timer = null;
-    const play = () => {
-      clearInterval(timer);
-      timer = setInterval(() => show(i + 1), HERO_MS);
-      restartBar();
-    };
-    $$("[data-dot]", heroEl).forEach(
-      (b) =>
-        (b.onclick = () => {
-          show(Number(b.dataset.dot));
-          play();
-        })
-    );
-    heroEl.addEventListener("mouseenter", () => clearInterval(timer));
-    heroEl.addEventListener("mouseleave", play);
+    $$("[data-dir]", heroEl).forEach((b) => {
+      b.onclick = () => go(Number(b.dataset.dir), true);
+    });
+    heroEl.addEventListener("mouseenter", () => {
+      if (window.matchMedia("(hover: hover)").matches) {
+        paused = true;
+        stop();
+      }
+    });
+    heroEl.addEventListener("mouseleave", () => {
+      paused = false;
+      schedule();
+    });
     let sx = 0;
-    heroEl.addEventListener("touchstart", (e) => (sx = e.changedTouches[0].clientX), { passive: true });
+    let sy = 0;
+    heroEl.addEventListener(
+      "touchstart",
+      (e) => {
+        sx = e.changedTouches[0].clientX;
+        sy = e.changedTouches[0].clientY;
+      },
+      { passive: true }
+    );
     heroEl.addEventListener(
       "touchend",
       (e) => {
         const dx = e.changedTouches[0].clientX - sx;
-        if (Math.abs(dx) > 40) show(i + (dx < 0 ? 1 : -1));
-        play();
+        const dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1, true);
       },
       { passive: true }
     );
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) clearInterval(timer);
-      else play();
+      if (document.hidden) {
+        paused = true;
+        stop();
+      } else {
+        paused = false;
+        schedule();
+      }
     });
-    play();
+    place();
+    schedule();
   }
   function section(title, list) {
     if (!list || !list.length) return "";

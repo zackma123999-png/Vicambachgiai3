@@ -1,0 +1,1425 @@
+/* ViCamBachGiai3 — shared Supabase data layer. Same VCBG API as the static build. */
+(function (global) {
+  const SESSION_KEY = "vicambachgiai.session.v3";
+  const RATE_KEY = "vicambachgiai.rate.v1";
+  const GUEST_PROGRESS = "vicambachgiai.guest.progress";
+
+  const emptySettings = () => ({
+    name: "ViCamBachGiai",
+    tagline: "Thư viện Bách Hợp — đọc chậm, ở lại lâu.",
+    allow_comments: true,
+    allow_registration: true,
+    social: { youtube: "", tiktok: "", facebook: "", wattpad: "" },
+    featured_quote: null,
+    poll: { id: "poll_home", title: "Bạn muốn ViCam ưu tiên truyện nào?", story_ids: [] },
+  });
+
+  const cache = {
+    ready: false,
+    users: [],
+    profiles: [],
+    stories: [],
+    chapters: [],
+    genres: [],
+    tags: [],
+    story_genres: [],
+    story_tags: [],
+    favorites: [],
+    follows: [],
+    reading_progress: [],
+    reading_history: [],
+    comments: [],
+    comment_replies: [],
+    comment_likes: [],
+    chapter_likes: [],
+    ratings: [],
+    views: [],
+    notifications: [],
+    poll_votes: [],
+    inbox: [],
+    site_settings: emptySettings(),
+  };
+
+  let sb = null;
+  let sessionUser = null;
+  let persistQueue = Promise.resolve();
+
+  function cfg() {
+    return global.VCBG_CONFIG || {};
+  }
+
+  function now() {
+    return Date.now();
+  }
+
+  function uid(prefix) {
+    return prefix + "_" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36);
+  }
+
+  function slugify(s) {
+    return String(s || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/đ/g, "d")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 80);
+  }
+
+  function uniqueSlug(base, exceptId) {
+    let slug = base || "truyen";
+    let n = 2;
+    while (cache.stories.some((s) => s.slug === slug && s.id !== exceptId)) {
+      slug = base + "-" + n++;
+    }
+    return slug;
+  }
+
+  function storeGet(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (_) {
+      return null;
+    }
+  }
+  function storeSet(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (_) {}
+  }
+  function storeDel(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch (_) {}
+  }
+
+  function hitRate(key, limit, windowMs) {
+    let table = {};
+    try {
+      table = JSON.parse(sessionStorage.getItem(RATE_KEY) || "{}");
+    } catch {
+      table = {};
+    }
+    const t = now();
+    const arr = (table[key] || []).filter((x) => t - x < windowMs);
+    if (arr.length >= limit) return false;
+    arr.push(t);
+    table[key] = arr;
+    try {
+      sessionStorage.setItem(RATE_KEY, JSON.stringify(table));
+    } catch (_) {}
+    return true;
+  }
+
+  function throwHttp(err, fallback) {
+    const msg =
+      (err && (err.message || err.error_description || err.msg)) || fallback || "Không thực hiện được.";
+    const e = new Error(msg);
+    if (err && err.code) e.code = err.code;
+    throw e;
+  }
+
+  function persist(fn) {
+    persistQueue = persistQueue
+      .then(fn)
+      .catch((err) => {
+        console.error("[VCBG persist]", err);
+      });
+    return persistQueue;
+  }
+
+  function normalizeRole(role) {
+    return role === "admin" ? "admin" : "reader";
+  }
+
+  function profileOf(userId) {
+    return cache.profiles.find((p) => p.user_id === userId || p.id === userId) || null;
+  }
+
+  function currentUser() {
+    if (!sessionUser) return null;
+    const p = cache.profiles.find((x) => x.id === sessionUser.id);
+    if (!p || p.status !== "active") return null;
+    return {
+      id: p.id,
+      email: p.email,
+      role: normalizeRole(p.role),
+      status: p.status,
+      created_at: p.created_at,
+      profile: {
+        id: p.id,
+        user_id: p.id,
+        display_name: p.display_name,
+        avatar: p.avatar,
+        bio: p.bio,
+      },
+    };
+  }
+
+  function requireUser() {
+    const u = currentUser();
+    if (!u) {
+      const err = new Error("Cần đăng nhập để thực hiện thao tác này.");
+      err.code = "AUTH_REQUIRED";
+      throw err;
+    }
+    return u;
+  }
+
+  function requireAdmin() {
+    const u = requireUser();
+    if (u.role !== "admin") {
+      const err = new Error("Bạn không có quyền quản trị.");
+      err.code = "FORBIDDEN";
+      throw err;
+    }
+    return u;
+  }
+
+  function isAdmin() {
+    const u = currentUser();
+    return !!(u && u.role === "admin");
+  }
+
+  function storyStats(storyId) {
+    const chapters = cache.chapters.filter((c) => c.story_id === storyId && c.status === "published");
+    const likes = cache.chapter_likes.filter((l) => chapters.some((c) => c.id === l.chapter_id)).length;
+    const ratings = cache.ratings.filter((r) => r.story_id === storyId);
+    const avg = ratings.length === 0 ? 0 : ratings.reduce((a, r) => a + r.stars, 0) / ratings.length;
+    const views = cache.views.filter((v) => v.story_id === storyId).length;
+    const last = chapters.slice().sort((a, b) => b.number - a.number)[0];
+    return {
+      chapter_count: chapters.length,
+      likes,
+      rating_avg: Math.round(avg * 10) / 10,
+      rating_count: ratings.length,
+      views,
+      latest_chapter: last || null,
+    };
+  }
+
+  function hydrateStory(story) {
+    if (!story) return null;
+    const genres = cache.story_genres
+      .filter((x) => x.story_id === story.id)
+      .map((x) => cache.genres.find((g) => g.id === x.genre_id))
+      .filter(Boolean);
+    const tags = cache.story_tags
+      .filter((x) => x.story_id === story.id)
+      .map((x) => cache.tags.find((t) => t.id === x.tag_id))
+      .filter(Boolean);
+    return { ...story, genres, tags, stats: storyStats(story.id) };
+  }
+
+  async function loadTable(name, extra) {
+    let q = sb.from(name).select("*");
+    if (extra) q = extra(q);
+    const { data, error } = await q;
+    if (error) throwHttp(error, "Không tải được " + name);
+    return data || [];
+  }
+
+  async function refresh() {
+    const [
+      profiles,
+      genres,
+      tags,
+      stories,
+      story_genres,
+      story_tags,
+      chapters,
+      comments,
+      comment_replies,
+      comment_likes,
+      chapter_likes,
+      ratings,
+      views,
+      poll_votes,
+      settingsRows,
+    ] = await Promise.all([
+      loadTable("profiles"),
+      loadTable("genres"),
+      loadTable("tags"),
+      loadTable("stories"),
+      loadTable("story_genres"),
+      loadTable("story_tags"),
+      loadTable("chapters"),
+      loadTable("comments"),
+      loadTable("comment_replies"),
+      loadTable("comment_likes"),
+      loadTable("chapter_likes"),
+      loadTable("ratings"),
+      loadTable("views"),
+      loadTable("poll_votes"),
+      loadTable("site_settings"),
+    ]);
+
+    cache.profiles = (profiles || []).map((p) => ({
+      ...p,
+      user_id: p.id,
+    }));
+    cache.users = cache.profiles.map((p) => ({
+      id: p.id,
+      email: p.email,
+      role: p.role,
+      status: p.status,
+      created_at: p.created_at,
+    }));
+    cache.genres = genres;
+    cache.tags = tags;
+    cache.stories = stories;
+    cache.story_genres = story_genres;
+    cache.story_tags = story_tags;
+    cache.chapters = chapters;
+    cache.comments = (comments || []).map((c) => ({
+      ...c,
+      likes: (comment_likes || []).filter((l) => l.comment_id === c.id).map((l) => l.user_id),
+    }));
+    cache.comment_replies = comment_replies;
+    cache.comment_likes = comment_likes;
+    cache.chapter_likes = chapter_likes;
+    cache.ratings = ratings;
+    cache.views = views;
+    cache.poll_votes = poll_votes;
+
+    const row = (settingsRows && settingsRows[0]) || {};
+    cache.site_settings = Object.assign(emptySettings(), {
+      name: row.name,
+      tagline: row.tagline,
+      allow_comments: row.allow_comments,
+      allow_registration: row.allow_registration,
+      social: row.social || emptySettings().social,
+      featured_quote: row.featured_quote || null,
+      poll: row.poll || emptySettings().poll,
+      seeded: !!row.seeded,
+    });
+
+    if (sessionUser) {
+      const uid_ = sessionUser.id;
+      const [favorites, follows, reading_progress, reading_history, notifications, inbox] =
+        await Promise.all([
+          loadTable("favorites", (q) => q.eq("user_id", uid_)),
+          loadTable("follows", (q) => q.eq("user_id", uid_)),
+          loadTable("reading_progress", (q) => q.eq("user_id", uid_)),
+          loadTable("reading_history", (q) => q.eq("user_id", uid_).order("at", { ascending: false }).limit(80)),
+          loadTable("notifications", (q) => q.eq("user_id", uid_).order("at", { ascending: false }).limit(60)),
+          isAdmin() ? loadTable("inbox", (q) => q.order("at", { ascending: false }).limit(300)) : Promise.resolve([]),
+        ]);
+      cache.favorites = favorites;
+      cache.follows = follows;
+      cache.reading_progress = reading_progress;
+      cache.reading_history = reading_history;
+      cache.notifications = notifications;
+      cache.inbox = inbox || [];
+    } else {
+      cache.favorites = [];
+      cache.follows = [];
+      cache.reading_progress = [];
+      cache.reading_history = [];
+      cache.notifications = [];
+      cache.inbox = [];
+    }
+    cache.ready = true;
+  }
+
+  async function syncSession() {
+    const { data, error } = await sb.auth.getSession();
+    if (error) console.warn(error);
+    sessionUser = (data && data.session && data.session.user) || null;
+    if (sessionUser) storeSet(SESSION_KEY, JSON.stringify({ userId: sessionUser.id, at: now() }));
+    else storeDel(SESSION_KEY);
+  }
+
+  function client() {
+    if (sb) return sb;
+    const url = cfg().supabaseUrl;
+    const key = cfg().supabaseAnonKey;
+    if (!url || !key || !global.supabase) {
+      throw new Error("Thiếu cấu hình Supabase. Điền js/config.js rồi deploy lại.");
+    }
+    sb = global.supabase.createClient(url, key, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    });
+    return sb;
+  }
+
+  const api = {
+    currentUser,
+    isAdmin,
+
+    async init() {
+      client();
+      await syncSession();
+      try {
+        await sb.rpc("publish_due_chapters");
+      } catch (_) {}
+      await refresh();
+    },
+
+    settings() {
+      return cache.site_settings;
+    },
+
+    updateSettings(patch) {
+      requireAdmin();
+      Object.assign(cache.site_settings, patch);
+      const row = {
+        name: cache.site_settings.name,
+        tagline: cache.site_settings.tagline,
+        allow_comments: cache.site_settings.allow_comments,
+        allow_registration: cache.site_settings.allow_registration,
+        social: cache.site_settings.social,
+        featured_quote: cache.site_settings.featured_quote,
+        poll: cache.site_settings.poll,
+      };
+      persist(async () => {
+        const { error } = await sb.from("site_settings").update(row).eq("id", 1);
+        if (error) throw error;
+      });
+      return cache.site_settings;
+    },
+
+    listGenres() {
+      return cache.genres.slice();
+    },
+    listTags() {
+      return cache.tags.slice();
+    },
+
+    async register({ email, password, display_name }) {
+      if (!cache.site_settings.allow_registration) throw new Error("Hiện không mở đăng ký.");
+      email = String(email || "").trim().toLowerCase();
+      display_name = String(display_name || "").trim();
+      if (!email || !email.includes("@")) throw new Error("Email không hợp lệ.");
+      if (!password || password.length < 8) throw new Error("Mật khẩu cần ít nhất 8 ký tự.");
+      if (!display_name) throw new Error("Cần tên hiển thị.");
+      if (!hitRate("register:" + email, 5, 10 * 60 * 1000)) throw new Error("Thử lại sau ít phút.");
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { data: { display_name } },
+      });
+      if (error) throwHttp(error, "Không đăng ký được.");
+      sessionUser = (data && data.user) || (data && data.session && data.session.user) || null;
+      if (!sessionUser) throw new Error("Đăng ký xong nhưng cần xác nhận email trước khi vào thư viện.");
+      await sb.from("profiles").upsert({
+        id: sessionUser.id,
+        email,
+        display_name,
+        avatar: display_name.slice(0, 1).toUpperCase(),
+        bio: "",
+        role: "reader",
+        status: "active",
+        created_at: now(),
+      });
+      await refresh();
+      return currentUser();
+    },
+
+    async login({ email, password }) {
+      email = String(email || "").trim().toLowerCase();
+      if (!hitRate("login:" + email, 8, 10 * 60 * 1000)) throw new Error("Quá nhiều lần thử. Đợi vài phút.");
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throwHttp(error, "Email hoặc mật khẩu không đúng.");
+      sessionUser = data.user;
+      await refresh();
+      const u = currentUser();
+      if (!u) {
+        await sb.auth.signOut();
+        sessionUser = null;
+        throw new Error("Tài khoản đã bị khóa.");
+      }
+      return u;
+    },
+
+    logout() {
+      sessionUser = null;
+      storeDel(SESSION_KEY);
+      persist(async () => {
+        await sb.auth.signOut();
+      });
+    },
+
+    async requestReset(email) {
+      email = String(email || "").trim().toLowerCase();
+      if (!hitRate("reset:" + email, 3, 15 * 60 * 1000)) throw new Error("Đã gửi quá nhiều mã. Thử lại sau.");
+      const redirectTo = location.origin + location.pathname + "#/quen-mat-khau";
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) throwHttp(error, "Không gửi được email đặt lại mật khẩu.");
+      return {
+        ok: true,
+        message: "Nếu email tồn tại, hộp thư sẽ có liên kết đặt lại mật khẩu trong vài phút.",
+      };
+    },
+
+    async confirmReset({ password }) {
+      if (!password || password.length < 8) throw new Error("Mật khẩu mới cần ít nhất 8 ký tự.");
+      const { data, error } = await sb.auth.updateUser({ password });
+      if (error) throwHttp(error, "Không đổi được mật khẩu. Mở lại từ liên kết trong email.");
+      sessionUser = data.user;
+      await refresh();
+      return currentUser();
+    },
+
+    updateProfile(patch) {
+      const u = requireUser();
+      const p = cache.profiles.find((x) => x.id === u.id);
+      if (!p) throw new Error("Không tìm thấy hồ sơ.");
+      if (patch.display_name) p.display_name = String(patch.display_name).trim();
+      if (patch.bio !== undefined) p.bio = String(patch.bio).slice(0, 400);
+      if (patch.avatar !== undefined) p.avatar = patch.avatar;
+      persist(async () => {
+        const { error } = await sb
+          .from("profiles")
+          .update({ display_name: p.display_name, bio: p.bio, avatar: p.avatar })
+          .eq("id", u.id);
+        if (error) throw error;
+      });
+      return currentUser();
+    },
+
+    listStories({ status, featured, upcoming, q, genre, tag, sort } = {}) {
+      let list = cache.stories.slice();
+      if (status) list = list.filter((s) => s.status === status);
+      if (featured) list = list.filter((s) => s.featured);
+      if (upcoming) list = list.filter((s) => s.upcoming);
+      if (q) {
+        const n = q.toLowerCase();
+        list = list.filter((s) => {
+          const genres = cache.story_genres
+            .filter((x) => x.story_id === s.id)
+            .map((x) => cache.genres.find((g) => g.id === x.genre_id)?.name || "");
+          const tags = cache.story_tags
+            .filter((x) => x.story_id === s.id)
+            .map((x) => cache.tags.find((t) => t.id === x.tag_id)?.name || "");
+          return (
+            s.title.toLowerCase().includes(n) ||
+            s.author.toLowerCase().includes(n) ||
+            genres.join(" ").toLowerCase().includes(n) ||
+            tags.join(" ").toLowerCase().includes(n)
+          );
+        });
+      }
+      if (genre) {
+        const g = cache.genres.find((x) => x.slug === genre || x.id === genre || x.name === genre);
+        if (g) list = list.filter((s) => cache.story_genres.some((x) => x.story_id === s.id && x.genre_id === g.id));
+      }
+      if (tag) {
+        const t = cache.tags.find((x) => x.slug === tag || x.id === tag || x.name === tag);
+        if (t) list = list.filter((s) => cache.story_tags.some((x) => x.story_id === s.id && x.tag_id === t.id));
+      }
+      const hydrated = list.map(hydrateStory);
+      if (sort === "updated") hydrated.sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0));
+      else if (sort === "views") hydrated.sort((a, b) => b.stats.views - a.stats.views);
+      else if (sort === "likes") hydrated.sort((a, b) => b.stats.likes - a.stats.likes);
+      else if (sort === "rating") hydrated.sort((a, b) => b.stats.rating_avg - a.stats.rating_avg);
+      else if (sort === "az") hydrated.sort((a, b) => a.title.localeCompare(b.title, "vi"));
+      return hydrated;
+    },
+
+    getStoryBySlug(slug) {
+      return hydrateStory(cache.stories.find((s) => s.slug === slug));
+    },
+    getStory(id) {
+      return hydrateStory(cache.stories.find((s) => s.id === id));
+    },
+    storyCommentCount(storyId) {
+      return cache.comments.filter((c) => c.story_id === storyId && c.status !== "hidden").length;
+    },
+    storiesByAuthor(author, exceptId) {
+      if (!author) return [];
+      const n = String(author).trim().toLowerCase();
+      return cache.stories
+        .filter((s) => s.id !== exceptId && String(s.author || "").trim().toLowerCase() === n)
+        .map(hydrateStory);
+    },
+    searchSuggest(q, limit) {
+      if (!q) return [];
+      return this.listStories({ q }).slice(0, limit || 6);
+    },
+
+    listChapters(storyId, { includeUnpublished, sort } = {}) {
+      let list = cache.chapters.filter((c) => c.story_id === storyId);
+      if (!includeUnpublished) list = list.filter((c) => c.status === "published");
+      list.sort((a, b) => (sort === "desc" ? b.number - a.number : a.number - b.number));
+      return list;
+    },
+    getChapter(storyId, number) {
+      return (
+        cache.chapters.find(
+          (c) => c.story_id === storyId && c.number === Number(number) && c.status === "published"
+        ) || null
+      );
+    },
+    getChapterById(id) {
+      return cache.chapters.find((c) => c.id === id) || null;
+    },
+
+    recordView(storyId, chapterId) {
+      const u = currentUser();
+      const key = (u ? u.id : "guest") + ":" + chapterId;
+      const recent = cache.views.find((v) => v.key === key && now() - v.at < 30 * 60 * 1000);
+      if (recent) return;
+      const rec = { id: uid("v"), key, story_id: storyId, chapter_id: chapterId, user_id: u ? u.id : null, at: now() };
+      cache.views.push(rec);
+      persist(async () => {
+        const { error } = await sb.from("views").insert(rec);
+        if (error) throw error;
+      });
+    },
+
+    saveProgress(storyId, chapterId, chapterNumber, scroll) {
+      const u = currentUser();
+      if (!u) {
+        const guest = JSON.parse(storeGet(GUEST_PROGRESS) || "{}");
+        guest[storyId] = { chapter_id: chapterId, chapter_number: chapterNumber, scroll: scroll || 0, at: now() };
+        storeSet(GUEST_PROGRESS, JSON.stringify(guest));
+        return;
+      }
+      let rec = cache.reading_progress.find((p) => p.user_id === u.id && p.story_id === storyId);
+      if (!rec) {
+        rec = { id: uid("rp"), user_id: u.id, story_id: storyId };
+        cache.reading_progress.push(rec);
+      }
+      rec.chapter_id = chapterId;
+      rec.chapter_number = chapterNumber;
+      rec.scroll = scroll || 0;
+      rec.at = now();
+      const hist = {
+        id: uid("rh"),
+        user_id: u.id,
+        story_id: storyId,
+        chapter_id: chapterId,
+        chapter_number: chapterNumber,
+        at: now(),
+      };
+      cache.reading_history.unshift(hist);
+      cache.reading_history = cache.reading_history.slice(0, 400);
+      persist(async () => {
+        const { error } = await sb.from("reading_progress").upsert({
+          id: rec.id,
+          user_id: rec.user_id,
+          story_id: rec.story_id,
+          chapter_id: rec.chapter_id,
+          chapter_number: rec.chapter_number,
+          scroll: rec.scroll,
+          at: rec.at,
+        });
+        if (error) throw error;
+        const { error: e2 } = await sb.from("reading_history").insert(hist);
+        if (e2) throw e2;
+      });
+    },
+
+    getProgress(storyId) {
+      const u = currentUser();
+      if (!u) {
+        const guest = JSON.parse(storeGet(GUEST_PROGRESS) || "{}");
+        return guest[storyId] || null;
+      }
+      return cache.reading_progress.find((p) => p.user_id === u.id && p.story_id === storyId) || null;
+    },
+
+    readChapterIds(storyId) {
+      const u = currentUser();
+      if (!u) return [];
+      return [...new Set(cache.reading_history.filter((h) => h.user_id === u.id && h.story_id === storyId).map((h) => h.chapter_id))];
+    },
+
+    toggleFavorite(storyId) {
+      const u = requireUser();
+      const i = cache.favorites.findIndex((f) => f.user_id === u.id && f.story_id === storyId);
+      if (i >= 0) {
+        const gone = cache.favorites.splice(i, 1)[0];
+        persist(async () => {
+          const { error } = await sb.from("favorites").delete().eq("id", gone.id);
+          if (error) throw error;
+        });
+        return { on: false };
+      }
+      const rec = { id: uid("fav"), user_id: u.id, story_id: storyId, at: now() };
+      cache.favorites.push(rec);
+      persist(async () => {
+        const { error } = await sb.from("favorites").insert(rec);
+        if (error) throw error;
+      });
+      return { on: true };
+    },
+
+    toggleFollow(storyId) {
+      const u = requireUser();
+      const i = cache.follows.findIndex((f) => f.user_id === u.id && f.story_id === storyId);
+      if (i >= 0) {
+        const gone = cache.follows.splice(i, 1)[0];
+        persist(async () => {
+          const { error } = await sb.from("follows").delete().eq("id", gone.id);
+          if (error) throw error;
+        });
+        return { on: false };
+      }
+      const rec = { id: uid("fol"), user_id: u.id, story_id: storyId, at: now() };
+      cache.follows.push(rec);
+      persist(async () => {
+        const { error } = await sb.from("follows").insert(rec);
+        if (error) throw error;
+      });
+      return { on: true };
+    },
+
+    isFavorite(storyId) {
+      const u = currentUser();
+      if (!u) return false;
+      return cache.favorites.some((f) => f.user_id === u.id && f.story_id === storyId);
+    },
+    isFollow(storyId) {
+      const u = currentUser();
+      if (!u) return false;
+      return cache.follows.some((f) => f.user_id === u.id && f.story_id === storyId);
+    },
+
+    library() {
+      const u = requireUser();
+      const favs = cache.favorites.filter((f) => f.user_id === u.id);
+      const fols = cache.follows.filter((f) => f.user_id === u.id);
+      const progress = cache.reading_progress.filter((p) => p.user_id === u.id);
+      const history = cache.reading_history.filter((h) => h.user_id === u.id).slice(0, 40);
+      return {
+        favorites: favs.map((f) => ({
+          ...f,
+          story: hydrateStory(cache.stories.find((s) => s.id === f.story_id)),
+          progress: progress.find((p) => p.story_id === f.story_id),
+        })),
+        follows: fols.map((f) => ({
+          ...f,
+          story: hydrateStory(cache.stories.find((s) => s.id === f.story_id)),
+          progress: progress.find((p) => p.story_id === f.story_id),
+        })),
+        history: history.map((h) => ({
+          ...h,
+          story: hydrateStory(cache.stories.find((s) => s.id === h.story_id)),
+        })),
+        comments: cache.comments
+          .filter((c) => c.user_id === u.id)
+          .slice(0, 40)
+          .map((c) => ({
+            ...c,
+            story: hydrateStory(cache.stories.find((s) => s.id === c.story_id)),
+          })),
+      };
+    },
+
+    rateStory(storyId, stars) {
+      const u = requireUser();
+      stars = Number(stars);
+      if (stars < 1 || stars > 5) throw new Error("Đánh giá 1–5 sao.");
+      if (!hitRate("rate:" + u.id + ":" + storyId, 6, 60 * 1000)) throw new Error("Bạn vừa đánh giá. Thử lại sau.");
+      let rec = cache.ratings.find((r) => r.user_id === u.id && r.story_id === storyId);
+      if (rec) rec.stars = stars;
+      else {
+        rec = { id: uid("rt"), user_id: u.id, story_id: storyId, stars, at: now() };
+        cache.ratings.push(rec);
+      }
+      persist(async () => {
+        const { error } = await sb.from("ratings").upsert({
+          id: rec.id,
+          user_id: rec.user_id,
+          story_id: rec.story_id,
+          stars: rec.stars,
+          at: now(),
+        });
+        if (error) throw error;
+      });
+      return storyStats(storyId);
+    },
+
+    myRating(storyId) {
+      const u = currentUser();
+      if (!u) return 0;
+      return cache.ratings.find((r) => r.user_id === u.id && r.story_id === storyId)?.stars || 0;
+    },
+
+    toggleChapterLike(chapterId) {
+      const u = requireUser();
+      if (!hitRate("like:" + u.id, 20, 60 * 1000)) throw new Error("Thao tác quá nhanh.");
+      const i = cache.chapter_likes.findIndex((l) => l.user_id === u.id && l.chapter_id === chapterId);
+      if (i >= 0) {
+        const gone = cache.chapter_likes.splice(i, 1)[0];
+        persist(async () => {
+          const { error } = await sb.from("chapter_likes").delete().eq("id", gone.id);
+          if (error) throw error;
+        });
+        return { on: false, count: this.chapterLikeCount(chapterId) };
+      }
+      const rec = { id: uid("lk"), user_id: u.id, chapter_id: chapterId, at: now() };
+      cache.chapter_likes.push(rec);
+      persist(async () => {
+        const { error } = await sb.from("chapter_likes").insert(rec);
+        if (error) throw error;
+      });
+      return { on: true, count: this.chapterLikeCount(chapterId) };
+    },
+
+    likedChapter(chapterId) {
+      const u = currentUser();
+      if (!u) return false;
+      return cache.chapter_likes.some((l) => l.user_id === u.id && l.chapter_id === chapterId);
+    },
+    chapterLikeCount(chapterId) {
+      return cache.chapter_likes.filter((l) => l.chapter_id === chapterId).length;
+    },
+
+    listComments(chapterId) {
+      const comments = cache.comments
+        .filter((c) => c.chapter_id === chapterId && c.status !== "hidden")
+        .sort((a, b) => b.created_at - a.created_at);
+      return comments.map((c) => ({
+        ...c,
+        user: profileOf(c.user_id),
+        liked: this.likedComment(c.id),
+        like_count: (c.likes || []).length,
+        replies: cache.comment_replies
+          .filter((r) => r.comment_id === c.id && r.status !== "hidden")
+          .sort((a, b) => a.created_at - b.created_at)
+          .map((r) => ({ ...r, user: profileOf(r.user_id) })),
+      }));
+    },
+
+    likedComment(commentId) {
+      const u = currentUser();
+      if (!u) return false;
+      const c = cache.comments.find((x) => x.id === commentId);
+      return !!(c && c.likes && c.likes.includes(u.id));
+    },
+
+    addComment({ chapterId, storyId, body, quote }) {
+      const u = requireUser();
+      if (!cache.site_settings.allow_comments) throw new Error("Bình luận đang tạm khóa.");
+      body = String(body || "").trim();
+      if (body.length < 2) throw new Error("Nội dung quá ngắn.");
+      if (body.length > 2000) throw new Error("Tối đa 2000 ký tự.");
+      if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
+      const rec = {
+        id: uid("c"),
+        user_id: u.id,
+        story_id: storyId,
+        chapter_id: chapterId,
+        body,
+        quote: quote ? String(quote).slice(0, 500) : "",
+        status: "visible",
+        likes: [],
+        created_at: now(),
+      };
+      cache.comments.unshift(rec);
+      persist(async () => {
+        const { likes, ...row } = rec;
+        const { error } = await sb.from("comments").insert(row);
+        if (error) throw error;
+      });
+      return rec;
+    },
+
+    replyComment(commentId, body) {
+      const u = requireUser();
+      body = String(body || "").trim();
+      if (body.length < 1) throw new Error("Nội dung trống.");
+      if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
+      const parent = cache.comments.find((c) => c.id === commentId);
+      if (!parent) throw new Error("Không tìm thấy bình luận.");
+      const rec = { id: uid("cr"), comment_id: commentId, user_id: u.id, body, status: "visible", created_at: now() };
+      cache.comment_replies.push(rec);
+      persist(async () => {
+        const { error } = await sb.from("comment_replies").insert(rec);
+        if (error) throw error;
+      });
+      return rec;
+    },
+
+    deleteOwnComment(commentId) {
+      const u = requireUser();
+      const i = cache.comments.findIndex((c) => c.id === commentId);
+      if (i < 0) throw new Error("Không tìm thấy.");
+      if (cache.comments[i].user_id !== u.id && u.role !== "admin") throw new Error("Không thể xóa bình luận của người khác.");
+      cache.comment_replies = cache.comment_replies.filter((r) => r.comment_id !== commentId);
+      cache.comments.splice(i, 1);
+      persist(async () => {
+        const { error } = await sb.from("comments").delete().eq("id", commentId);
+        if (error) throw error;
+      });
+    },
+
+    deleteOwnReply(replyId) {
+      const u = requireUser();
+      const i = cache.comment_replies.findIndex((r) => r.id === replyId);
+      if (i < 0) throw new Error("Không tìm thấy.");
+      if (cache.comment_replies[i].user_id !== u.id && u.role !== "admin") throw new Error("Không thể xóa.");
+      cache.comment_replies.splice(i, 1);
+      persist(async () => {
+        const { error } = await sb.from("comment_replies").delete().eq("id", replyId);
+        if (error) throw error;
+      });
+    },
+
+    likeComment(commentId) {
+      const u = requireUser();
+      const c = cache.comments.find((x) => x.id === commentId);
+      if (!c) throw new Error("Không tìm thấy.");
+      c.likes = c.likes || [];
+      const i = c.likes.indexOf(u.id);
+      if (i >= 0) {
+        c.likes.splice(i, 1);
+        persist(async () => {
+          const { error } = await sb.from("comment_likes").delete().eq("comment_id", commentId).eq("user_id", u.id);
+          if (error) throw error;
+        });
+      } else {
+        c.likes.push(u.id);
+        persist(async () => {
+          const { error } = await sb.from("comment_likes").insert({ comment_id: commentId, user_id: u.id });
+          if (error) throw error;
+        });
+      }
+      return { on: c.likes.includes(u.id), count: c.likes.length };
+    },
+
+    adminStats() {
+      requireAdmin();
+      return {
+        stories: cache.stories.length,
+        chapters: cache.chapters.length,
+        members: cache.users.length,
+        comments: cache.comments.length,
+        views: cache.views.length,
+        recent: cache.stories
+          .slice()
+          .sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0))
+          .slice(0, 8)
+          .map(hydrateStory),
+      };
+    },
+
+    adminListStories() {
+      requireAdmin();
+      return cache.stories
+        .slice()
+        .sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0))
+        .map(hydrateStory);
+    },
+
+    upsertStory(data) {
+      requireAdmin();
+      const t = now();
+      let story = data.id ? cache.stories.find((s) => s.id === data.id) : null;
+      if (!story) {
+        story = { id: uid("st"), created_at: t, views_seed: 0 };
+        cache.stories.push(story);
+      }
+      story.title = String(data.title || "").trim();
+      if (!story.title) throw new Error("Cần tên truyện.");
+      story.slug = uniqueSlug(data.slug ? slugify(data.slug) : slugify(story.title), story.id);
+      story.author = String(data.author || "").trim();
+      story.editor = String(data.editor || "").trim();
+      story.synopsis = String(data.synopsis || "");
+      story.status = data.status || "ongoing";
+      story.featured = !!data.featured;
+      story.upcoming = !!data.upcoming;
+      story.accent = data.accent || "#8a6a4a";
+      if (data.cover) story.cover = data.cover;
+      if (!story.cover) story.cover = "";
+      story.updated_at = t;
+      cache.story_genres = cache.story_genres.filter((x) => x.story_id !== story.id);
+      cache.story_tags = cache.story_tags.filter((x) => x.story_id !== story.id);
+      (data.genre_ids || []).forEach((gid) => cache.story_genres.push({ story_id: story.id, genre_id: gid }));
+      (data.tag_ids || []).forEach((tid) => cache.story_tags.push({ story_id: story.id, tag_id: tid }));
+      const row = {
+        id: story.id,
+        slug: story.slug,
+        title: story.title,
+        author: story.author,
+        editor: story.editor,
+        synopsis: story.synopsis,
+        status: story.status,
+        featured: story.featured,
+        upcoming: story.upcoming,
+        accent: story.accent,
+        cover: story.cover,
+        created_at: story.created_at,
+        updated_at: story.updated_at,
+      };
+      const gRows = (data.genre_ids || []).map((gid) => ({ story_id: story.id, genre_id: gid }));
+      const tRows = (data.tag_ids || []).map((tid) => ({ story_id: story.id, tag_id: tid }));
+      persist(async () => {
+        const { error } = await sb.from("stories").upsert(row);
+        if (error) throw error;
+        await sb.from("story_genres").delete().eq("story_id", story.id);
+        await sb.from("story_tags").delete().eq("story_id", story.id);
+        if (gRows.length) {
+          const { error: e2 } = await sb.from("story_genres").insert(gRows);
+          if (e2) throw e2;
+        }
+        if (tRows.length) {
+          const { error: e3 } = await sb.from("story_tags").insert(tRows);
+          if (e3) throw e3;
+        }
+      });
+      return hydrateStory(story);
+    },
+
+    deleteStory(id) {
+      requireAdmin();
+      cache.stories = cache.stories.filter((s) => s.id !== id);
+      const chIds = cache.chapters.filter((c) => c.story_id === id).map((c) => c.id);
+      cache.chapters = cache.chapters.filter((c) => c.story_id !== id);
+      cache.comments = cache.comments.filter((c) => c.story_id !== id);
+      cache.favorites = cache.favorites.filter((f) => f.story_id !== id);
+      cache.follows = cache.follows.filter((f) => f.story_id !== id);
+      cache.ratings = cache.ratings.filter((r) => r.story_id !== id);
+      cache.views = cache.views.filter((v) => v.story_id !== id);
+      cache.chapter_likes = cache.chapter_likes.filter((l) => !chIds.includes(l.chapter_id));
+      persist(async () => {
+        const { error } = await sb.from("stories").delete().eq("id", id);
+        if (error) throw error;
+      });
+    },
+
+    upsertChapter(data) {
+      requireAdmin();
+      const t = now();
+      let ch = data.id ? cache.chapters.find((c) => c.id === data.id) : null;
+      if (!ch) {
+        ch = { id: uid("ch"), created_at: t };
+        cache.chapters.push(ch);
+      }
+      ch.story_id = data.story_id;
+      ch.number = Number(data.number);
+      ch.title = String(data.title || "").trim();
+      ch.body = String(data.body || "");
+      const wasPublished = !!ch.published_at;
+      ch.status = data.status || "draft";
+      ch.publish_at = data.publish_at || null;
+      if (ch.status === "published" && !ch.published_at) ch.published_at = t;
+      ch.updated_at = t;
+      const story = cache.stories.find((s) => s.id === ch.story_id);
+      if (story) story.updated_at = t;
+      const row = {
+        id: ch.id,
+        story_id: ch.story_id,
+        number: ch.number,
+        title: ch.title,
+        body: ch.body,
+        status: ch.status,
+        publish_at: ch.publish_at,
+        published_at: ch.published_at || null,
+        created_at: ch.created_at,
+        updated_at: ch.updated_at,
+      };
+      persist(async () => {
+        const { error } = await sb.from("chapters").upsert(row);
+        if (error) throw error;
+        if (story) await sb.from("stories").update({ updated_at: t }).eq("id", story.id);
+      });
+      if (ch.status === "published" && !wasPublished && story) {
+        this.notifyFollowers(
+          story.id,
+          "Chương mới: " + story.title,
+          "Chương " + ch.number + (ch.title ? " — " + ch.title : ""),
+          "#/truyen/" + story.slug + "/chuong-" + ch.number
+        );
+      }
+      return ch;
+    },
+
+    deleteChapter(id) {
+      requireAdmin();
+      cache.chapters = cache.chapters.filter((c) => c.id !== id);
+      cache.comments = cache.comments.filter((c) => c.chapter_id !== id);
+      cache.chapter_likes = cache.chapter_likes.filter((l) => l.chapter_id !== id);
+      persist(async () => {
+        const { error } = await sb.from("chapters").delete().eq("id", id);
+        if (error) throw error;
+      });
+    },
+
+    nextChapterNumber(storyId) {
+      const nums = cache.chapters.filter((c) => c.story_id === storyId).map((c) => c.number);
+      return nums.length ? Math.max(...nums) + 1 : 1;
+    },
+
+    adminComments() {
+      requireAdmin();
+      return cache.comments.map((c) => ({
+        ...c,
+        user: profileOf(c.user_id),
+        story: cache.stories.find((s) => s.id === c.story_id),
+        chapter: cache.chapters.find((ch) => ch.id === c.chapter_id),
+        replies: cache.comment_replies.filter((r) => r.comment_id === c.id),
+      }));
+    },
+
+    moderateComment(id, status) {
+      requireAdmin();
+      const c = cache.comments.find((x) => x.id === id);
+      if (!c) throw new Error("Không tìm thấy.");
+      if (status === "deleted") {
+        cache.comment_replies = cache.comment_replies.filter((r) => r.comment_id !== id);
+        cache.comments = cache.comments.filter((x) => x.id !== id);
+        persist(async () => {
+          const { error } = await sb.from("comments").delete().eq("id", id);
+          if (error) throw error;
+        });
+      } else {
+        c.status = status;
+        persist(async () => {
+          const { error } = await sb.from("comments").update({ status }).eq("id", id);
+          if (error) throw error;
+        });
+      }
+    },
+
+    setCommentsAllowed(on) {
+      this.updateSettings({ allow_comments: !!on });
+    },
+
+    adminUsers() {
+      requireAdmin();
+      return cache.users.map((u) => ({
+        id: u.id,
+        email: u.email,
+        role: u.role,
+        status: u.status,
+        created_at: u.created_at,
+        profile: profileOf(u.id),
+      }));
+    },
+
+    setUserStatus(id, status) {
+      const admin = requireAdmin();
+      if (admin.id === id) throw new Error("Không thể khóa chính mình.");
+      const user = cache.users.find((u) => u.id === id);
+      const p = cache.profiles.find((x) => x.id === id);
+      if (!user || !p) throw new Error("Không tìm thấy.");
+      user.status = status;
+      p.status = status;
+      persist(async () => {
+        const { error } = await sb.from("profiles").update({ status }).eq("id", id);
+        if (error) throw error;
+      });
+    },
+
+    setUserRole(id, role) {
+      const admin = requireAdmin();
+      if (admin.id === id) throw new Error("Không đổi quyền của chính mình.");
+      const next = normalizeRole(role);
+      const user = cache.users.find((u) => u.id === id);
+      const p = cache.profiles.find((x) => x.id === id);
+      if (!user || !p) throw new Error("Không tìm thấy.");
+      user.role = next;
+      p.role = next;
+      persist(async () => {
+        const { error } = await sb.from("profiles").update({ role: next }).eq("id", id);
+        if (error) throw error;
+      });
+    },
+
+    ensureGenre(name) {
+      requireAdmin();
+      const slug = slugify(name);
+      let g = cache.genres.find((x) => x.slug === slug);
+      if (!g) {
+        g = { id: uid("g"), name, slug };
+        cache.genres.push(g);
+        persist(async () => {
+          const { error } = await sb.from("genres").insert(g);
+          if (error) throw error;
+        });
+      }
+      return g;
+    },
+
+    ensureTag(name) {
+      requireAdmin();
+      const slug = slugify(name);
+      let t = cache.tags.find((x) => x.slug === slug);
+      if (!t) {
+        t = { id: uid("tg"), name, slug };
+        cache.tags.push(t);
+        persist(async () => {
+          const { error } = await sb.from("tags").insert(t);
+          if (error) throw error;
+        });
+      }
+      return t;
+    },
+
+    renameGenre(id, name) {
+      requireAdmin();
+      const g = cache.genres.find((x) => x.id === id);
+      if (!g) throw new Error("Không tìm thấy phân loại.");
+      g.name = String(name || "").trim();
+      g.slug = slugify(g.name);
+      persist(async () => {
+        const { error } = await sb.from("genres").update({ name: g.name, slug: g.slug }).eq("id", id);
+        if (error) throw error;
+      });
+      return g;
+    },
+
+    deleteGenre(id) {
+      requireAdmin();
+      cache.genres = cache.genres.filter((g) => g.id !== id);
+      cache.story_genres = cache.story_genres.filter((x) => x.genre_id !== id);
+      persist(async () => {
+        const { error } = await sb.from("genres").delete().eq("id", id);
+        if (error) throw error;
+      });
+    },
+
+    renameTag(id, name) {
+      requireAdmin();
+      const t = cache.tags.find((x) => x.id === id);
+      if (!t) throw new Error("Không tìm thấy tag.");
+      t.name = String(name || "").trim();
+      t.slug = slugify(t.name);
+      persist(async () => {
+        const { error } = await sb.from("tags").update({ name: t.name, slug: t.slug }).eq("id", id);
+        if (error) throw error;
+      });
+      return t;
+    },
+
+    deleteTag(id) {
+      requireAdmin();
+      cache.tags = cache.tags.filter((t) => t.id !== id);
+      cache.story_tags = cache.story_tags.filter((x) => x.tag_id !== id);
+      persist(async () => {
+        const { error } = await sb.from("tags").delete().eq("id", id);
+        if (error) throw error;
+      });
+    },
+
+    notifyFollowers(storyId, title, body, href) {
+      persist(async () => {
+        const { data, error } = await sb.from("follows").select("user_id").eq("story_id", storyId);
+        if (error) throw error;
+        const t = now();
+        const rows = (data || []).map((f) => ({
+          id: uid("n"),
+          user_id: f.user_id,
+          title,
+          body,
+          href,
+          read: false,
+          at: t,
+        }));
+        if (!rows.length) return;
+        const { error: e2 } = await sb.from("notifications").insert(rows);
+        if (e2) throw e2;
+      });
+    },
+
+    myNotifications() {
+      const u = requireUser();
+      return cache.notifications.filter((n) => n.user_id === u.id).sort((a, b) => b.at - a.at).slice(0, 40);
+    },
+
+    unreadCount() {
+      const u = currentUser();
+      if (!u) return 0;
+      return cache.notifications.filter((n) => n.user_id === u.id && !n.read).length;
+    },
+
+    markNotificationsRead() {
+      const u = requireUser();
+      cache.notifications.forEach((n) => {
+        if (n.user_id === u.id) n.read = true;
+      });
+      persist(async () => {
+        const { error } = await sb.from("notifications").update({ read: true }).eq("user_id", u.id).eq("read", false);
+        if (error) throw error;
+      });
+    },
+
+    weeklyRanking(limit) {
+      const since = now() - 7 * 24 * 60 * 60 * 1000;
+      const counts = {};
+      cache.views.forEach((v) => {
+        if (v.at >= since) counts[v.story_id] = (counts[v.story_id] || 0) + 1;
+      });
+      const rows = cache.stories
+        .map((s) => ({ story: hydrateStory(s), week: counts[s.id] || 0 }))
+        .filter((r) => r.story)
+        .sort((a, b) => b.week - a.week || b.story.stats.views - a.story.stats.views)
+        .slice(0, limit || 3);
+      const max = Math.max(1, ...rows.map((r) => r.week));
+      return rows.map((r, i) => ({ rank: i + 1, story: r.story, week: r.week, pct: Math.round((r.week / max) * 100) }));
+    },
+
+    recentUpdates(limit) {
+      const published = cache.chapters
+        .filter((c) => c.status === "published")
+        .sort((a, b) => (b.published_at || b.updated_at || 0) - (a.published_at || a.updated_at || 0));
+      const seen = new Set();
+      const items = [];
+      published.forEach((c) => {
+        if (seen.has(c.story_id) || items.length >= (limit || 6)) return;
+        const story = hydrateStory(cache.stories.find((s) => s.id === c.story_id));
+        if (!story) return;
+        seen.add(c.story_id);
+        const kind = story.status === "completed" ? "done" : "new";
+        items.push({
+          kind,
+          label: kind === "done" ? "Vừa hoàn thành" : "Chương mới",
+          story,
+          chapter: c,
+          at: c.published_at || c.updated_at,
+        });
+      });
+      return items;
+    },
+
+    recentComments(limit) {
+      return cache.comments
+        .filter((c) => c.status !== "hidden")
+        .sort((a, b) => b.created_at - a.created_at)
+        .slice(0, limit || 6)
+        .map((c) => {
+          const story = cache.stories.find((s) => s.id === c.story_id);
+          const chapter = cache.chapters.find((ch) => ch.id === c.chapter_id);
+          const user = profileOf(c.user_id);
+          return {
+            ...c,
+            story,
+            chapter,
+            user,
+            href: story && chapter ? "#/truyen/" + story.slug + "/chuong-" + chapter.number : "#/",
+          };
+        });
+    },
+
+    addHomeComment(body) {
+      const latest = this.recentUpdates(1)[0];
+      if (!latest) throw new Error("Chưa có chương để gắn lời nhắn.");
+      return this.addComment({ chapterId: latest.chapter.id, storyId: latest.story.id, body });
+    },
+
+    moodCatalog() {
+      const wanted = [
+        { slug: "chua-lanh", name: "Chữa lành", icon: "✦" },
+        { slug: "day-dut", name: "Day dứt", icon: "◇" },
+        { slug: "ngot-ngao", name: "Ngọt ngào", icon: "♡" },
+        { slug: "lanh-lung", name: "Lạnh lùng", icon: "✻" },
+        { slug: "co-phong", name: "Cổ phong", icon: "☾" },
+        { slug: "truong-thanh", name: "Trưởng thành", icon: "◎" },
+      ];
+      return wanted.map((m) => {
+        const t = cache.tags.find((x) => x.slug === m.slug);
+        return { ...m, id: t ? t.id : null, exists: !!t };
+      });
+    },
+
+    featuredQuote() {
+      const q = cache.site_settings.featured_quote;
+      if (!q) return null;
+      const story = hydrateStory(cache.stories.find((s) => s.id === q.story_id));
+      const chapter = cache.chapters.find((c) => c.id === q.chapter_id);
+      if (!story || !chapter) return null;
+      return { text: q.text, story, chapter, href: "#/truyen/" + story.slug + "/chuong-" + chapter.number };
+    },
+
+    setFeaturedQuote({ text, story_id, chapter_id }) {
+      requireAdmin();
+      cache.site_settings.featured_quote = { text: String(text || "").trim(), story_id, chapter_id };
+      this.updateSettings({ featured_quote: cache.site_settings.featured_quote });
+      return this.featuredQuote();
+    },
+
+    pollState() {
+      const poll = cache.site_settings.poll || { id: "poll_home", story_ids: [], title: "" };
+      const u = currentUser();
+      const votes = cache.poll_votes.filter((v) => v.poll_id === poll.id);
+      const total = votes.length;
+      const mine = u ? votes.find((v) => v.user_id === u.id) : null;
+      const options = (poll.story_ids || [])
+        .map((id) => {
+          const story = hydrateStory(cache.stories.find((s) => s.id === id));
+          if (!story) return null;
+          const count = votes.filter((v) => v.story_id === id).length;
+          return { story, count, pct: total ? Math.round((count / total) * 100) : 0 };
+        })
+        .filter(Boolean);
+      return { poll, options, total, mine };
+    },
+
+    setPollStories(story_ids, title) {
+      requireAdmin();
+      const next = (story_ids || []).slice(0, 6);
+      const prev = (cache.site_settings.poll && cache.site_settings.poll.story_ids) || [];
+      const changed = JSON.stringify(prev) !== JSON.stringify(next);
+      cache.site_settings.poll = {
+        id: changed ? uid("poll") : (cache.site_settings.poll && cache.site_settings.poll.id) || uid("poll"),
+        title: title || "Bạn muốn ViCam ưu tiên truyện nào?",
+        story_ids: next,
+      };
+      if (changed) cache.poll_votes = cache.poll_votes.filter((v) => v.poll_id === cache.site_settings.poll.id);
+      this.updateSettings({ poll: cache.site_settings.poll });
+      return this.pollState();
+    },
+
+    votePoll(storyId) {
+      const u = requireUser();
+      const poll = cache.site_settings.poll;
+      if (!poll || !(poll.story_ids || []).includes(storyId)) throw new Error("Truyện không nằm trong đợt bình chọn.");
+      if (cache.poll_votes.some((v) => v.poll_id === poll.id && v.user_id === u.id))
+        throw new Error("Bạn đã bình chọn đợt này.");
+      if (!hitRate("poll:" + u.id, 3, 60 * 1000)) throw new Error("Thử lại sau.");
+      const rec = { id: uid("pv"), poll_id: poll.id, user_id: u.id, story_id: storyId, at: now() };
+      cache.poll_votes.push(rec);
+      persist(async () => {
+        const { error } = await sb.from("poll_votes").insert(rec);
+        if (error) throw error;
+      });
+      return this.pollState();
+    },
+
+    sendInbox({ type, body, name, email, story }) {
+      body = String(body || "").trim();
+      if (body.length < 4) throw new Error("Nội dung quá ngắn.");
+      const u = currentUser();
+      const rec = {
+        id: uid("in"),
+        type: type === "report" ? "report" : "message",
+        body,
+        name: String(name || (u && u.profile && u.profile.display_name) || "Khách").slice(0, 80),
+        email: String(email || (u && u.email) || "").slice(0, 120),
+        story: String(story || "").slice(0, 160),
+        user_id: u ? u.id : null,
+        read: false,
+        at: now(),
+      };
+      cache.inbox.unshift(rec);
+      cache.inbox = cache.inbox.slice(0, 300);
+      persist(async () => {
+        const { error } = await sb.from("inbox").insert(rec);
+        if (error) throw error;
+      });
+      return { ok: true };
+    },
+
+    adminInbox() {
+      requireAdmin();
+      return cache.inbox.slice();
+    },
+
+    markInboxRead(id) {
+      requireAdmin();
+      const rec = cache.inbox.find((x) => x.id === id);
+      if (rec) rec.read = true;
+      persist(async () => {
+        const { error } = await sb.from("inbox").update({ read: true }).eq("id", id);
+        if (error) throw error;
+      });
+    },
+  };
+
+  global.VCBG = api;
+})(window);

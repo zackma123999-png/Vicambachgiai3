@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ViCamBachGiai — Thư viện Bách Hợp</title>
+  <meta name="description" content="ViCamBachGiai — thư viện đọc truyện Bách Hợp. Đọc chậm, ở lại lâu.">
+  <meta property="og:title" content="ViCamBachGiai">
+  <meta property="og:description" content="Thư viện Bách Hợp — đọc chậm, ở lại lâu.">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="./">
+  <link rel="icon" href="brand/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Saira+ExtraCondensed:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="sr-only" href="#app">Bỏ qua điều hướng</a>
+  <div id="app">
+    <div class="empty">Đang mở thư viện…</div>
+  </div>
+  <div class="toast-wrap" id="toasts" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

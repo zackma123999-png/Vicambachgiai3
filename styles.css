@@ -852,6 +852,9 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   margin: 0 0 1.15em;
   padding-right: 1.4rem;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
 }
 .p-bubble {
   position: absolute;

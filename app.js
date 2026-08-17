@@ -11,6 +11,23 @@
       .replace(/"/g, "&" + "quot;");
   };
   const ALLOWED = new Set(["P", "BR", "STRONG", "B", "EM", "I", "U", "S", "STRIKE", "H2", "H3", "H4", "BLOCKQUOTE", "UL", "OL", "LI", "A", "IMG", "DIV", "SPAN", "HR"]);
+  function cleanStyle(value) {
+    const kept = [];
+    String(value || "")
+      .split(";")
+      .forEach((part) => {
+        const i = part.indexOf(":");
+        if (i < 0) return;
+        const prop = part.slice(0, i).trim().toLowerCase();
+        const val = part.slice(i + 1).trim();
+        if (!prop || !val) return;
+        if (prop === "text-align" && /^(left|center|right|justify)$/i.test(val)) kept.push("text-align: " + val.toLowerCase());
+        else if (/^margin(-(top|right|bottom|left))?$/.test(prop) && /^-?[0-9.]+(px|em|rem|%)$/i.test(val)) kept.push(prop + ": " + val);
+        else if (prop === "line-height" && /^[0-9.]+(px|em|rem|%)?$/i.test(val)) kept.push("line-height: " + val);
+        else if (prop === "text-indent" && /^-?[0-9.]+(px|em|rem|%)$/i.test(val)) kept.push("text-indent: " + val);
+      });
+    return kept.join("; ");
+  }
   function sanitize(html) {
     const box = document.createElement("div");
     box.innerHTML = String(html || "");
@@ -22,11 +39,23 @@
             return;
           }
           [...c.attributes].forEach((a) => {
+            if (a.name === "align" && /^(left|center|right|justify)$/i.test(a.value)) {
+              const cur = c.getAttribute("style") || "";
+              if (!/text-align\s*:/i.test(cur)) c.style.textAlign = a.value.toLowerCase();
+              c.removeAttribute("align");
+              return;
+            }
+            if (a.name === "style") {
+              const cleaned = cleanStyle(a.value);
+              if (cleaned) c.setAttribute("style", cleaned);
+              else c.removeAttribute("style");
+              return;
+            }
             const ok =
               (c.tagName === "A" && a.name === "href" && /^(https?:|mailto:|#)/i.test(a.value)) ||
               (c.tagName === "IMG" && a.name === "src" && /^(data:image\/|covers\/|brand\/|https?:)/i.test(a.value)) ||
-              (a.name === "alt" || a.name === "class") ||
-              (a.name === "style" && /^(text-align:\s*(left|center|right|justify)\s*;?|margin-bottom:\s*[0-9.]+em\s*;?)$/i.test(a.value.trim()));
+              a.name === "alt" ||
+              a.name === "class";
             if (!ok) c.removeAttribute(a.name);
           });
           walk(c);
@@ -2150,8 +2179,14 @@
     bindChrome();
     const ed = $("#ed");
     let edGap = 0.9;
+    if (ch && ch.body) {
+      ed.innerHTML = sanitize(ch.body);
+      const firstP = ed.querySelector("p");
+      const mb = firstP && firstP.style && firstP.style.marginBottom;
+      const n = mb ? parseFloat(mb) : NaN;
+      if (Number.isFinite(n)) edGap = Math.min(2.2, Math.max(0.4, n));
+    }
     ed.style.setProperty("--ed-gap", edGap + "em");
-    if (ch && ch.body) ed.innerHTML = sanitize(ch.body);
     const key = "vicambachgiai.autosave." + (id || "new");
     try {
       const saved = localStorage.getItem(key);

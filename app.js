@@ -258,7 +258,13 @@
   function latestLine(s) {
     const ch = s.stats && s.stats.latest_chapter;
     if (!ch) return "Chưa có chương";
-    return ch.title || ("Chương " + ch.number);
+    return (ch.number ? ch.number + ". " : "") + (ch.title || ("Chương " + ch.number));
+  }
+  function fmtCount(n) {
+    n = Number(n) || 0;
+    if (n >= 10000) return (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, "") + "K";
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(n);
   }
   function storyCard(s, compact) {
     if (compact) {
@@ -267,19 +273,37 @@
         <div class="meta"><h3>${esc(s.title)}</h3><div class="by">${esc(s.author)}</div></div>
       </a>`;
     }
-    const first = s.stats && s.stats.latest_chapter ? 1 : 1;
-    return `<article class="wide-card" data-slug="${esc(s.slug)}">
+    const first = VCBG.listChapters(s.id, { sort: "asc" })[0];
+    const latest = s.stats && s.stats.latest_chapter;
+    const readN = first ? first.number : 1;
+    const latestHref = latest ? `#/truyen/${esc(s.slug)}/chuong-${latest.number}` : `#/truyen/${esc(s.slug)}`;
+    const saved = VCBG.isFavorite(s.id);
+    const rating = s.stats.rating_avg || 0;
+    return `<article class="wide-card" data-slug="${esc(s.slug)}" style="--tone:${esc(s.accent || "#7c5cbf")}">
       <a class="wide-cover" href="#/truyen/${esc(s.slug)}">${coverImg(s.cover, "Bìa " + s.title)}</a>
       <div class="wide-body">
+        <p class="wide-badge">${esc(s.upcoming ? "Sắp ra mắt" : statusLabel(s.status))}</p>
         <a href="#/truyen/${esc(s.slug)}"><h3>${esc(s.title)}</h3></a>
-        <p class="by">Tác giả: ${esc(s.author)}</p>
-        <div class="pill-row">${storyPills(s)}</div>
-        <div class="wide-stats"><span class="stat-eye" aria-hidden="true"></span><span>${s.stats.views}</span><span>${s.stats.chapter_count}</span></div>
-        <div class="wide-latest"><span>Chương mới</span><b>${esc(latestLine(s))}</b></div>
-        <div class="wide-actions">
-          <a class="btn btn-cyan" href="#/truyen/${esc(s.slug)}/chuong-${first}">Đọc truyện</a>
-          <button type="button" class="btn btn-ghost" data-fav="${esc(s.id)}">${VCBG.isFavorite(s.id) ? "♥ Đã lưu" : "♡ Lưu trữ"}</button>
+        <p class="by">Tác giả: ${esc(s.author || "—")}</p>
+        <div class="pill-row">${[]
+          .concat((s.genres || []).map((g) => g.name))
+          .concat((s.tags || []).map((t) => t.name))
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((t) => `<span class="pill">${esc(t)}</span>`)
+          .join("")}</div>
+        <div class="wide-stats">
+          <span><i class="stat-eye" aria-hidden="true"></i>${fmtCount(s.stats.views)}</span>
+          <span>★ ${rating}</span>
+          <span>▤ ${s.stats.chapter_count} chương</span>
         </div>
+        <a class="wide-latest" href="${latestHref}">
+          <i></i><span>Chương mới</span><b>${esc(latestLine(s))}</b><em>›</em>
+        </a>
+      </div>
+      <div class="wide-actions">
+        <a class="btn btn-cyan" href="#/truyen/${esc(s.slug)}/chuong-${readN}">Đọc truyện</a>
+        <button type="button" class="btn btn-ghost wide-save" data-fav="${esc(s.id)}" aria-pressed="${saved}">${saved ? "♥ Đã lưu" : "♡ Lưu trữ"}</button>
       </div>
     </article>`;
   }

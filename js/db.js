@@ -760,11 +760,13 @@
     },
     async ensureChapterBody(ch) {
       if (!ch || (ch.body != null && ch.body !== "")) return ch;
-      const { data, error } = await sb.from("chapters").select("id,content,body").eq("id", ch.id).maybeSingle();
-      if (error) throwHttp(error, "Không tải được chương.");
-      if (data) {
-        ch.body = data.body != null ? data.body : data.content || "";
+      let { data, error } = await sb.from("chapters").select("id,content").eq("id", ch.id).maybeSingle();
+      if (error && /42703|column .* does not exist/i.test(String(error.message || ""))) {
+        ({ data, error } = await sb.from("chapters").select("id,body").eq("id", ch.id).maybeSingle());
       }
+      if (error) throwHttp(error, "Không tải được chương.");
+      if (!data) throw new Error("Không tìm thấy nội dung chương.");
+      ch.body = data.content != null && data.content !== "" ? data.content : data.body || "";
       return ch;
     },
 

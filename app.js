@@ -681,7 +681,6 @@
       <div class="rail-foot">
         <div class="rail-track"><span data-bar></span></div>
         <span data-num></span>
-        <em>Vuốt để xem thêm</em>
       </div>
     </section>`;
   }

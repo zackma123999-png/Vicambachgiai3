@@ -446,6 +446,7 @@ a { color: inherit; text-decoration: none; }
 }
 .rail::-webkit-scrollbar { height: 0; }
 .rail-foot { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.04em; }
+.rail-foot [data-num] { margin-left: auto; font-variant-numeric: tabular-nums; }
 .rail-track {
   flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden;
 }
@@ -507,8 +508,8 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   flex-direction: column;
   gap: 0.28rem;
-  padding-right: 1.55rem;
 }
+.wide-title { padding-right: 1.55rem; }
 .wide-title {
   display: flex;
   align-items: flex-start;
@@ -544,31 +545,32 @@ a { color: inherit; text-decoration: none; }
 }
 .pill-row { display: flex; flex-wrap: wrap; gap: 0.28rem; }
 .pill {
-  font-size: 0.64rem; padding: 0.14rem 0.46rem; border-radius: 999px;
-  background: color-mix(in srgb, var(--tone) 34%, rgba(18,16,36,0.7));
-  color: #ddd6fe;
-  max-width: 7.5rem;
+  font-size: 0.64rem; padding: 0.16rem 0.52rem; border-radius: 999px;
+  background: linear-gradient(180deg, rgba(149, 137, 230, 0.42), rgba(129, 116, 216, 0.32));
+  border: 1px solid var(--accent-line);
+  color: #EDE9FE;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .pill-more {
-  background: transparent;
-  border: 1px solid rgba(168,154,230,0.28);
-  color: var(--muted);
+  background: rgba(129, 116, 216, 0.18);
+  border: 1px solid var(--accent-line);
+  color: #EDE9FE;
   max-width: none;
 }
 .wide-stats {
-  display: flex; align-items: center; flex-wrap: nowrap;
-  gap: 0;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 0.28rem 0;
   color: var(--muted); font-size: 0.72rem;
-  overflow: hidden;
+  overflow: visible;
 }
 .wide-stats span {
   display: inline-flex; align-items: center; gap: 0.22rem;
   white-space: nowrap;
-  padding: 0 0.5rem 0 0;
-  margin-right: 0.5rem;
+  padding: 0 0.42rem 0 0;
+  margin-right: 0.42rem;
   border-right: 1px solid rgba(168,154,230,0.18);
 }
 .wide-stats span:last-child { border-right: 0; margin-right: 0; padding-right: 0; }

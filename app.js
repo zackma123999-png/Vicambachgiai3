@@ -273,37 +273,34 @@
         <div class="meta"><h3>${esc(s.title)}</h3><div class="by">${esc(s.author)}</div></div>
       </a>`;
     }
-    const first = VCBG.listChapters(s.id, { sort: "asc" })[0];
     const latest = s.stats && s.stats.latest_chapter;
-    const readN = first ? first.number : 1;
     const latestHref = latest ? `#/truyen/${esc(s.slug)}/chuong-${latest.number}` : `#/truyen/${esc(s.slug)}`;
     const saved = VCBG.isFavorite(s.id);
     const rating = s.stats.rating_avg || 0;
+    const kinds = []
+      .concat([s.upcoming ? "Sắp ra mắt" : statusLabel(s.status)])
+      .concat((s.genres || []).map((g) => g.name))
+      .concat((s.tags || []).map((t) => t.name))
+      .filter(Boolean);
+    const shown = kinds.slice(0, 2);
+    const extra = kinds.length - shown.length;
     return `<article class="wide-card" data-slug="${esc(s.slug)}" style="--tone:${esc(s.accent || "#7c5cbf")}">
+      <button type="button" class="wide-heart" data-fav="${esc(s.id)}" aria-label="${saved ? "Bỏ lưu" : "Lưu trữ"}" aria-pressed="${saved}">${saved ? "♥" : "♡"}</button>
       <a class="wide-cover" href="#/truyen/${esc(s.slug)}">${coverImg(s.cover, "Bìa " + s.title)}</a>
       <div class="wide-body">
-        <p class="wide-badge">${esc(s.upcoming ? "Sắp ra mắt" : statusLabel(s.status))}</p>
-        <a href="#/truyen/${esc(s.slug)}"><h3>${esc(s.title)}</h3></a>
+        <a class="wide-title" href="#/truyen/${esc(s.slug)}"><h3>${esc(s.title)}</h3><em>›</em></a>
         <p class="by">Tác giả: ${esc(s.author || "—")}</p>
-        <div class="pill-row">${[]
-          .concat((s.genres || []).map((g) => g.name))
-          .concat((s.tags || []).map((t) => t.name))
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((t) => `<span class="pill">${esc(t)}</span>`)
-          .join("")}</div>
+        <div class="pill-row">${shown.map((t) => `<span class="pill">${esc(t)}</span>`).join("")}${extra > 0 ? `<span class="pill pill-more">+${extra}</span>` : ""}</div>
         <div class="wide-stats">
           <span><i class="stat-eye" aria-hidden="true"></i>${fmtCount(s.stats.views)}</span>
           <span>★ ${rating}</span>
           <span>▤ ${s.stats.chapter_count} chương</span>
         </div>
         <a class="wide-latest" href="${latestHref}">
-          <i></i><span>Chương mới</span><b>${esc(latestLine(s))}</b><em>›</em>
+          <span><i></i> Chương mới</span>
+          <b>${esc(latestLine(s))}</b>
+          <em>›</em>
         </a>
-      </div>
-      <div class="wide-actions">
-        <a class="btn btn-cyan" href="#/truyen/${esc(s.slug)}/chuong-${readN}">Đọc truyện</a>
-        <button type="button" class="btn btn-ghost wide-save" data-fav="${esc(s.id)}" aria-pressed="${saved}">${saved ? "♥ Đã lưu" : "♡ Lưu trữ"}</button>
       </div>
     </article>`;
   }
@@ -640,7 +637,13 @@
         try {
           const r = VCBG.toggleFavorite(b.getAttribute("data-fav"));
           toast(r.on ? "Đã thêm vào tủ truyện." : "Đã xóa khỏi tủ truyện.");
-          b.textContent = r.on ? "♥ Đã lưu" : "♡ Lưu trữ";
+          if (b.classList.contains("wide-heart")) {
+            b.textContent = r.on ? "♥" : "♡";
+            b.setAttribute("aria-pressed", r.on);
+            b.setAttribute("aria-label", r.on ? "Bỏ lưu" : "Lưu trữ");
+          } else {
+            b.textContent = r.on ? "♥ Đã lưu" : "♡ Lưu trữ";
+          }
         } catch (err) {
           if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
           else toast(err.message);

@@ -361,6 +361,7 @@
     cache.stories = (stories || []).map((s) => ({
       ...s,
       cover: s.cover || s.cover_url || "",
+      description: s.description || "",
       created_at: toMs(s.created_at),
       updated_at: toMs(s.updated_at),
     }));
@@ -1170,6 +1171,7 @@
       story.author = String(data.author || "").trim();
       story.editor = String(data.editor || "").trim();
       story.synopsis = String(data.synopsis || "");
+      if (data.description != null) story.description = String(data.description || "");
       let status = data.status || "ongoing";
       let upcoming = !!data.upcoming;
       if (status === "upcoming") {
@@ -1195,7 +1197,7 @@
         author: story.author,
         editor: story.editor,
         synopsis: story.synopsis,
-        description: story.synopsis,
+        description: story.description || "",
         status: story.status,
         featured: story.featured,
         upcoming: story.upcoming,

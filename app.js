@@ -103,6 +103,37 @@
   function statusLabel(s) {
     return { ongoing: "Đang lên sóng", completed: "Đã hoàn thành", upcoming: "Sắp ra mắt" }[s] || s;
   }
+  function storyInfoText(s) {
+    const raw = String((s && s.description) || "").trim();
+    const syn = String((s && s.synopsis) || "").trim();
+    if (raw && raw !== syn) return raw;
+    const kinds = []
+      .concat((s.genres || []).map((g) => g.name))
+      .concat((s.tags || []).map((t) => t.name))
+      .filter(Boolean);
+    return [
+      "Tên truyện: " + (s.title || "—"),
+      "Tác giả: " + (s.author || "—"),
+      kinds.length ? "Thể loại: " + kinds.join(", ") : "",
+      "Tình trạng: " + statusLabel(s.status),
+      s.editor ? "Edit: " + s.editor : "",
+      s.created_at ? "Ngày bắt đầu: " + fmtDate(s.created_at) : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+  function formatStoryInfo(text) {
+    return String(text || "")
+      .split(/\r?\n/)
+      .map((line) => line.trimEnd())
+      .filter((line, i, arr) => line || (i && arr[i - 1]))
+      .map((line) => {
+        const m = line.match(/^([^:]{1,40}):\s*(.*)$/);
+        if (m) return `<p><strong>${esc(m[1])}:</strong> ${esc(m[2] || "—")}</p>`;
+        return line ? `<p>${esc(line)}</p>` : "<p><br></p>";
+      })
+      .join("");
+  }
   function setMeta(title, desc) {
     document.title = title;
     let m = document.querySelector('meta[name="description"]');
@@ -914,10 +945,16 @@
         return `<a class="chip" href="#/kham-pha?${kind}=${esc(t.slug)}">${esc(t.name)}</a>`;
       })
       .join("") + (tagExtra > 0 ? `<span class="chip chip-more">+${tagExtra}</span>` : "");
-    const introHtml = `<article class="intro-sheet">
-        <p class="intro-kicker">Tóm tắt</p>
+    const infoText = storyInfoText(s);
+    const introHtml = `<article class="intro-card">
+        <h2 class="intro-title">Giới thiệu</h2>
         <div class="intro-body is-clamp" id="introBody">${esc(s.synopsis).replace(/\n/g, "<br>")}</div>
-        <button type="button" class="intro-more" id="btnMore" hidden>Đọc tiếp tóm tắt</button>
+        <button type="button" class="intro-more" id="btnMore" hidden>Đọc tiếp tóm tắt →</button>
+      </article>
+      <article class="info-card">
+        <h2 class="info-title">Thông tin truyện</h2>
+        <div class="info-body" id="infoBody">${formatStoryInfo(infoText)}</div>
+        <button type="button" class="info-more" id="btnInfoMore" hidden>Xem chi tiết đầy đủ</button>
       </article>
       ${sameAuthor.length ? `<section class="same-author">
         <div class="same-head">
@@ -952,22 +989,24 @@
           <div class="story-hero">
             <div class="story-cover">${coverImg(s.cover, "Bìa " + s.title, true)}</div>
             <div class="story-info">
-              <div class="badge">${esc(statusLabel(s.status))}</div>
-              <h1>${esc(s.title)}</h1>
-              <p class="by">Tác giả: ${esc(s.author)}</p>
-              <div class="tags">${tagsLine || "—"}</div>
-              <div class="story-metrics">
-                <span class="metric-eye"><i class="stat-eye" aria-hidden="true"></i>${s.stats.views}</span>
-                <span>${s.stats.rating_avg || 0}★</span>
-                <span>${s.stats.chapter_count} chương</span>
-                <button type="button" class="heart-inline" id="btnHeart" aria-label="Thả tim">${fav ? "♥" : "♡"}</button>
+              <div class="story-copy">
+                <div class="badge">${esc(s.upcoming ? "Sắp ra mắt" : statusLabel(s.status))}</div>
+                <h1>${esc(s.title)}</h1>
+                <p class="by">Tác giả: <span>${esc(s.author || "—")}</span></p>
+                <div class="tags">${tagsLine}</div>
+              </div>
+              <div class="story-metrics" role="list">
+                <div class="metric" role="listitem"><span class="metric-ico" aria-hidden="true">👁</span><b>${s.stats.views || 0}</b><small>Lượt xem</small></div>
+                <div class="metric" role="listitem"><span class="metric-ico" aria-hidden="true">★</span><b>${s.stats.rating_avg || 0}</b><small>Đánh giá</small></div>
+                <div class="metric" role="listitem"><span class="metric-ico" aria-hidden="true">▤</span><b>${s.stats.chapter_count || 0}</b><small>Chương</small></div>
+                <div class="metric" role="listitem"><span class="metric-ico heart" aria-hidden="true">♡</span><b>${s.stats.likes || 0}</b><small>Yêu thích</small></div>
+              </div>
+              <div class="story-acts">
+                ${readHref ? `<a class="btn btn-cyan" href="${readHref}">${readLabel}</a>` : `<span class="btn" disabled>Chưa có chương</span>`}
+                <button class="btn btn-ghost" id="btnFav">${fav ? "Đã lưu" : "Lưu trữ"}</button>
+                <button class="btn btn-ghost" id="btnFol">${fol ? "Đang theo" : "Theo dõi"}</button>
               </div>
             </div>
-          </div>
-          <div class="story-acts">
-            ${readHref ? `<a class="btn btn-cyan" href="${readHref}">${readLabel}</a>` : `<span class="btn" disabled>Chưa có chương</span>`}
-            <button class="btn btn-ghost" id="btnFav">${fav ? "Đã lưu" : "Lưu trữ"}</button>
-            <button class="btn btn-ghost" id="btnFol">${fol ? "Đang theo" : "Theo dõi"}</button>
           </div>
         </section>
         <nav class="story-tabs" aria-label="Phần truyện">
@@ -983,20 +1022,6 @@
       </div>` +
       footer();
     bindChrome();
-    const coverEl = $(".story-cover");
-    const infoEl = $(".story-info");
-    const lockInfo = () => {
-      if (!coverEl || !infoEl) return;
-      infoEl.style.minHeight = "";
-      infoEl.style.maxHeight = "";
-    };
-    lockInfo();
-    const coverImgEl = coverEl && coverEl.querySelector("img");
-    if (coverImgEl) {
-      if (coverImgEl.complete) lockInfo();
-      else coverImgEl.addEventListener("load", lockInfo, { once: true });
-    }
-    window.addEventListener("resize", lockInfo, { passive: true });
     const more = $("#btnMore");
     const introBody = $("#introBody");
     if (more && introBody) {
@@ -1007,8 +1032,22 @@
       requestAnimationFrame(syncMore);
       more.onclick = () => {
         const on = introBody.classList.toggle("is-clamp");
-        more.textContent = on ? "Đọc tiếp tóm tắt" : "Thu gọn";
+        more.textContent = on ? "Đọc tiếp tóm tắt →" : "Thu gọn ↑";
         more.hidden = false;
+      };
+    }
+    const infoMore = $("#btnInfoMore");
+    const infoBody = $("#infoBody");
+    if (infoMore && infoBody) {
+      const syncInfo = () => {
+        const overflow = infoBody.scrollHeight > infoBody.clientHeight + 4;
+        infoMore.hidden = !overflow && infoBody.classList.contains("is-clamp");
+      };
+      requestAnimationFrame(syncInfo);
+      infoMore.onclick = () => {
+        const on = infoBody.classList.toggle("is-clamp");
+        infoMore.textContent = on ? "Xem chi tiết đầy đủ" : "Thu gọn";
+        infoMore.hidden = false;
       };
     }
     const toggleFav = () => {
@@ -1016,7 +1055,6 @@
         const r = VCBG.toggleFavorite(s.id);
         toast(r.on ? "Đã thêm vào tủ truyện." : "Đã xóa khỏi tủ truyện.");
         if ($("#btnFav")) $("#btnFav").textContent = r.on ? "Đã lưu" : "Lưu trữ";
-        if ($("#btnHeart")) $("#btnHeart").textContent = r.on ? "♥" : "♡";
         if ($("#btnFavDock")) $("#btnFavDock").textContent = r.on ? "Đã lưu" : "Lưu trữ";
       } catch (e) {
         if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
@@ -1025,7 +1063,6 @@
     };
     if ($("#btnFav")) $("#btnFav").onclick = toggleFav;
     if ($("#btnFavDock")) $("#btnFavDock").onclick = toggleFav;
-    if ($("#btnHeart")) $("#btnHeart").onclick = toggleFav;
     if ($("#btnFol"))
       $("#btnFol").onclick = () => {
         try {
@@ -2023,7 +2060,7 @@
       };
   }
   function adminStoryForm(id) {
-    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", status: "ongoing", featured: false, upcoming: false, accent: "#8a6a4a", cover: "", genres: [], tags: [] };
+    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, accent: "#8a6a4a", cover: "", genres: [], tags: [] };
     const gids = (s.genres || []).map((g) => g.id);
     const tids = (s.tags || []).map((t) => t.id);
     app().innerHTML =
@@ -2035,7 +2072,11 @@
           <div class="field"><label>Slug</label><input name="slug" value="${esc(s.slug || "")}"></div>
           <div class="field"><label>Tác giả</label><input name="author" value="${esc(s.author || "")}"></div>
           <div class="field"><label>Editor / Dịch giả</label><input name="editor" value="${esc(s.editor || "")}"></div>
-          <div class="field"><label>Văn án</label><textarea name="synopsis">${esc(s.synopsis || "")}</textarea></div>
+          <div class="field"><label>Văn án / Giới thiệu</label><textarea name="synopsis" rows="8">${esc(s.synopsis || "")}</textarea></div>
+          <div class="field"><label>Thông tin truyện</label>
+            <textarea name="description" rows="12" placeholder="Dán cả khối thông tin vào đây, mỗi dòng một mục. Ví dụ:&#10;Tên truyện: …&#10;Tác giả: …&#10;Thể loại: …&#10;Nhân vật chính: …&#10;CP phụ: …">${esc((s.description && s.description !== s.synopsis ? s.description : "") || "")}</textarea>
+            <p class="editor-hint">Một ô duy nhất. Xuống dòng tự do, không cần thêm từng trường.</p>
+          </div>
           <div class="field"><label>Trạng thái</label>
             <select name="status">
               <option value="ongoing" ${s.status === "ongoing" ? "selected" : ""}>Đang lên sóng</option>
@@ -2091,6 +2132,7 @@
           author: fd.get("author"),
           editor: fd.get("editor"),
           synopsis: fd.get("synopsis"),
+          description: fd.get("description"),
           status: fd.get("status"),
           featured: e.target.featured.checked,
           upcoming: e.target.upcoming.checked || fd.get("status") === "upcoming",

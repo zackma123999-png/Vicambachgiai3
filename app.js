@@ -674,23 +674,27 @@
     const banner = slides;
     const stackCards = banner
       .map((s, idx) => {
-        const chips = ["Bách hợp"].concat((s.genres || []).slice(0, 2).map((g) => g.name));
+        const chips = []
+          .concat((s.genres || []).map((g) => g.name))
+          .concat((s.tags || []).map((t) => t.name))
+          .filter(Boolean)
+          .slice(0, 2);
         const first = VCBG.listChapters(s.id, { sort: "asc" })[0];
         const readHref = first ? `#/truyen/${esc(s.slug)}/chuong-${first.number}` : `#/truyen/${esc(s.slug)}`;
         const syn = String(s.synopsis || "").replace(/\s+/g, " ").trim();
+        const badge = s.upcoming ? "Sắp ra mắt" : statusLabel(s.status);
         return `<article class="stack-card${idx === 0 ? " is-active" : ""}" data-i="${idx}" data-d="${idx}" style="--tone:${esc(s.accent || "#7c5cbf")}">
-          <img class="stack-cover" src="${esc(s.cover)}" alt="" ${idx < 2 ? "" : "loading=\"lazy\""}>
+          <img class="stack-cover" src="${esc(s.cover)}" alt="${esc(s.title)}" ${idx < 3 ? "" : "loading=\"lazy\""}>
           <div class="stack-shade"></div>
           <div class="stack-body">
-            <p class="stack-chips">${chips.map((c) => `<span>${esc(c)}</span>`).join("")}</p>
+            <p class="stack-badge">${esc(badge)}</p>
             <h2 class="stack-title">${esc(s.title)}</h2>
-            <p class="stack-author"><span class="stack-ico" aria-hidden="true">☺</span>${esc(s.author)}</p>
+            <p class="stack-chips">${chips.map((c) => `<span>${esc(c)}</span>`).join("")}</p>
             <p class="stack-syn">${esc(syn)}</p>
             <div class="stack-actions">
               <a class="btn btn-cyan" href="${readHref}">Đọc ngay →</a>
               <a class="btn btn-ghost" href="#/truyen/${esc(s.slug)}">Chi tiết</a>
             </div>
-            <p class="stack-foot">${String(s.stats.chapter_count || 0).padStart(2, "0")} chương</p>
           </div>
         </article>`;
       })
@@ -732,7 +736,7 @@
     const heroEl = $("#hero");
     if (!heroEl || !n) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const HOLD = 2700;
+    const HOLD = 3000;
     let i = 0;
     let timer = null;
     let paused = false;
@@ -749,6 +753,8 @@
       im.src = s.cover;
     };
     const place = () => {
+      const tone = (deck[i] && deck[i].accent) || "#7c5cbf";
+      heroEl.style.setProperty("--hero-tone", tone);
       $$(".stack-card", heroEl).forEach((el, k) => {
         const d = rel(k);
         const abs = Math.abs(d);
@@ -756,11 +762,13 @@
         el.style.setProperty("--d", d);
         el.style.setProperty("--abs", abs);
         el.classList.toggle("is-active", d === 0);
-        el.style.zIndex = String(40 - abs);
+        el.classList.toggle("is-side", abs > 0 && abs <= 2);
+        el.style.zIndex = String(50 - abs);
         el.setAttribute("aria-hidden", d === 0 ? "false" : "true");
       });
       $$("[data-dot]", heroEl).forEach((el, k) => el.classList.toggle("on", k === i));
       preload((i + 1) % n);
+      preload((i + n - 1) % n);
       preload((i + 2) % n);
     };
     const stop = () => {
@@ -791,6 +799,15 @@
     });
     $$("[data-dir]", heroEl).forEach((b) => {
       b.onclick = () => go(Number(b.dataset.dir));
+    });
+    $$(".stack-card", heroEl).forEach((el, k) => {
+      el.onclick = (ev) => {
+        if (el.classList.contains("is-active")) return;
+        if (ev.target.closest("a,button")) return;
+        const fwd = (k - i + n) % n;
+        const back = (i - k + n) % n;
+        go(fwd <= back ? fwd : -back);
+      };
     });
     heroEl.addEventListener("mouseenter", () => {
       if (window.matchMedia("(hover: hover)").matches) {

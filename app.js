@@ -361,171 +361,242 @@
       </div>
     </footer>`;
   }
+  function fmtRel(ts) {
+    if (!ts) return "";
+    const d = Date.now() - Number(ts);
+    if (d < 60 * 1000) return "vừa xong";
+    if (d < 60 * 60 * 1000) return Math.floor(d / 60000) + " phút trước";
+    if (d < 24 * 60 * 60 * 1000) return Math.floor(d / 3600000) + " giờ trước";
+    if (d < 7 * 24 * 60 * 60 * 1000) return Math.floor(d / 86400000) + " ngày trước";
+    return fmtDate(ts);
+  }
+  function avatarHTML(user, cls) {
+    const name = (user && (user.display_name || user.email)) || "Ẩn danh";
+    const letter = String(name).trim().slice(0, 1).toUpperCase() || "?";
+    const src = user && user.avatar && String(user.avatar).length > 2 ? user.avatar : "";
+    if (src && /^(https?:|data:|covers\/|brand\/)/i.test(src)) {
+      return `<span class="${cls || "sig-ava"}"><img src="${esc(src)}" alt=""></span>`;
+    }
+    return `<span class="${cls || "sig-ava"}">${esc(letter)}</span>`;
+  }
   function homeLower() {
-    const rank = VCBG.weeklyRanking(3);
-    const updates = VCBG.recentUpdates(4);
-    const notes = VCBG.recentComments(3);
-    const moods = VCBG.moodCatalog();
-    const quote = VCBG.featuredQuote();
-    const poll = VCBG.pollState();
-    const maxWeek = Math.max(1, ...rank.map((r) => r.week));
-    const rankHtml = rank.length
-      ? rank
-          .map((r) => {
-            const s = r.story;
-            const bits = [s.author].concat((s.genres || []).map((g) => g.name)).concat((s.tags || []).slice(0, 1).map((t) => t.name));
-            return `<a class="rank-row" href="#/truyen/${esc(s.slug)}">
-              <span class="rank-n">${String(r.rank).padStart(2, "0")}</span>
-              <span class="rank-cover">${coverImg(s.cover, s.title)}</span>
-              <span class="rank-meta">
-                <b>${esc(s.title)}</b>
-                <small>${esc(bits.join(" · "))}</small>
-                <i class="rank-bar"><i style="width:${Math.max(8, r.pct)}%"></i></i>
-              </span>
-              <span class="rank-score"><em>${r.week}</em><small>lượt đọc · ${s.stats.views} tín hiệu</small></span>
-            </a>`;
-          })
-          .join("")
-      : `<div class="empty">Chưa có lượt đọc trong 7 ngày.</div>`;
-    const upHtml = updates.length
-      ? updates
-          .map(
-            (u) => `<a class="tl-item" href="#/truyen/${esc(u.story.slug)}/chuong-${u.chapter.number}">
-              <small>${esc(u.label)}</small>
-              <b>${esc(u.story.title)}</b>
-              <span>${esc(u.chapter.title || "Chương " + u.chapter.number)}</span>
-              <em>${fmtDate(u.at)}</em>
-            </a>`
-          )
-          .join("")
-      : `<div class="empty">Chưa có cập nhật.</div>`;
-    const noteHtml = notes
-      .map((n) => {
-        const who = (n.user && n.user.display_name) || "Ẩn danh";
-        return `<article class="note-card">
-          <div class="note-top"><span class="avatar-chip">${esc(who.slice(0, 1))}</span><b>${esc(who)}</b><time>${fmtDate(n.created_at)}</time></div>
-          <p>${esc(n.body)}</p>
-          <a href="${esc(n.href)}">${esc((n.story && n.story.title) || "")} · Chương ${n.chapter ? n.chapter.number : "?"}</a>
-        </article>`;
-      })
-      .join("");
-    const moodHtml = moods
-      .map(
-        (m, i) =>
-          `<button type="button" class="mood-btn ${i === 0 ? "on" : ""}" data-mood="${esc(m.slug)}">${m.icon} ${esc(m.name)}</button>`
-      )
-      .join("");
-    const quoteHtml = quote
-      ? `<div class="quote-grid">
-          <div>
-            <p class="kicker">Một câu lưu lại</p>
-            <blockquote>“${esc(quote.text)}”</blockquote>
-            <p class="sub">${esc(quote.story.title)} · ${esc(quote.chapter.title || "Chương " + quote.chapter.number)}</p>
-            <a class="btn btn-ghost" href="${esc(quote.href)}">Đọc đoạn này ›</a>
+    const q = new URLSearchParams((location.hash.split("?")[1] || "").replace(/#.*$/, ""));
+    const sort = ["latest", "hot", "talk"].includes(q.get("sig")) ? q.get("sig") : "latest";
+    const storyId = q.get("sigstory") || "";
+    const feed = VCBG.communityFeed({ sort, storyId });
+    const shown = feed;
+    const stories = VCBG.listStories({ sort: "updated" });
+    const me = VCBG.currentUser();
+    const tab = (id, lab) =>
+      `<button type="button" class="sig-tab${sort === id ? " on" : ""}" data-sig="${id}">${lab}</button>`;
+    const replyHTML = (c, r, hidden) => {
+      const who = (r.user && r.user.display_name) || "Ẩn danh";
+      const parent = (c.user && c.user.display_name) || "bạn";
+      return `<article class="sig-reply${hidden ? " is-more" : ""}" data-rid="${esc(r.id)}">
+        ${avatarHTML(r.user, "sig-ava sm")}
+        <div class="sig-reply-body">
+          <div class="sig-meta">
+            <b>${esc(who)}</b>
+            ${r.staff ? `<span class="sig-badge staff">ViCam</span>` : ""}
+            <time>${esc(fmtRel(r.created_at))}</time>
           </div>
-          <div class="orb" aria-hidden="true"></div>
-        </div>`
-      : "";
-    const pollHtml = poll.options.length
-      ? `<div class="poll-grid">
-          ${poll.options
-            .map(
-              (o) => `<label class="poll-opt">
-                <input type="radio" name="pollStory" value="${esc(o.story.id)}" ${poll.mine && poll.mine.story_id === o.story.id ? "checked" : ""}>
-                <span>${esc(o.story.title)}</span>
-                <i class="rank-bar"><i style="width:${o.pct}%"></i></i>
-                <em>${o.pct}%</em>
-              </label>`
-            )
-            .join("")}
-        </div>
-        <button type="button" class="btn btn-grad" id="btnVote">Gửi bình chọn</button>`
-      : `<div class="empty">Chưa mở đợt bình chọn.</div>`;
-    return `<section class="wrap lower-wrap">
-      <article class="panel">
-        <p class="kicker">Nhịp đọc tuần này</p>
-        <h2>Ba câu chuyện đang được gọi tên</h2>
-        <p class="lead">Một bảng xếp hạng gọn, cập nhật theo lượt đọc trong thư viện.</p>
-        <div class="rank-list">${rankHtml}</div>
-      </article>
-      <article class="panel">
-        <p class="kicker">Tín hiệu độc giả <span class="live">LIVE</span></p>
-        <h2>Những chuyển động vừa chạm tới thư viện</h2>
-        <p class="lead">Chương mới, lời nhắn và nguồn bình luận đều ở đúng một nơi.</p>
-        <div class="signal-grid">
-          <div class="inner-card">
-            <p class="kicker">Dòng cập nhật</p>
-            <div class="tl">${upHtml}</div>
-          </div>
-          <div class="inner-card">
-            <p class="kicker">Lời nhắn vừa đến</p>
-            ${noteHtml || `<div class="empty">Chưa có lời nhắn.</div>`}
-            <form id="homeNote" class="note-form">
-              <input name="body" maxlength="400" placeholder="Viết bình luận..." required>
-              <button class="btn btn-cyan" type="submit">Gửi</button>
-            </form>
+          <p class="sig-to">Trả lời ${esc(parent)}</p>
+          <p class="sig-text">${esc(r.body)}</p>
+          <div class="sig-acts">
+            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">↩ Trả lời</button>
           </div>
         </div>
-      </article>
-      <article class="panel">
-        <p class="kicker">Chọn theo cảm xúc</p>
-        <h2>Hôm nay bạn muốn đọc gì?</h2>
-        <p class="lead">Chọn một sắc thái, ViCam sẽ đưa bạn đến câu chuyện phù hợp.</p>
-        <div class="mood-grid">${moodHtml}</div>
-        <a class="btn btn-grad" id="moodGo" href="#/kham-pha?tag=chua-lanh">Khám phá “Chữa lành” ›</a>
-      </article>
-      ${quoteHtml ? `<article class="panel">${quoteHtml}</article>` : ""}
-      <article class="panel poll-panel">
-        <p class="kicker">Gửi một tín hiệu</p>
-        <h2>${esc(poll.poll.title || "Bạn muốn ViCam ưu tiên truyện nào?")}</h2>
-        ${pollHtml}
+      </article>`;
+    };
+    const cardHTML = (c) => {
+      const who = (c.user && c.user.display_name) || "Ẩn danh";
+      const replies = c.replies || [];
+      const firstR = replies.slice(0, 1);
+      const rest = replies.slice(1);
+      const loc = [c.story && c.story.title, c.chapter ? "Chương " + c.chapter.number : ""]
+        .filter(Boolean)
+        .join(" · ");
+      return `<article class="sig-card" data-cid="${esc(c.id)}">
+        ${avatarHTML(c.user)}
+        <div class="sig-main">
+          <div class="sig-meta">
+            <b>${esc(who)}</b>
+            ${c.staff ? `<span class="sig-badge staff">ViCam</span>` : `<span class="sig-badge">LV.${c.level || 1}</span>`}
+            <time>${esc(fmtRel(c.created_at))}</time>
+            ${c.hot ? `<span class="sig-hot">★ Đang được chú ý</span>` : ""}
+          </div>
+          ${
+            c.quote
+              ? `<blockquote class="sig-quote"><p>“${esc(c.quote)}”</p>${loc ? `<cite>— ${esc(loc)}</cite>` : ""}</blockquote>`
+              : ""
+          }
+          <p class="sig-text">${esc(c.body)}</p>
+          ${loc ? `<a class="sig-loc" href="${esc(c.href)}">${esc(loc)}</a>` : ""}
+          <div class="sig-acts">
+            <button type="button" class="sig-chip${c.liked ? " on" : ""}" data-like="${esc(c.id)}" aria-pressed="${c.liked}">❤ ${c.like_count || 0}</button>
+            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">💬 Trả lời</button>
+            <button type="button" class="sig-act" data-quote="${esc(c.id)}">❝ Trích dẫn</button>
+          </div>
+          ${firstR.map((r) => replyHTML(c, r, false)).join("")}
+          ${rest.map((r) => replyHTML(c, r, true)).join("")}
+          ${
+            rest.length
+              ? `<button type="button" class="sig-more-replies" data-more="${esc(c.id)}">Xem ${rest.length} phản hồi khác ▾</button>`
+              : ""
+          }
+        </div>
+      </article>`;
+    };
+    return `<section class="wrap sig-wrap" id="tin-hieu">
+      <article class="sig-board">
+        <header class="sig-head">
+          <div class="sig-brand">
+            <span class="sig-mark" aria-hidden="true">💬</span>
+            <div>
+              <h2>Tín hiệu độc giả <i></i></h2>
+              <p>Nơi mọi cảm xúc về câu chuyện được kết nối.</p>
+            </div>
+          </div>
+        </header>
+        <p class="sig-count">💬 ${feed.total || 0} bình luận · <span class="live-dot"></span> ${feed.talking || 0} người đang trò chuyện</p>
+        <div class="sig-tools">
+          <div class="sig-tabs">
+            ${tab("latest", "Mới nhất")}
+            ${tab("hot", "Nhiều tương tác")}
+            ${tab("talk", "Đang thảo luận")}
+          </div>
+          <label class="sig-filter">
+            <span class="sr-only">Chọn truyện</span>
+            <select id="sigStory">
+              <option value="">Chọn truyện</option>
+              ${stories.map((s) => `<option value="${esc(s.id)}" ${s.id === storyId ? "selected" : ""}>${esc(s.title)}</option>`).join("")}
+            </select>
+          </label>
+        </div>
+        <div class="sig-list" id="sigList">${
+          shown.length
+            ? shown
+                .map((c, i) => cardHTML(c).replace('class="sig-card"', `class="sig-card${i >= 6 ? " is-hidden" : ""}"`))
+                .join("")
+            : `<div class="empty">Chưa có bình luận.</div>`
+        }</div>
+        ${shown.length > 6 ? `<button type="button" class="sig-more" id="sigMore">Xem thêm bình luận ▾</button>` : ""}
+        <div class="sig-compose">
+          ${avatarHTML(me && me.profile)}
+          <button type="button" class="sig-fake" id="sigOpen">${me ? "Chia sẻ cảm nghĩ của bạn…" : "Đăng nhập để chia sẻ cảm nghĩ…"}</button>
+          <button type="button" class="btn btn-cyan" id="sigJoin">Tham gia trò chuyện</button>
+        </div>
+        ${me ? "" : `<p class="sig-login"><a href="#/dang-nhap">Đăng nhập</a> để bình luận và tham gia thảo luận cùng cộng đồng ViCam.</p>`}
       </article>
     </section>`;
   }
-  function bindLowerHome() {
-    $$("[data-mood]").forEach((b) => {
-      b.onclick = () => {
-        $$("[data-mood]").forEach((x) => x.classList.remove("on"));
-        b.classList.add("on");
-        const slug = b.getAttribute("data-mood");
-        const name = b.textContent.replace(/^[^\s]+\s/, "");
-        const goBtn = $("#moodGo");
-        if (goBtn) {
-          goBtn.href = "#/kham-pha?tag=" + encodeURIComponent(slug);
-          goBtn.textContent = "Khám phá “" + name + "” ›";
-        }
-      };
-    });
-    const note = $("#homeNote");
-    if (note)
-      note.onsubmit = (e) => {
-        e.preventDefault();
-        try {
-          VCBG.addHomeComment(new FormData(note).get("body"));
+  function openSignalBox(opts) {
+    opts = opts || {};
+    const me = VCBG.currentUser();
+    if (!me) {
+      go("/dang-nhap");
+      return;
+    }
+    const stories = VCBG.listStories({ sort: "updated" });
+    const host = document.createElement("div");
+    host.className = "sig-host";
+    host.innerHTML = `<div class="drawer-bg" id="sigBg"></div>
+      <aside class="drawer bottom sig-drawer" role="dialog" aria-labelledby="sigBoxTitle">
+        <div class="drawer-pad">
+          <div class="drawer-head">
+            <h3 id="sigBoxTitle">${opts.replyTo ? "Trả lời " + esc(opts.replyTo) : opts.quote ? "Trích dẫn" : "Tham gia trò chuyện"}</h3>
+            <button type="button" class="r-ico" id="sigClose" aria-label="Đóng">×</button>
+          </div>
+          ${opts.quote ? `<blockquote class="sig-quote"><p>“${esc(opts.quote)}”</p></blockquote>` : ""}
+          <form id="sigForm">
+            ${
+              opts.commentId
+                ? ""
+                : `<div class="field"><label>Truyện</label>
+              <select name="story_id" required>
+                <option value="">Chọn truyện</option>
+                ${stories
+                  .map((s) => {
+                    const chs = VCBG.listChapters(s.id);
+                    const last = chs[chs.length - 1];
+                    return `<option value="${esc(s.id)}" data-ch="${last ? esc(last.id) : ""}">${esc(s.title)}</option>`;
+                  })
+                  .join("")}
+              </select></div>`
+            }
+            <div class="field"><label>Nội dung</label>
+              <textarea name="body" required maxlength="2000" placeholder="Viết cảm nghĩ của bạn…">${esc(opts.seed || "")}</textarea>
+            </div>
+            <button class="btn btn-cyan" type="submit">Gửi</button>
+          </form>
+        </div>
+      </aside>`;
+    document.body.appendChild(host);
+    const close = () => host.remove();
+    $("#sigBg").onclick = close;
+    $("#sigClose").onclick = close;
+    $("#sigForm").onsubmit = (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      try {
+        if (opts.commentId) {
+          VCBG.replyComment(opts.commentId, fd.get("body"));
+          toast("Đã trả lời.");
+        } else {
+          const sid = fd.get("story_id");
+          const sel = e.target.querySelector("select[name=story_id]");
+          const opt = sel && sel.selectedOptions[0];
+          let chId = opt && opt.dataset.ch;
+          if (!chId) {
+            const chs = VCBG.listChapters(sid);
+            chId = chs.length ? chs[chs.length - 1].id : "";
+          }
+          if (!chId) throw new Error("Truyện chưa có chương để gắn bình luận.");
+          VCBG.addComment({
+            chapterId: chId,
+            storyId: sid,
+            body: fd.get("body"),
+            quote: opts.quote || "",
+          });
           toast("Đăng bình luận thành công.");
-          go("/");
-        } catch (err) {
-          if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
-          else toast(err.message);
         }
+        close();
+        go(location.hash || "/");
+      } catch (err) {
+        if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+        else toast(err.message);
+      }
+    };
+    const ta = host.querySelector("textarea");
+    if (ta) ta.focus();
+  }
+  function bindLowerHome() {
+    const setSig = (patch) => {
+      const p = new URLSearchParams((location.hash.split("?")[1] || "").replace(/#.*$/, ""));
+      Object.keys(patch).forEach((k) => {
+        if (patch[k]) p.set(k, patch[k]);
+        else p.delete(k);
+      });
+      const q = p.toString();
+      go("/" + (q ? "?" + q : ""));
+    };
+    $$("[data-sig]").forEach((b) => {
+      b.onclick = () => setSig({ sig: b.dataset.sig });
+    });
+    const storySel = $("#sigStory");
+    if (storySel)
+      storySel.onchange = () => setSig({ sigstory: storySel.value });
+    const more = $("#sigMore");
+    if (more)
+      more.onclick = () => {
+        const hidden = $$(".sig-card.is-hidden");
+        hidden.slice(0, 6).forEach((el) => el.classList.remove("is-hidden"));
+        if (!$$(".sig-card.is-hidden").length) more.remove();
       };
-    const vote = $("#btnVote");
-    if (vote)
-      vote.onclick = () => {
-        const picked = document.querySelector("input[name=pollStory]:checked");
-        if (!picked) {
-          toast("Hãy chọn một truyện.");
-          return;
-        }
-        try {
-          VCBG.votePoll(picked.value);
-          toast("Đã ghi bình chọn.");
-          go("/");
-        } catch (err) {
-          if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
-          else toast(err.message);
-        }
-      };
+    const open = () => openSignalBox({});
+    if ($("#sigOpen")) $("#sigOpen").onclick = open;
+    if ($("#sigJoin")) $("#sigJoin").onclick = open;
+    bindSignalActs();
     const openInbox = (type) => {
       const title = type === "report" ? "Báo lỗi nội dung" : "Gửi lời nhắn";
       const host = document.createElement("div");
@@ -558,6 +629,46 @@
     const br = $("#btnReport");
     if (bm) bm.onclick = () => openInbox("message");
     if (br) br.onclick = () => openInbox("report");
+    const qp = new URLSearchParams((location.hash.split("?")[1] || "").replace(/#.*$/, ""));
+    if (qp.get("sig") || qp.get("sigstory")) {
+      const board = $("#tin-hieu");
+      if (board) board.scrollIntoView({ block: "start" });
+    }
+  }
+  function bindSignalActs() {
+    $$("[data-like]").forEach((b) => {
+      if (b.closest(".sig-board"))
+        b.onclick = () => {
+          try {
+            const r = VCBG.likeComment(b.dataset.like);
+            b.textContent = "❤ " + r.count;
+            b.classList.toggle("on", r.on);
+            b.setAttribute("aria-pressed", r.on);
+          } catch (e) {
+            if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
+            else toast(e.message);
+          }
+        };
+    });
+    $$("[data-reply]").forEach((b) => {
+      if (b.closest(".sig-board"))
+        b.onclick = () => openSignalBox({ commentId: b.dataset.reply, replyTo: b.dataset.to || "" });
+    });
+    $$("[data-quote]").forEach((b) => {
+      b.onclick = () => {
+        const card = b.closest(".sig-card");
+        const text = card && card.querySelector(".sig-text");
+        openSignalBox({ quote: text ? text.textContent : "" });
+      };
+    });
+    $$("[data-more]").forEach((b) => {
+      b.onclick = () => {
+        const card = b.closest(".sig-card");
+        if (!card) return;
+        card.querySelectorAll(".sig-reply.is-more").forEach((n) => n.classList.remove("is-more"));
+        b.remove();
+      };
+    });
   }
   function bindChrome() {
     const menu = $("#btnMenu");

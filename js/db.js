@@ -1544,22 +1544,58 @@
     },
 
     recentComments(limit) {
-      return cache.comments
-        .filter((c) => c.status !== "hidden")
-        .sort((a, b) => b.created_at - a.created_at)
-        .slice(0, limit || 6)
-        .map((c) => {
-          const story = cache.stories.find((s) => s.id === c.story_id);
-          const chapter = cache.chapters.find((ch) => ch.id === c.chapter_id);
-          const user = profileOf(c.user_id);
-          return {
-            ...c,
-            story,
-            chapter,
-            user,
-            href: story && chapter ? "#/truyen/" + story.slug + "/chuong-" + chapter.number : "#/",
-          };
-        });
+      return this.communityFeed({ sort: "latest" }).slice(0, limit || 6);
+    },
+    communityFeed({ sort, storyId } = {}) {
+      const DAY = 24 * 60 * 60 * 1000;
+      const nowMs = now();
+      const comments = cache.comments.filter((c) => c.status !== "hidden");
+      const talking = new Set();
+      comments.forEach((c) => {
+        if (nowMs - c.created_at < DAY) talking.add(c.user_id);
+      });
+      cache.comment_replies.forEach((r) => {
+        if (r.status !== "hidden" && nowMs - r.created_at < DAY) talking.add(r.user_id);
+      });
+      const counts = {};
+      comments.forEach((c) => {
+        counts[c.user_id] = (counts[c.user_id] || 0) + 1;
+      });
+      let list = comments.map((c) => {
+        const story = cache.stories.find((s) => s.id === c.story_id);
+        const chapter = cache.chapters.find((ch) => ch.id === c.chapter_id);
+        const user = profileOf(c.user_id);
+        const replies = cache.comment_replies
+          .filter((r) => r.comment_id === c.id && r.status !== "hidden")
+          .sort((a, b) => a.created_at - b.created_at)
+          .map((r) => ({
+            ...r,
+            user: profileOf(r.user_id),
+            staff: !!(profileOf(r.user_id) && normalizeRole(profileOf(r.user_id).role) === "admin"),
+          }));
+        const like_count = (c.likes || []).length;
+        const n = counts[c.user_id] || 1;
+        const level = Math.min(5, Math.max(1, 1 + Math.floor(n / 3)));
+        return {
+          ...c,
+          story,
+          chapter,
+          user,
+          replies,
+          like_count,
+          liked: this.likedComment(c.id),
+          href: story && chapter ? "#/truyen/" + story.slug + "/chuong-" + chapter.number : story ? "#/truyen/" + story.slug : "#/",
+          level,
+          staff: !!(user && normalizeRole(user.role) === "admin"),
+          hot: like_count >= 5 || replies.length >= 3,
+          last_at: Math.max(c.created_at, ...replies.map((r) => r.created_at), 0),
+        };
+      });
+      if (storyId) list = list.filter((c) => c.story_id === storyId);
+      if (sort === "hot") list.sort((a, b) => b.like_count + b.replies.length * 2 - (a.like_count + a.replies.length * 2) || b.created_at - a.created_at);
+      else if (sort === "talk") list.sort((a, b) => b.last_at - a.last_at);
+      else list.sort((a, b) => b.created_at - a.created_at);
+      return Object.assign(list, { total: comments.length, talking: talking.size });
     },
 
     addHomeComment(body) {

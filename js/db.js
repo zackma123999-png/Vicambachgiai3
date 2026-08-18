@@ -444,7 +444,7 @@
       loadOptional("chapter_likes"),
       loadOptional("ratings"),
       loadOptional("poll_votes"),
-      withTimeout(sb.rpc("get_story_stats"), 8000, "thống kê")
+      withTimeout(Promise.resolve(sb.rpc("get_story_stats")), 8000, "thống kê")
         .then(({ data, error }) => {
           if (error) throw error;
           return data || [];
@@ -650,7 +650,9 @@
         try {
           await withTimeout(syncSession(), 4000, "phiên");
         } catch (_) {}
-        sb.rpc("publish_due_chapters").catch(() => {});
+        try {
+          Promise.resolve(sb.rpc("publish_due_chapters")).catch(() => {});
+        } catch (_) {}
         await refresh();
         bootstrapped = true;
       })();

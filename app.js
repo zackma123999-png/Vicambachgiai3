@@ -2529,19 +2529,37 @@
     if (app().querySelector(".site-header")) return;
     app().innerHTML =
       header() +
-      `<main class="wrap"><div class="empty" id="bootEmpty">Đang mở thư viện…</div></main>` +
+      `<main class="wrap"><div class="empty" id="bootEmpty">Đang mở thư viện…<p><button type="button" class="btn btn-cyan" id="bootRetry">Thử lại</button></p></div></main>` +
       footer();
     bindChrome();
+    const retry = $("#bootRetry");
+    if (retry) retry.onclick = () => location.reload();
   }
   async function runRender() {
     paintShell();
+    const watchdog = setTimeout(() => {
+      const empty = $("#bootEmpty");
+      if (empty && empty.isConnected) {
+        empty.innerHTML =
+          'Mạng chậm hoặc chưa tải xong.<p><button type="button" class="btn btn-cyan" id="bootRetry">Thử lại</button></p>';
+        const retry = $("#bootRetry");
+        if (retry) retry.onclick = () => location.reload();
+      }
+    }, 9000);
     try {
       await VCBG.init();
     } catch (e) {
-      app().innerHTML = header() + `<div class="empty">Không khởi tạo được dữ liệu: ${esc(e.message)}</div>` + footer();
+      clearTimeout(watchdog);
+      app().innerHTML =
+        header() +
+        `<div class="empty">Không khởi tạo được dữ liệu: ${esc(e.message)}<p><button type="button" class="btn btn-cyan" id="bootRetry">Thử lại</button></p></div>` +
+        footer();
       bindChrome();
+      const retry = $("#bootRetry");
+      if (retry) retry.onclick = () => location.reload();
       return;
     }
+    clearTimeout(watchdog);
     const route = parseHash();
     window.scrollTo(0, 0);
     try {

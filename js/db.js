@@ -262,18 +262,39 @@
     return { ...story, genres, tags, stats: storyStats(story.id) };
   }
 
-  function withTimeout(promise, ms, label) {
-    let t;
-    const timeout = new Promise((_, reject) => {
-      t = setTimeout(() => reject(new Error("Hết thời gian tải " + (label || "dữ liệu") + ".")), ms);
+  function settle(q, ms, label) {
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const timer = setTimeout(() => {
+        if (done) return;
+        done = true;
+        reject(new Error("Hết thời gian tải " + (label || "dữ liệu") + "."));
+      }, ms);
+      Promise.resolve(q).then(
+        (value) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve(value);
+        },
+        (err) => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          reject(err);
+        }
+      );
     });
-    return Promise.race([promise, timeout]).finally(() => clearTimeout(t));
+  }
+
+  function withTimeout(promise, ms, label) {
+    return settle(promise, ms, label);
   }
 
   async function loadTable(name, extra) {
     let q = sb.from(name).select("*");
     if (extra) q = extra(q);
-    const { data, error } = await withTimeout(q, 8000, name);
+    const { data, error } = await settle(q, 7000, name);
     if (error) throwHttp(error, "Không tải được " + name);
     return data || [];
   }
@@ -397,22 +418,36 @@
   }
 
   async function refreshCatalog() {
-    const [genres, tags, stories, story_genres, story_tags, chapters, settingsRows] = await Promise.all([
-      loadTable("genres"),
-      loadTable("tags"),
-      loadTable("stories"),
-      loadTable("story_genres"),
-      loadTable("story_tags"),
-      withTimeout(
+    const stories = await loadTable("stories");
+    cache.stories = mapStories(stories);
+    cache.ready = true;
+    writeSnap();
+
+    fillCatalogRest(stories);
+  }
+
+  async function fillCatalogRest(stories) {
+    try {
+    const [genres, tags, story_genres, story_tags, chapters, settingsRows] = await Promise.all([
+      loadOptional("genres"),
+      loadOptional("tags"),
+      loadOptional("story_genres"),
+      loadOptional("story_tags"),
+      settle(
         sb
           .from("chapters")
           .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at"),
-        8000,
+        7000,
         "chapters"
-      ).then(({ data, error }) => {
-        if (error) throwHttp(error, "Không tải được chapters");
-        return data || [];
-      }),
+      )
+        .then(({ data, error }) => {
+          if (error) throw error;
+          return data || [];
+        })
+        .catch((err) => {
+          console.warn("[VCBG optional] chapters", err && err.message);
+          return cache.chapters || [];
+        }),
       loadOptional("site_settings"),
     ]);
 
@@ -508,6 +543,9 @@
         }
       )
       .catch((err) => console.warn("[VCBG extras]", err && err.message));
+    } catch (err) {
+      console.warn("[VCBG catalog rest]", err && err.message);
+    }
   }
 
   async function refreshAccount() {
@@ -640,29 +678,44 @@
     async init() {
       client();
       if (bootstrapped) return;
-      if (bootPromise) {
-        await bootPromise;
-        return;
-      }
       const snap = readSnap();
       if (snap) applyCatalog(snap);
-      const pending = (async () => {
-        try {
-          await withTimeout(syncSession(), 4000, "phiên");
-        } catch (_) {}
-        try {
-          Promise.resolve(sb.rpc("publish_due_chapters")).catch(() => {});
-        } catch (_) {}
-        await refresh();
-        bootstrapped = true;
-      })();
-      bootPromise = pending;
-      pending.catch((err) => console.error("[VCBG boot]", err)).finally(() => {
-        if (bootPromise === pending) bootPromise = null;
-      });
-      if (cache.ready && cache.stories && cache.stories.length) return;
-      await withTimeout(pending, 12000, "thư viện");
-      bootstrapped = true;
+      if (!bootPromise) {
+        const pending = (async () => {
+          try {
+            await settle(syncSession(), 3000, "phiên");
+          } catch (_) {}
+          try {
+            Promise.resolve(sb.rpc("publish_due_chapters")).then(
+              () => {},
+              () => {}
+            );
+          } catch (_) {}
+          await refresh();
+          bootstrapped = true;
+        })();
+        bootPromise = pending;
+        pending.then(
+          () => {},
+          (err) => console.error("[VCBG boot]", err)
+        );
+        pending.then(
+          () => {
+            if (bootPromise === pending) bootPromise = null;
+          },
+          () => {
+            if (bootPromise === pending) bootPromise = null;
+          }
+        );
+      }
+      if (cache.stories && cache.stories.length) return;
+      try {
+        await settle(bootPromise || Promise.resolve(), 8000, "thư viện");
+      } catch (err) {
+        if (cache.stories && cache.stories.length) return;
+        throw err;
+      }
+      bootstrapped = !!(cache.stories && cache.stories.length);
     },
 
     settings() {

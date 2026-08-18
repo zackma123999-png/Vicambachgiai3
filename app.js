@@ -2525,11 +2525,21 @@
     renderLock = mine.catch(() => {});
     return mine;
   }
+  function paintShell() {
+    if (app().querySelector(".site-header")) return;
+    app().innerHTML =
+      header() +
+      `<main class="wrap"><div class="empty">Đang mở thư viện…</div></main>` +
+      footer();
+    bindChrome();
+  }
   async function runRender() {
+    paintShell();
     try {
       await VCBG.init();
     } catch (e) {
-      app().innerHTML = `<div class="empty">Không khởi tạo được dữ liệu: ${esc(e.message)}</div>`;
+      app().innerHTML = header() + `<div class="empty">Không khởi tạo được dữ liệu: ${esc(e.message)}</div>` + footer();
+      bindChrome();
       return;
     }
     const route = parseHash();
@@ -2562,6 +2572,14 @@
     currentPath = readLocationPath();
     render();
   });
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", render);
-  else render();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+  async function boot() {
+    await render();
+    if (VCBG.whenReady) {
+      VCBG.whenReady()
+        .then(() => render())
+        .catch(() => {});
+    }
+  }
 })();

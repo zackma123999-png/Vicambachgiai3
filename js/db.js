@@ -296,7 +296,71 @@
     } catch (_) {}
   }
 
-  async function refresh() {
+  const SNAP_KEY = "vicambachgiai.catalog.v1";
+  const SNAP_MAX_AGE = 12 * 60 * 60 * 1000;
+
+  function applyCatalog(payload) {
+    if (!payload) return false;
+    cache.profiles = payload.profiles || [];
+    cache.users = payload.users || [];
+    cache.genres = payload.genres || [];
+    cache.tags = payload.tags || [];
+    cache.stories = payload.stories || [];
+    cache.story_genres = payload.story_genres || [];
+    cache.story_tags = payload.story_tags || [];
+    cache.chapters = payload.chapters || [];
+    cache.comments = payload.comments || [];
+    cache.comment_replies = payload.comment_replies || [];
+    cache.comment_likes = payload.comment_likes || [];
+    cache.chapter_likes = payload.chapter_likes || [];
+    cache.ratings = payload.ratings || [];
+    cache.story_stats = payload.story_stats || {};
+    cache.poll_votes = payload.poll_votes || [];
+    cache.site_settings = Object.assign(emptySettings(), payload.site_settings || {});
+    cache.ready = true;
+    return !!(cache.stories && cache.stories.length);
+  }
+
+  function readSnap() {
+    try {
+      const raw = storeGet(SNAP_KEY);
+      if (!raw) return null;
+      const snap = JSON.parse(raw);
+      if (!snap || !snap.at || now() - snap.at > SNAP_MAX_AGE) return null;
+      return snap;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function writeSnap() {
+    try {
+      storeSet(
+        SNAP_KEY,
+        JSON.stringify({
+          at: now(),
+          profiles: cache.profiles,
+          users: cache.users,
+          genres: cache.genres,
+          tags: cache.tags,
+          stories: cache.stories,
+          story_genres: cache.story_genres,
+          story_tags: cache.story_tags,
+          chapters: cache.chapters,
+          comments: cache.comments,
+          comment_replies: cache.comment_replies,
+          comment_likes: cache.comment_likes,
+          chapter_likes: cache.chapter_likes,
+          ratings: cache.ratings,
+          story_stats: cache.story_stats,
+          poll_votes: cache.poll_votes,
+          site_settings: cache.site_settings,
+        })
+      );
+    } catch (_) {}
+  }
+
+  async function refreshCatalog() {
     const [
       profiles,
       genres,
@@ -400,12 +464,10 @@
     (storyStatsRows || []).forEach((row) => {
       cache.story_stats[row.story_id] = row;
     });
-    cache.views = [];
     cache.poll_votes = (poll_votes || []).map((v) => ({
       ...v,
       at: toMs(v.at || v.created_at),
     }));
-
     const row = (settingsRows && settingsRows[0]) || {};
     cache.site_settings = Object.assign(emptySettings(), {
       name: row.name,
@@ -417,87 +479,95 @@
       poll: row.poll || emptySettings().poll,
       seeded: !!row.seeded,
     });
+    cache.ready = true;
+    writeSnap();
+  }
 
-    if (sessionUser) {
-      const uid_ = sessionUser.id;
-      await loadOwnProfile();
-      if (isAdmin()) {
-        try {
-          const all = await loadTable("profiles");
-          cache.profiles = (all || []).map((p) => ({
-            ...p,
-            id: p.user_id || p.id,
-            user_id: p.user_id || p.id,
-            created_at: toMs(p.created_at),
-          }));
-          cache.users = cache.profiles.map((x) => ({
-            id: x.id,
-            email: x.email,
-            role: x.role,
-            status: x.status,
-            created_at: x.created_at,
-          }));
-        } catch (_) {}
-      }
-      const [favorites, follows, reading_progress, reading_history, notifications, inbox] =
-        await Promise.all([
-          loadTable("favorites", (q) => q.eq("user_id", uid_)),
-          loadTable("follows", (q) => q.eq("user_id", uid_)),
-          loadTable("reading_progress", (q) => q.eq("user_id", uid_)),
-          loadTable("reading_history", (q) => q.eq("user_id", uid_).order("read_at", { ascending: false }).limit(80)),
-          loadTable("notifications", (q) => q.eq("user_id", uid_).order("created_at", { ascending: false }).limit(60)),
-          isAdmin() ? loadTable("inbox", (q) => q.order("created_at", { ascending: false }).limit(300)) : Promise.resolve([]),
-        ]);
-      cache.favorites = (favorites || []).map((f) => ({
-        ...f,
-        id: f.id || f.user_id + ":" + f.story_id,
-        at: toMs(f.at || f.created_at),
-      }));
-      cache.follows = (follows || []).map((f) => ({
-        ...f,
-        id: f.id || f.user_id + ":" + f.story_id,
-        at: toMs(f.at || f.created_at),
-      }));
-      cache.reading_progress = (reading_progress || []).map((p) => ({
-        ...p,
-        id: p.id || p.user_id + ":" + p.story_id,
-        chapter_number: Number(p.chapter_number || 0),
-        scroll: Number(p.scroll || 0),
-        at: toMs(p.at || p.updated_at),
-      }));
-      cache.reading_history = (reading_history || []).map((h) => ({
-        ...h,
-        chapter_number: Number(h.chapter_number || 0),
-        at: toMs(h.at || h.read_at),
-      }));
-      cache.notifications = (notifications || []).map((n) => ({
-        ...n,
-        at: toMs(n.at || n.created_at),
-      }));
-      cache.inbox = (inbox || []).map((m) => ({
-        ...m,
-        at: toMs(m.at || m.created_at),
-      }));
-      if (isAdmin()) {
-        try {
-          const views = await loadTable("views");
-          cache.views = (views || []).map((v) => ({
-            ...v,
-            at: toMs(v.at || v.created_at),
-          }));
-        } catch (_) {
-          cache.views = [];
-        }
-      }
-    } else {
+  async function refreshAccount() {
+    if (!sessionUser) {
       cache.favorites = [];
       cache.follows = [];
       cache.reading_progress = [];
       cache.reading_history = [];
       cache.notifications = [];
       cache.inbox = [];
+      cache.views = [];
+      return;
     }
-    cache.ready = true;
+    const uid_ = sessionUser.id;
+    await loadOwnProfile();
+    if (isAdmin()) {
+      try {
+        const all = await loadTable("profiles");
+        cache.profiles = (all || []).map((p) => ({
+          ...p,
+          id: p.user_id || p.id,
+          user_id: p.user_id || p.id,
+          created_at: toMs(p.created_at),
+        }));
+        cache.users = cache.profiles.map((x) => ({
+          id: x.id,
+          email: x.email,
+          role: x.role,
+          status: x.status,
+          created_at: x.created_at,
+        }));
+      } catch (_) {}
+    }
+    const [favorites, follows, reading_progress, reading_history, notifications, inbox] = await Promise.all([
+      loadTable("favorites", (q) => q.eq("user_id", uid_)),
+      loadTable("follows", (q) => q.eq("user_id", uid_)),
+      loadTable("reading_progress", (q) => q.eq("user_id", uid_)),
+      loadTable("reading_history", (q) => q.eq("user_id", uid_).order("read_at", { ascending: false }).limit(80)),
+      loadTable("notifications", (q) => q.eq("user_id", uid_).order("created_at", { ascending: false }).limit(60)),
+      isAdmin() ? loadTable("inbox", (q) => q.order("created_at", { ascending: false }).limit(300)) : Promise.resolve([]),
+    ]);
+    cache.favorites = (favorites || []).map((f) => ({
+      ...f,
+      id: f.id || f.user_id + ":" + f.story_id,
+      at: toMs(f.at || f.created_at),
+    }));
+    cache.follows = (follows || []).map((f) => ({
+      ...f,
+      id: f.id || f.user_id + ":" + f.story_id,
+      at: toMs(f.at || f.created_at),
+    }));
+    cache.reading_progress = (reading_progress || []).map((p) => ({
+      ...p,
+      id: p.id || p.user_id + ":" + p.story_id,
+      chapter_number: Number(p.chapter_number || 0),
+      scroll: Number(p.scroll || 0),
+      at: toMs(p.at || p.updated_at),
+    }));
+    cache.reading_history = (reading_history || []).map((h) => ({
+      ...h,
+      chapter_number: Number(h.chapter_number || 0),
+      at: toMs(h.at || h.read_at),
+    }));
+    cache.notifications = (notifications || []).map((n) => ({
+      ...n,
+      at: toMs(n.at || n.created_at),
+    }));
+    cache.inbox = (inbox || []).map((m) => ({
+      ...m,
+      at: toMs(m.at || m.created_at),
+    }));
+    if (isAdmin()) {
+      try {
+        const views = await loadTable("views");
+        cache.views = (views || []).map((v) => ({
+          ...v,
+          at: toMs(v.at || v.created_at),
+        }));
+      } catch (_) {
+        cache.views = [];
+      }
+    }
+  }
+
+  async function refresh() {
+    await refreshCatalog();
+    await refreshAccount();
   }
 
   async function syncSession() {
@@ -534,27 +604,36 @@
     currentUser,
     isAdmin,
 
+    whenReady() {
+      return bootPromise || Promise.resolve();
+    },
+
     async init() {
       client();
-      if (bootstrapped) return;
-      await syncSession();
       if (bootstrapped) return;
       if (bootPromise) {
         await bootPromise;
         return;
       }
+      const snap = readSnap();
+      if (snap) applyCatalog(snap);
       bootPromise = (async () => {
+        try {
+          await syncSession();
+        } catch (_) {}
         try {
           await sb.rpc("publish_due_chapters");
         } catch (_) {}
         await refresh();
         bootstrapped = true;
-      })();
-      try {
-        await bootPromise;
-      } finally {
+      })().finally(() => {
         bootPromise = null;
+      });
+      if (cache.ready && cache.stories && cache.stories.length) {
+        bootPromise.catch((err) => console.error("[VCBG boot]", err));
+        return;
       }
+      await bootPromise;
     },
 
     settings() {

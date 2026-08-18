@@ -2529,7 +2529,7 @@
     if (app().querySelector(".site-header")) return;
     app().innerHTML =
       header() +
-      `<main class="wrap"><div class="empty">Đang mở thư viện…</div></main>` +
+      `<main class="wrap"><div class="empty" id="bootEmpty">Đang mở thư viện…</div></main>` +
       footer();
     bindChrome();
   }
@@ -2544,18 +2544,27 @@
     }
     const route = parseHash();
     window.scrollTo(0, 0);
-    if (route.name === "home") pageHome();
-    else if (route.name === "explore") pageExplore(route);
-    else if (route.name === "story") pageStory(route);
-    else if (route.name === "read") await pageRead(route);
-    else if (route.name === "login") pageAuth("login");
-    else if (route.name === "register") pageAuth("register");
-    else if (route.name === "forgot") pageAuth("forgot");
-    else if (route.name === "library") pageLibrary();
-    else if (route.name === "account") pageAccount();
-    else if (route.name === "notifs") pageNotifs();
-    else if (route.name === "admin") await pageAdmin(route);
-    else pageHome();
+    try {
+      if (route.name === "home") pageHome();
+      else if (route.name === "explore") pageExplore(route);
+      else if (route.name === "story") pageStory(route);
+      else if (route.name === "read") await pageRead(route);
+      else if (route.name === "login") pageAuth("login");
+      else if (route.name === "register") pageAuth("register");
+      else if (route.name === "forgot") pageAuth("forgot");
+      else if (route.name === "library") pageLibrary();
+      else if (route.name === "account") pageAccount();
+      else if (route.name === "notifs") pageNotifs();
+      else if (route.name === "admin") await pageAdmin(route);
+      else pageHome();
+    } catch (err) {
+      console.error("[VCBG render]", err);
+      app().innerHTML =
+        header() +
+        `<div class="empty">Không mở được trang: ${esc(err.message || "lỗi không xác định.")}</div>` +
+        footer();
+      bindChrome();
+    }
   }
 
   document.addEventListener("click", (e) => {

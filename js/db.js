@@ -262,12 +262,27 @@
     return { ...story, genres, tags, stats: storyStats(story.id) };
   }
 
+  function withTimeout(promise, ms, label) {
+    let t;
+    const timeout = new Promise((_, reject) => {
+      t = setTimeout(() => reject(new Error("Hết thời gian tải " + (label || "dữ liệu") + ".")), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(t));
+  }
+
   async function loadTable(name, extra) {
     let q = sb.from(name).select("*");
     if (extra) q = extra(q);
-    const { data, error } = await q;
+    const { data, error } = await withTimeout(q, 8000, name);
     if (error) throwHttp(error, "Không tải được " + name);
     return data || [];
+  }
+
+  function loadOptional(name, extra) {
+    return loadTable(name, extra).catch((err) => {
+      console.warn("[VCBG optional]", name, err && err.message);
+      return [];
+    });
   }
 
   let bootstrapped = false;
@@ -360,78 +375,17 @@
     } catch (_) {}
   }
 
-  async function refreshCatalog() {
-    const [
-      profiles,
-      genres,
-      tags,
-      stories,
-      story_genres,
-      story_tags,
-      chapters,
-      comments,
-      comment_replies,
-      comment_likes,
-      chapter_likes,
-      ratings,
-      poll_votes,
-      settingsRows,
-      storyStatsRows,
-    ] = await Promise.all([
-      loadTable("public_profiles").catch(() => loadTable("profiles")),
-      loadTable("genres"),
-      loadTable("tags"),
-      loadTable("stories"),
-      loadTable("story_genres"),
-      loadTable("story_tags"),
-      sb
-        .from("chapters")
-        .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at")
-        .then(({ data, error }) => {
-          if (error) throwHttp(error, "Không tải được chapters");
-          return data || [];
-        }),
-      loadTable("comments"),
-      loadTable("comment_replies"),
-      loadTable("comment_likes"),
-      loadTable("chapter_likes"),
-      loadTable("ratings"),
-      loadTable("poll_votes"),
-      loadTable("site_settings"),
-      sb.rpc("get_story_stats").then(({ data, error }) => {
-        if (error) throwHttp(error, "Không tải được thống kê.");
-        return data || [];
-      }),
-    ]);
-
-    cache.profiles = (profiles || []).map((p) => {
-      const id = p.user_id || p.id;
-      return {
-        ...p,
-        id,
-        user_id: id,
-        created_at: toMs(p.created_at),
-      };
-    });
-    cache.users = cache.profiles.map((p) => ({
-      id: p.id,
-      email: p.email,
-      role: p.role,
-      status: p.status,
-      created_at: p.created_at,
-    }));
-    cache.genres = genres;
-    cache.tags = tags;
-    cache.stories = (stories || []).map((s) => ({
+  function mapStories(stories) {
+    return (stories || []).map((s) => ({
       ...s,
       cover: s.cover || s.cover_url || "",
       description: s.description || "",
       created_at: toMs(s.created_at),
       updated_at: toMs(s.updated_at),
     }));
-    cache.story_genres = story_genres;
-    cache.story_tags = story_tags;
-    cache.chapters = (chapters || []).map((c) => ({
+  }
+  function mapChapters(chapters) {
+    return (chapters || []).map((c) => ({
       ...c,
       number: Number(c.number || c.chapter_number || 0),
       body: c.body != null ? c.body : c.content || "",
@@ -440,47 +394,120 @@
       created_at: toMs(c.created_at),
       updated_at: toMs(c.updated_at),
     }));
-    cache.comments = (comments || []).map((c) => ({
-      ...c,
-      likes: (comment_likes || []).filter((l) => l.comment_id === c.id).map((l) => l.user_id),
-      created_at: toMs(c.created_at),
-    }));
-    cache.comment_replies = (comment_replies || []).map((r) => ({
-      ...r,
-      created_at: toMs(r.created_at),
-    }));
-    cache.comment_likes = comment_likes;
-    cache.chapter_likes = (chapter_likes || []).map((l) => ({
-      ...l,
-      id: l.id || l.user_id + ":" + l.chapter_id,
-      at: toMs(l.at || l.created_at),
-    }));
-    cache.ratings = (ratings || []).map((r) => ({
-      ...r,
-      id: r.id || r.user_id + ":" + r.story_id,
-      at: toMs(r.at || r.created_at),
-    }));
-    cache.story_stats = {};
-    (storyStatsRows || []).forEach((row) => {
-      cache.story_stats[row.story_id] = row;
-    });
-    cache.poll_votes = (poll_votes || []).map((v) => ({
-      ...v,
-      at: toMs(v.at || v.created_at),
-    }));
-    const row = (settingsRows && settingsRows[0]) || {};
+  }
+
+  async function refreshCatalog() {
+    const [genres, tags, stories, story_genres, story_tags, chapters, settingsRows] = await Promise.all([
+      loadTable("genres"),
+      loadTable("tags"),
+      loadTable("stories"),
+      loadTable("story_genres"),
+      loadTable("story_tags"),
+      withTimeout(
+        sb
+          .from("chapters")
+          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at"),
+        8000,
+        "chapters"
+      ).then(({ data, error }) => {
+        if (error) throwHttp(error, "Không tải được chapters");
+        return data || [];
+      }),
+      loadOptional("site_settings"),
+    ]);
+
+    cache.genres = genres || [];
+    cache.tags = tags || [];
+    cache.stories = mapStories(stories);
+    cache.story_genres = story_genres || [];
+    cache.story_tags = story_tags || [];
+    cache.chapters = mapChapters(chapters);
+    const settings = (settingsRows && settingsRows[0]) || {};
     cache.site_settings = Object.assign(emptySettings(), {
-      name: row.name,
-      tagline: row.tagline,
-      allow_comments: row.allow_comments,
-      allow_registration: row.allow_registration,
-      social: row.social || emptySettings().social,
-      featured_quote: row.featured_quote || null,
-      poll: row.poll || emptySettings().poll,
-      seeded: !!row.seeded,
+      name: settings.name,
+      tagline: settings.tagline,
+      allow_comments: settings.allow_comments,
+      allow_registration: settings.allow_registration,
+      social: settings.social || emptySettings().social,
+      featured_quote: settings.featured_quote || null,
+      poll: settings.poll || emptySettings().poll,
+      seeded: !!settings.seeded,
     });
     cache.ready = true;
     writeSnap();
+
+    Promise.all([
+      loadOptional("public_profiles").then((rows) => (rows && rows.length ? rows : loadOptional("profiles"))),
+      loadOptional("comments"),
+      loadOptional("comment_replies"),
+      loadOptional("comment_likes"),
+      loadOptional("chapter_likes"),
+      loadOptional("ratings"),
+      loadOptional("poll_votes"),
+      withTimeout(sb.rpc("get_story_stats"), 8000, "thống kê")
+        .then(({ data, error }) => {
+          if (error) throw error;
+          return data || [];
+        })
+        .catch((err) => {
+          console.warn("[VCBG optional] stats", err && err.message);
+          return [];
+        }),
+    ])
+      .then(
+        ([
+          profiles,
+          comments,
+          comment_replies,
+          comment_likes,
+          chapter_likes,
+          ratings,
+          poll_votes,
+          storyStatsRows,
+        ]) => {
+          cache.profiles = (profiles || []).map((p) => {
+            const id = p.user_id || p.id;
+            return { ...p, id, user_id: id, created_at: toMs(p.created_at) };
+          });
+          cache.users = cache.profiles.map((p) => ({
+            id: p.id,
+            email: p.email,
+            role: p.role,
+            status: p.status,
+            created_at: p.created_at,
+          }));
+          cache.comments = (comments || []).map((c) => ({
+            ...c,
+            likes: (comment_likes || []).filter((l) => l.comment_id === c.id).map((l) => l.user_id),
+            created_at: toMs(c.created_at),
+          }));
+          cache.comment_replies = (comment_replies || []).map((r) => ({
+            ...r,
+            created_at: toMs(r.created_at),
+          }));
+          cache.comment_likes = comment_likes || [];
+          cache.chapter_likes = (chapter_likes || []).map((l) => ({
+            ...l,
+            id: l.id || l.user_id + ":" + l.chapter_id,
+            at: toMs(l.at || l.created_at),
+          }));
+          cache.ratings = (ratings || []).map((r) => ({
+            ...r,
+            id: r.id || r.user_id + ":" + r.story_id,
+            at: toMs(r.at || r.created_at),
+          }));
+          cache.story_stats = {};
+          (storyStatsRows || []).forEach((row) => {
+            cache.story_stats[row.story_id] = row;
+          });
+          cache.poll_votes = (poll_votes || []).map((v) => ({
+            ...v,
+            at: toMs(v.at || v.created_at),
+          }));
+          writeSnap();
+        }
+      )
+      .catch((err) => console.warn("[VCBG extras]", err && err.message));
   }
 
   async function refreshAccount() {
@@ -567,7 +594,9 @@
 
   async function refresh() {
     await refreshCatalog();
-    await refreshAccount();
+    await withTimeout(refreshAccount(), 6000, "tài khoản").catch((err) => {
+      console.warn("[VCBG account]", err && err.message);
+    });
   }
 
   async function syncSession() {
@@ -617,23 +646,21 @@
       }
       const snap = readSnap();
       if (snap) applyCatalog(snap);
-      bootPromise = (async () => {
+      const pending = (async () => {
         try {
-          await syncSession();
+          await withTimeout(syncSession(), 4000, "phiên");
         } catch (_) {}
-        try {
-          await sb.rpc("publish_due_chapters");
-        } catch (_) {}
+        sb.rpc("publish_due_chapters").catch(() => {});
         await refresh();
         bootstrapped = true;
-      })().finally(() => {
-        bootPromise = null;
+      })();
+      bootPromise = pending;
+      pending.catch((err) => console.error("[VCBG boot]", err)).finally(() => {
+        if (bootPromise === pending) bootPromise = null;
       });
-      if (cache.ready && cache.stories && cache.stories.length) {
-        bootPromise.catch((err) => console.error("[VCBG boot]", err));
-        return;
-      }
-      await bootPromise;
+      if (cache.ready && cache.stories && cache.stories.length) return;
+      await withTimeout(pending, 12000, "thư viện");
+      bootstrapped = true;
     },
 
     settings() {
@@ -777,8 +804,8 @@
             .filter((x) => x.story_id === s.id)
             .map((x) => cache.tags.find((t) => t.id === x.tag_id)?.name || "");
           return (
-            s.title.toLowerCase().includes(n) ||
-            s.author.toLowerCase().includes(n) ||
+            String(s.title || "").toLowerCase().includes(n) ||
+            String(s.author || "").toLowerCase().includes(n) ||
             genres.join(" ").toLowerCase().includes(n) ||
             tags.join(" ").toLowerCase().includes(n)
           );
@@ -1628,12 +1655,12 @@
     communityFeed({ sort, storyId } = {}) {
       const DAY = 24 * 60 * 60 * 1000;
       const nowMs = now();
-      const comments = cache.comments.filter((c) => c.status !== "hidden");
+      const comments = (cache.comments || []).filter((c) => c.status !== "hidden");
       const talking = new Set();
       comments.forEach((c) => {
         if (nowMs - c.created_at < DAY) talking.add(c.user_id);
       });
-      cache.comment_replies.forEach((r) => {
+      (cache.comment_replies || []).forEach((r) => {
         if (r.status !== "hidden" && nowMs - r.created_at < DAY) talking.add(r.user_id);
       });
       const counts = {};
@@ -1644,7 +1671,7 @@
         const story = cache.stories.find((s) => s.id === c.story_id);
         const chapter = cache.chapters.find((ch) => ch.id === c.chapter_id);
         const user = profileOf(c.user_id);
-        const replies = cache.comment_replies
+        const replies = (cache.comment_replies || [])
           .filter((r) => r.comment_id === c.id && r.status !== "hidden")
           .sort((a, b) => a.created_at - b.created_at)
           .map((r) => ({

@@ -1,7 +1,18 @@
-/* Prevent hero covers from popping in one-by-one on first paint. */
-.hero.stack-hero:not(.hero-sides-ready) .stack-card:not(.is-active) {
-  opacity: 0 !important;
+/* Keep the whole initial fan hidden until all five visible covers are decoded. */
+.hero.stack-hero .stack-stage {
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 180ms ease, transform 180ms ease;
 }
-.hero.stack-hero.hero-sides-ready .stack-card:not(.is-active) {
-  transition-delay: 0ms !important;
+.hero.stack-hero.hero-fan-ready .stack-stage {
+  opacity: 1;
+  transform: translateY(0);
+}
+/* Hide dots until the fan is ready so the hero enters as one visual unit. */
+.hero.stack-hero .hero-nav {
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+.hero.stack-hero.hero-fan-ready .hero-nav {
+  opacity: 1;
 }

@@ -25,8 +25,9 @@
     if (!u || !u.id) return;
     var old = readCached();
     var role = u.role === "admin" ? "admin" : "reader";
-    /* Never downgrade a recently verified admin just because profile data is still loading. */
-    if (old && old.role === "admin" && role !== "admin" && (old.id === u.id || (old.email && u.email && old.email === u.email))) {
+    /* Do not downgrade a verified admin while the profile row is still being restored. */
+    if (old && old.role === "admin" && role !== "admin" &&
+        (old.id === u.id || (old.email && u.email && old.email === u.email))) {
       role = "admin";
     }
     var slim = {
@@ -119,38 +120,55 @@
     if (el) el.remove();
   }
 
-  function waitForLiveAdmin(timeout) {
+  /* Important: the database layer restores the Supabase session first, then loads the
+     user's profile/role after catalog work. Never decide FORBIDDEN while that sequence is
+     still running. Wait for VCBG.whenReady(), then verify the real internal admin role. */
+  function waitForResolvedAdmin() {
     if (liveAdmin()) return Promise.resolve(true);
     if (checking) return checking;
-    timeout = timeout || 5000;
-    checking = new Promise(function (resolve) {
-      var done = false;
-      var started = Date.now();
-      function finish(ok) {
-        if (done) return;
-        done = true;
-        checking = null;
-        resolve(ok);
-      }
-      function tick() {
-        if (liveAdmin()) return finish(true);
-        if (Date.now() - started >= timeout) return finish(false);
-        setTimeout(tick, 80);
-      }
+
+    checking = (async function () {
       try {
         if (typeof window.VCBG.whenReady === "function") {
-          Promise.resolve(window.VCBG.whenReady()).then(function () {
-            if (liveAdmin()) finish(true);
-          }).catch(function () {});
+          await Promise.resolve(window.VCBG.whenReady());
         }
       } catch (_) {}
-      tick();
+
+      /* whenReady can be briefly null during fast boot; allow the profile cache to settle. */
+      var started = Date.now();
+      while (Date.now() - started < 3000) {
+        if (liveAdmin()) return true;
+        await new Promise(function (resolve) { setTimeout(resolve, 80); });
+      }
+      return liveAdmin();
+    })().finally(function () {
+      checking = null;
     });
+
     return checking;
   }
 
-  /* Admin links are held until Supabase has restored the real profile role. This prevents
-     the router guard from evaluating a transient reader/null state on mobile. */
+  function openAdminAfterAuth(href) {
+    showChecking();
+    waitForResolvedAdmin().then(function (ok) {
+      hideChecking();
+      if (ok) {
+        location.hash = String(href || "#/admin").replace(/^#/, "");
+        return;
+      }
+      /* Only reject after the auth/profile bootstrap has genuinely completed. */
+      var cached = readCached();
+      if (cached && cached.role === "admin") {
+        /* Keep the user on the current page and allow a later retry; never show a false
+           'no admin permission' page caused by startup timing. */
+        return;
+      }
+      location.hash = "/tai-khoan";
+    }).catch(function () {
+      hideChecking();
+    });
+  }
+
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest ? e.target.closest('a[href^="#/admin"]') : null;
     if (!a) return;
@@ -159,16 +177,11 @@
 
     e.preventDefault();
     e.stopImmediatePropagation();
-    var href = a.getAttribute("href") || "#/admin";
-    showChecking();
-    waitForLiveAdmin(5000).then(function (ok) {
-      hideChecking();
-      if (ok) location.hash = href.slice(1);
-      else location.hash = "/tai-khoan";
-    });
+    openAdminAfterAuth(a.getAttribute("href") || "#/admin");
   }, true);
 
-  /* Same protection for a mobile reload while already on an /admin hash. */
+  /* On a mobile reload of an admin hash, temporarily park at home so the normal router
+     cannot execute needAdmin() before the internal profile role is restored. */
   var initialHash = String(location.hash || "");
   var initialCached = readCached();
   if (/^#\/admin(?:\/|$)/.test(initialHash) && initialCached && initialCached.role === "admin" && !liveAdmin()) {
@@ -176,9 +189,11 @@
     try { history.replaceState(null, "", location.pathname + location.search + "#/"); } catch (_) {}
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showChecking, { once: true });
     else showChecking();
-    waitForLiveAdmin(5000).then(function (ok) {
+    waitForResolvedAdmin().then(function (ok) {
       hideChecking();
       if (ok) location.hash = target.slice(1);
+    }).catch(function () {
+      hideChecking();
     });
   }
 })();

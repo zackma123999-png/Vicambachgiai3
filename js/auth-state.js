@@ -1,4 +1,4 @@
-/* Persist resolved auth state and defer admin navigation until the live role is known. */
+/* Persist resolved auth state and defer admin navigation until the real background auth/profile bootstrap is done. */
 (function () {
   if (!window.VCBG) return;
 
@@ -16,20 +16,15 @@
       if (!x || !x.id || !x.role) return null;
       if (Date.now() - Number(x.at || 0) > AUTH_MAX_AGE) return null;
       return x;
-    } catch (_) {
-      return null;
-    }
+    } catch (_) { return null; }
   }
 
   function saveUser(u) {
     if (!u || !u.id) return;
     var old = readCached();
     var role = u.role === "admin" ? "admin" : "reader";
-    /* Do not downgrade a verified admin while the profile row is still being restored. */
     if (old && old.role === "admin" && role !== "admin" &&
-        (old.id === u.id || (old.email && u.email && old.email === u.email))) {
-      role = "admin";
-    }
+        (old.id === u.id || (old.email && u.email && old.email === u.email))) role = "admin";
     var slim = {
       id: u.id,
       email: u.email || (old && old.email) || "",
@@ -57,19 +52,14 @@
   window.VCBG.currentUser = function persistedCurrentUser() {
     var live = liveUser();
     var cached = readCached();
-
     if (live) {
       if (cached && cached.role === "admin" && live.role !== "admin" &&
           (cached.id === live.id || (cached.email && live.email && cached.email === live.email))) {
-        return Object.assign({}, live, {
-          role: "admin",
-          profile: live.profile || cached.profile || null
-        });
+        return Object.assign({}, live, { role: "admin", profile: live.profile || cached.profile || null });
       }
       saveUser(live);
       return live;
     }
-
     return cached || null;
   };
 
@@ -100,7 +90,6 @@
     if (old) return old;
     var el = document.createElement("div");
     el.id = "vcbg-auth-checking";
-    el.setAttribute("aria-live", "polite");
     el.innerHTML = '<div class="vcbg-auth-spinner"></div><div>Đang xác thực quyền quản trị…</div>';
     el.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#070b14;color:#8b9bb3;font:500 16px 'Be Vietnam Pro',system-ui,sans-serif";
     var sp = el.firstElementChild;
@@ -120,53 +109,32 @@
     if (el) el.remove();
   }
 
-  /* Important: the database layer restores the Supabase session first, then loads the
-     user's profile/role after catalog work. Never decide FORBIDDEN while that sequence is
-     still running. Wait for VCBG.whenReady(), then verify the real internal admin role. */
   function waitForResolvedAdmin() {
     if (liveAdmin()) return Promise.resolve(true);
     if (checking) return checking;
-
     checking = (async function () {
       try {
-        if (typeof window.VCBG.whenReady === "function") {
-          await Promise.resolve(window.VCBG.whenReady());
-        }
+        if (typeof window.VCBG.backgroundReady === "function") await window.VCBG.backgroundReady();
+        else if (typeof window.VCBG.whenReady === "function") await window.VCBG.whenReady();
       } catch (_) {}
-
-      /* whenReady can be briefly null during fast boot; allow the profile cache to settle. */
       var started = Date.now();
-      while (Date.now() - started < 3000) {
+      while (Date.now() - started < 2000) {
         if (liveAdmin()) return true;
         await new Promise(function (resolve) { setTimeout(resolve, 80); });
       }
       return liveAdmin();
-    })().finally(function () {
-      checking = null;
-    });
-
+    })().finally(function () { checking = null; });
     return checking;
   }
 
-  function openAdminAfterAuth(href) {
-    showChecking();
-    waitForResolvedAdmin().then(function (ok) {
-      hideChecking();
-      if (ok) {
-        location.hash = String(href || "#/admin").replace(/^#/, "");
-        return;
-      }
-      /* Only reject after the auth/profile bootstrap has genuinely completed. */
-      var cached = readCached();
-      if (cached && cached.role === "admin") {
-        /* Keep the user on the current page and allow a later retry; never show a false
-           'no admin permission' page caused by startup timing. */
-        return;
-      }
-      location.hash = "/tai-khoan";
-    }).catch(function () {
-      hideChecking();
-    });
+  function navigateToAdmin(href) {
+    var target = String(href || "#/admin");
+    if (!target.startsWith("#")) target = "#" + target.replace(/^#?/, "");
+    if (location.hash === target) {
+      try { window.dispatchEvent(new HashChangeEvent("hashchange")); } catch (_) { location.reload(); }
+    } else {
+      location.hash = target;
+    }
   }
 
   document.addEventListener("click", function (e) {
@@ -177,11 +145,18 @@
 
     e.preventDefault();
     e.stopImmediatePropagation();
-    openAdminAfterAuth(a.getAttribute("href") || "#/admin");
+    var href = a.getAttribute("href") || "#/admin";
+    showChecking();
+    waitForResolvedAdmin().then(function (ok) {
+      hideChecking();
+      if (ok) navigateToAdmin(href);
+      else {
+        var stillCached = readCached();
+        if (!stillCached || stillCached.role !== "admin") location.hash = "#/tai-khoan";
+      }
+    }).catch(hideChecking);
   }, true);
 
-  /* On a mobile reload of an admin hash, temporarily park at home so the normal router
-     cannot execute needAdmin() before the internal profile role is restored. */
   var initialHash = String(location.hash || "");
   var initialCached = readCached();
   if (/^#\/admin(?:\/|$)/.test(initialHash) && initialCached && initialCached.role === "admin" && !liveAdmin()) {
@@ -191,9 +166,7 @@
     else showChecking();
     waitForResolvedAdmin().then(function (ok) {
       hideChecking();
-      if (ok) location.hash = target.slice(1);
-    }).catch(function () {
-      hideChecking();
-    });
+      if (ok) navigateToAdmin(target);
+    }).catch(hideChecking);
   }
 })();

@@ -3,6 +3,7 @@
   if (!window.VCBG || typeof window.VCBG.init !== "function") return;
 
   var HERO_KEY = "vicambachgiai.hero.v1";
+  var AUTH_KEY = "vicambachgiai.auth.state.v1";
   var originalInit = window.VCBG.init.bind(window.VCBG);
   var originalListStories = window.VCBG.listStories.bind(window.VCBG);
   var started = false;
@@ -33,6 +34,15 @@
       }
     } catch (_) {}
     return (Array.isArray(window.VCBG_HERO_SNAPSHOT) ? window.VCBG_HERO_SNAPSHOT : []).map(normalizeFallback);
+  }
+
+  function cachedAdmin() {
+    try {
+      var x = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+      return !!(x && x.role === "admin" && x.id);
+    } catch (_) {
+      return false;
+    }
   }
 
   var fallbackStories = readFallback();
@@ -89,16 +99,27 @@
   }
 
   window.VCBG.init = function fastInit() {
+    var initRun = Promise.resolve();
     if (!started) {
       started = true;
       try {
-        Promise.resolve(originalInit())
-          .then(saveLiveFallback)
+        initRun = Promise.resolve(originalInit())
+          .then(function () { saveLiveFallback(); })
           .catch(function (err) { console.error("[VCBG background init]", err); });
       } catch (err) {
         console.error("[VCBG background init]", err);
       }
     }
-    return Promise.resolve();
+
+    /* Normal readers keep the instant boot. For a remembered admin session, wait only for
+       the auth/profile boot promise (max 3s) so a mobile refresh cannot render as reader first. */
+    if (cachedAdmin() && typeof window.VCBG.whenReady === "function") {
+      var ready = Promise.resolve().then(function () { return window.VCBG.whenReady(); });
+      return Promise.race([
+        ready,
+        new Promise(function (resolve) { setTimeout(resolve, 3000); })
+      ]);
+    }
+    return initRun.then(function () {});
   };
 })();

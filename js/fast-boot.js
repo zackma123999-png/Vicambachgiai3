@@ -1,12 +1,13 @@
-/* ViCamBachGiai — instant non-blocking startup with lightweight homepage fallback. */
+/* ViCamBachGiai — fully non-blocking stale-while-revalidate startup. */
 (function () {
   if (!window.VCBG || typeof window.VCBG.init !== "function") return;
 
   var HERO_KEY = "vicambachgiai.hero.v1";
-  var AUTH_KEY = "vicambachgiai.auth.state.v1";
+  var CATALOG_KEY = "vicambachgiai.catalog.v1";
   var originalInit = window.VCBG.init.bind(window.VCBG);
   var originalListStories = window.VCBG.listStories.bind(window.VCBG);
   var started = false;
+  var backgroundInit = null;
 
   function proxyCover(s) {
     if (!s || !s.id) return "";
@@ -26,23 +27,24 @@
     return copy;
   }
 
-  function readFallback() {
-    try {
-      var saved = JSON.parse(localStorage.getItem(HERO_KEY) || "null");
-      if (saved && Array.isArray(saved.stories) && saved.stories.length) {
-        return saved.stories.map(normalizeFallback);
-      }
-    } catch (_) {}
-    return (Array.isArray(window.VCBG_HERO_SNAPSHOT) ? window.VCBG_HERO_SNAPSHOT : []).map(normalizeFallback);
+  function readJson(key) {
+    try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (_) { return null; }
   }
 
-  function cachedAdmin() {
-    try {
-      var x = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-      return !!(x && x.role === "admin" && x.id);
-    } catch (_) {
-      return false;
+  function readFallback() {
+    var hero = readJson(HERO_KEY);
+    if (hero && Array.isArray(hero.stories) && hero.stories.length) {
+      return hero.stories.map(normalizeFallback);
     }
+
+    /* Full local catalog is the second SWR source. It lets a reload paint the last-known
+       library immediately even if Supabase/auth/network have not finished yet. */
+    var catalog = readJson(CATALOG_KEY);
+    if (catalog && Array.isArray(catalog.stories) && catalog.stories.length) {
+      return catalog.stories.map(normalizeFallback);
+    }
+
+    return (Array.isArray(window.VCBG_HERO_SNAPSHOT) ? window.VCBG_HERO_SNAPSHOT : []).map(normalizeFallback);
   }
 
   var fallbackStories = readFallback();
@@ -75,13 +77,13 @@
     try {
       var live = originalListStories({ sort: "updated" }) || [];
       if (!live.length) return;
-      var slim = live.slice(0, 24).map(function (s) {
+      var slim = live.slice(0, 40).map(function (s) {
         return normalizeFallback({
           id: s.id,
           title: s.title,
           slug: s.slug,
           author: s.author,
-          synopsis: String(s.synopsis || "").slice(0, 700),
+          synopsis: String(s.synopsis || "").slice(0, 900),
           status: s.status,
           featured: !!s.featured,
           upcoming: !!s.upcoming,
@@ -98,28 +100,35 @@
     } catch (_) {}
   }
 
-  window.VCBG.init = function fastInit() {
-    var initRun = Promise.resolve();
-    if (!started) {
-      started = true;
-      try {
-        initRun = Promise.resolve(originalInit())
-          .then(function () { saveLiveFallback(); })
-          .catch(function (err) { console.error("[VCBG background init]", err); });
-      } catch (err) {
-        console.error("[VCBG background init]", err);
-      }
+  function startBackgroundRefresh() {
+    if (started) return backgroundInit || Promise.resolve();
+    started = true;
+    try {
+      backgroundInit = Promise.resolve(originalInit())
+        .then(function () {
+          saveLiveFallback();
+          try {
+            window.dispatchEvent(new CustomEvent("vcbg:data-ready"));
+          } catch (_) {}
+        })
+        .catch(function (err) {
+          console.error("[VCBG background init]", err);
+        });
+    } catch (err) {
+      console.error("[VCBG background init]", err);
+      backgroundInit = Promise.resolve();
     }
+    return backgroundInit;
+  }
 
-    /* Normal readers keep the instant boot. For a remembered admin session, wait only for
-       the auth/profile boot promise (max 3s) so a mobile refresh cannot render as reader first. */
-    if (cachedAdmin() && typeof window.VCBG.whenReady === "function") {
-      var ready = Promise.resolve().then(function () { return window.VCBG.whenReady(); });
-      return Promise.race([
-        ready,
-        new Promise(function (resolve) { setTimeout(resolve, 3000); })
-      ]);
-    }
-    return initRun.then(function () {});
+  /* Critical rule: init NEVER blocks first paint. Start all network/auth/database work in
+     the background and resolve synchronously to the app renderer. The app can paint cached
+     data now; its existing whenReady() pass re-renders once fresh data arrives. */
+  window.VCBG.init = function nonBlockingInit() {
+    startBackgroundRefresh();
+    return Promise.resolve();
   };
+
+  /* Warm the background fetch as soon as this script executes, before app.js boot runs. */
+  startBackgroundRefresh();
 })();

@@ -1,0 +1,26 @@
+/* Reader-only spacing fix. No application logic or other UI is changed. */
+.reader-body {
+  width: 100%;
+  padding-left: 1.35rem;
+  padding-right: 1.35rem;
+}
+
+.reader-body p.r-p {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0;
+  padding-right: 0;
+  text-align: justify;
+  text-justify: inter-word;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: auto;
+}
+
+@media (max-width: 480px) {
+  .reader-body {
+    padding-left: 1.3rem;
+    padding-right: 1.3rem;
+  }
+}

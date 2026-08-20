@@ -8,6 +8,7 @@
   var originalListStories = window.VCBG.listStories.bind(window.VCBG);
   var started = false;
   var backgroundInit = null;
+  var backgroundDone = false;
 
   function proxyCover(s) {
     if (!s || !s.id) return "";
@@ -33,17 +34,9 @@
 
   function readFallback() {
     var hero = readJson(HERO_KEY);
-    if (hero && Array.isArray(hero.stories) && hero.stories.length) {
-      return hero.stories.map(normalizeFallback);
-    }
-
-    /* Full local catalog is the second SWR source. It lets a reload paint the last-known
-       library immediately even if Supabase/auth/network have not finished yet. */
+    if (hero && Array.isArray(hero.stories) && hero.stories.length) return hero.stories.map(normalizeFallback);
     var catalog = readJson(CATALOG_KEY);
-    if (catalog && Array.isArray(catalog.stories) && catalog.stories.length) {
-      return catalog.stories.map(normalizeFallback);
-    }
-
+    if (catalog && Array.isArray(catalog.stories) && catalog.stories.length) return catalog.stories.map(normalizeFallback);
     return (Array.isArray(window.VCBG_HERO_SNAPSHOT) ? window.VCBG_HERO_SNAPSHOT : []).map(normalizeFallback);
   }
 
@@ -106,29 +99,36 @@
     try {
       backgroundInit = Promise.resolve(originalInit())
         .then(function () {
+          backgroundDone = true;
           saveLiveFallback();
-          try {
-            window.dispatchEvent(new CustomEvent("vcbg:data-ready"));
-          } catch (_) {}
+          try { window.dispatchEvent(new CustomEvent("vcbg:data-ready")); } catch (_) {}
         })
         .catch(function (err) {
+          backgroundDone = true;
           console.error("[VCBG background init]", err);
+          try { window.dispatchEvent(new CustomEvent("vcbg:data-ready")); } catch (_) {}
         });
     } catch (err) {
+      backgroundDone = true;
       console.error("[VCBG background init]", err);
       backgroundInit = Promise.resolve();
     }
     return backgroundInit;
   }
 
-  /* Critical rule: init NEVER blocks first paint. Start all network/auth/database work in
-     the background and resolve synchronously to the app renderer. The app can paint cached
-     data now; its existing whenReady() pass re-renders once fresh data arrives. */
   window.VCBG.init = function nonBlockingInit() {
     startBackgroundRefresh();
     return Promise.resolve();
   };
 
-  /* Warm the background fetch as soon as this script executes, before app.js boot runs. */
+  /* Auth guards must wait for this promise, not VCBG.whenReady(), whose bootPromise can
+     already have been cleared by the time a mobile user taps the Admin menu. */
+  window.VCBG.backgroundReady = function backgroundReady() {
+    return startBackgroundRefresh();
+  };
+  window.VCBG.isBackgroundReady = function isBackgroundReady() {
+    return backgroundDone;
+  };
+
   startBackgroundRefresh();
 })();

@@ -1,10 +1,14 @@
-/* Preload cached homepage hero covers as early as possible. */
+/* Preload homepage hero covers as early as possible. */
 (function () {
   try {
-    var raw = localStorage.getItem("vicambachgiai.catalog.v1");
-    if (!raw) return;
-    var snap = JSON.parse(raw);
-    var stories = (snap && snap.stories) || [];
+    var stories = Array.isArray(window.VCBG_HERO_SNAPSHOT) ? window.VCBG_HERO_SNAPSHOT.slice() : [];
+    if (!stories.length) {
+      var raw = localStorage.getItem("vicambachgiai.catalog.v1");
+      if (raw) {
+        var snap = JSON.parse(raw);
+        stories = (snap && snap.stories) || [];
+      }
+    }
     if (!stories.length) return;
     var featured = stories.filter(function (s) { return !!s.featured; });
     var ongoing = stories.filter(function (s) { return s.status === "ongoing"; });

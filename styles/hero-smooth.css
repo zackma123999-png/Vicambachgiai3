@@ -1,0 +1,7 @@
+/* Prevent hero covers from popping in one-by-one on first paint. */
+.hero.stack-hero:not(.hero-sides-ready) .stack-card:not(.is-active) {
+  opacity: 0 !important;
+}
+.hero.stack-hero.hero-sides-ready .stack-card:not(.is-active) {
+  transition-delay: 0ms !important;
+}

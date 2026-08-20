@@ -1,10 +1,8 @@
-/* Persist resolved auth state and keep admin navigation consistent with db.js internal role. */
+/* Keep cached auth for UI, but gate admin navigation on db.js's real requireAdmin path. */
 (function () {
   if (!window.VCBG) return;
 
   var KEY = "vicambachgiai.auth.state.v1";
-  var CATALOG_KEY = "vicambachgiai.catalog.v1";
-  var RECOVER_KEY = "vcbg.admin.recover.once";
   var originalCurrentUser = typeof window.VCBG.currentUser === "function" ? window.VCBG.currentUser.bind(window.VCBG) : function () { return null; };
   var originalIsAdmin = typeof window.VCBG.isAdmin === "function" ? window.VCBG.isAdmin.bind(window.VCBG) : function () { return false; };
   var originalLogin = typeof window.VCBG.login === "function" ? window.VCBG.login.bind(window.VCBG) : null;
@@ -21,64 +19,30 @@
     } catch (_) { return null; }
   }
 
-  function seedCatalogAdmin(u) {
-    if (!u || !u.id || u.role !== "admin") return;
-    try {
-      var cat = JSON.parse(localStorage.getItem(CATALOG_KEY) || "null") || {};
-      var profiles = Array.isArray(cat.profiles) ? cat.profiles.slice() : [];
-      var users = Array.isArray(cat.users) ? cat.users.slice() : [];
-      var old = profiles.find(function (p) { return p && (p.id === u.id || p.user_id === u.id); }) || {};
-      var profile = Object.assign({}, old, {
-        id: u.id,
-        user_id: u.id,
-        email: u.email || old.email || "",
-        role: "admin",
-        status: u.status || old.status || "active",
-        display_name: (u.profile && u.profile.display_name) || old.display_name || ((u.email || "Admin").split("@")[0])
-      });
-      profiles = profiles.filter(function (p) { return !(p && (p.id === u.id || p.user_id === u.id)); });
-      profiles.push(profile);
-      users = users.filter(function (x) { return !(x && x.id === u.id); });
-      users.push({ id: u.id, email: profile.email, role: "admin", status: profile.status, created_at: profile.created_at || 0 });
-      cat.profiles = profiles;
-      cat.users = users;
-      cat.at = Date.now();
-      localStorage.setItem(CATALOG_KEY, JSON.stringify(cat));
-    } catch (_) {}
-  }
-
   function saveUser(u) {
     if (!u || !u.id) return;
     var old = readCached();
     var role = u.role === "admin" ? "admin" : "reader";
     if (old && old.role === "admin" && role !== "admin" &&
         (old.id === u.id || (old.email && u.email && old.email === u.email))) role = "admin";
-    var slim = {
-      id: u.id,
-      email: u.email || (old && old.email) || "",
-      role: role,
-      status: u.status || "active",
-      profile: u.profile || (old && old.profile) || null,
-      at: Date.now()
-    };
-    try { localStorage.setItem(KEY, JSON.stringify(slim)); } catch (_) {}
-    if (slim.role === "admin") seedCatalogAdmin(slim);
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        id: u.id,
+        email: u.email || (old && old.email) || "",
+        role: role,
+        status: u.status || "active",
+        profile: u.profile || (old && old.profile) || null,
+        at: Date.now()
+      }));
+    } catch (_) {}
   }
 
   function clearUser() {
-    try {
-      localStorage.removeItem(KEY);
-      sessionStorage.removeItem(RECOVER_KEY);
-    } catch (_) {}
+    try { localStorage.removeItem(KEY); } catch (_) {}
   }
 
   function liveUser() {
     try { return originalCurrentUser(); } catch (_) { return null; }
-  }
-
-  function liveAdmin() {
-    var u = liveUser();
-    return !!(u && u.role === "admin");
   }
 
   window.VCBG.currentUser = function persistedCurrentUser() {
@@ -119,7 +83,7 @@
 
   function showChecking() {
     var old = document.getElementById("vcbg-auth-checking");
-    if (old) return old;
+    if (old) return;
     var el = document.createElement("div");
     el.id = "vcbg-auth-checking";
     el.innerHTML = '<div class="vcbg-auth-spinner"></div><div>Đang xác thực quyền quản trị…</div>';
@@ -133,7 +97,6 @@
       document.head.appendChild(st);
     }
     document.body.appendChild(el);
-    return el;
   }
 
   function hideChecking() {
@@ -141,28 +104,42 @@
     if (el) el.remove();
   }
 
-  /* Do not await the entire catalog refresh before checking admin. db.js restores the
-     Supabase session first; as soon as sessionUser exists, the pre-seeded admin profile
-     makes its internal currentUser()/requireAdmin() authoritative. */
-  function waitForResolvedAdmin(maxMs) {
-    if (liveAdmin()) return Promise.resolve(true);
+  /* This is the authoritative readiness test: adminStats() itself calls db.js requireAdmin().
+     If this succeeds, every admin route/API sees the same role and the panel can render safely. */
+  function internalAdminReady() {
+    try {
+      if (typeof window.VCBG.adminStats !== "function") return false;
+      window.VCBG.adminStats();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function waitForInternalAdmin(maxMs) {
+    if (internalAdminReady()) return Promise.resolve(true);
     if (checking) return checking;
-    maxMs = maxMs || 12000;
-    checking = new Promise(function (resolve) {
+    maxMs = maxMs || 15000;
+    checking = (async function () {
+      try {
+        if (typeof window.VCBG.backgroundReady === "function") {
+          Promise.resolve(window.VCBG.backgroundReady()).catch(function () {});
+        }
+      } catch (_) {}
+
       var started = Date.now();
-      (function tick() {
-        if (liveAdmin()) return resolve(true);
-        if (Date.now() - started >= maxMs) return resolve(false);
-        setTimeout(tick, 70);
-      })();
-    }).finally(function () { checking = null; });
+      while (Date.now() - started < maxMs) {
+        if (internalAdminReady()) return true;
+        await new Promise(function (resolve) { setTimeout(resolve, 80); });
+      }
+      return internalAdminReady();
+    })().finally(function () { checking = null; });
     return checking;
   }
 
-  function navigateToAdmin(href) {
-    var target = String(href || "#/admin");
+  function navigate(target) {
+    target = String(target || "#/admin");
     if (!target.startsWith("#")) target = "#" + target.replace(/^#?/, "");
-    try { sessionStorage.removeItem(RECOVER_KEY); } catch (_) {}
     if (location.hash === target) {
       try { window.dispatchEvent(new HashChangeEvent("hashchange")); }
       catch (_) { location.reload(); }
@@ -171,58 +148,43 @@
     }
   }
 
-  function hardRecoverAdmin(href) {
-    var cached = readCached();
-    if (!cached || cached.role !== "admin") return false;
-    seedCatalogAdmin(cached);
-    try {
-      if (sessionStorage.getItem(RECOVER_KEY) === "1") return false;
-      sessionStorage.setItem(RECOVER_KEY, "1");
-    } catch (_) {}
-    var target = String(href || "#/admin");
-    if (!target.startsWith("#")) target = "#" + target.replace(/^#?/, "");
-    location.hash = target;
-    setTimeout(function () { location.reload(); }, 20);
-    return true;
-  }
-
+  /* Intercept EVERY admin navigation for a cached admin. Do not let app.js needAdmin() run
+     until the exact db.js requireAdmin() path is ready. */
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest ? e.target.closest('a[href^="#/admin"]') : null;
     if (!a) return;
     var cached = readCached();
-    if (!cached || cached.role !== "admin" || liveAdmin()) return;
+    if (!cached || cached.role !== "admin") return;
 
     e.preventDefault();
     e.stopImmediatePropagation();
     var href = a.getAttribute("href") || "#/admin";
-    seedCatalogAdmin(cached);
     showChecking();
-    waitForResolvedAdmin(3500).then(function (ok) {
+    waitForInternalAdmin(15000).then(function (ok) {
       hideChecking();
-      if (ok) return navigateToAdmin(href);
-      hardRecoverAdmin(href);
-    }).catch(function () {
+      if (ok) navigate(href);
+      else console.error("[VCBG admin] Internal admin guard did not become ready.");
+    }).catch(function (err) {
       hideChecking();
-      hardRecoverAdmin(href);
+      console.error("[VCBG admin]", err);
     });
   }, true);
 
-  /* If the browser reloads while already on #/admin, keep the router away from the guard
-     until db.js has restored sessionUser. The cached admin profile was seeded before db.js. */
+  /* Same protection on refresh while already inside an admin route. */
   var initialHash = String(location.hash || "");
-  var initialCached = readCached();
-  if (/^#\/admin(?:\/|$)/.test(initialHash) && initialCached && initialCached.role === "admin" && !liveAdmin()) {
+  var cached = readCached();
+  if (/^#\/admin(?:\/|$)/.test(initialHash) && cached && cached.role === "admin" && !internalAdminReady()) {
     var target = initialHash;
-    seedCatalogAdmin(initialCached);
     try { history.replaceState(null, "", location.pathname + location.search + "#/"); } catch (_) {}
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showChecking, { once: true });
     else showChecking();
-    waitForResolvedAdmin(12000).then(function (ok) {
+    waitForInternalAdmin(15000).then(function (ok) {
       hideChecking();
-      if (ok) navigateToAdmin(target);
-      else {
-        try { sessionStorage.removeItem(RECOVER_KEY); } catch (_) {}
-      }
-    }).catch(hideChecking);
+      if (ok) navigate(target);
+      else console.error("[VCBG admin] Reload guard never became ready.");
+    }).catch(function (err) {
+      hideChecking();
+      console.error("[VCBG admin reload]", err);
+    });
   }
 })();

@@ -1,4 +1,4 @@
-/* Reveal the fan of hero cards together instead of one cover at a time. */
+/* Reveal the initial five-card hero fan as one unit, never one cover at a time. */
 (function () {
   function whenReady(img) {
     if (!img) return Promise.resolve();
@@ -22,30 +22,26 @@
     if (!hero || hero.dataset.smoothArmed === "1") return;
     hero.dataset.smoothArmed = "1";
 
-    var active = hero.querySelector(".stack-card.is-active .stack-cover");
-    if (active) {
-      try { active.fetchPriority = "high"; } catch (_) {}
-      active.loading = "eager";
-    }
-
-    var sideImgs = Array.prototype.slice.call(
-      hero.querySelectorAll('.stack-card[data-d="-2"] .stack-cover, .stack-card[data-d="-1"] .stack-cover, .stack-card[data-d="1"] .stack-cover, .stack-card[data-d="2"] .stack-cover')
+    var imgs = Array.prototype.slice.call(
+      hero.querySelectorAll('.stack-card[data-d="-2"] .stack-cover, .stack-card[data-d="-1"] .stack-cover, .stack-card[data-d="0"] .stack-cover, .stack-card[data-d="1"] .stack-cover, .stack-card[data-d="2"] .stack-cover')
     );
-    sideImgs.forEach(function (img) {
+
+    imgs.forEach(function (img) {
       img.loading = "eager";
       try { img.fetchPriority = "high"; } catch (_) {}
     });
 
-    Promise.all(sideImgs.map(whenReady)).then(function () {
+    var reveal = function () {
+      if (hero.classList.contains("hero-fan-ready")) return;
       requestAnimationFrame(function () {
-        hero.classList.add("hero-sides-ready");
+        requestAnimationFrame(function () {
+          hero.classList.add("hero-fan-ready");
+        });
       });
-    });
+    };
 
-    /* Never leave the fan hidden on a slow/erroring connection. */
-    setTimeout(function () {
-      hero.classList.add("hero-sides-ready");
-    }, 1800);
+    Promise.all(imgs.map(whenReady)).then(reveal);
+    setTimeout(reveal, 2200);
   }
 
   function scan() {

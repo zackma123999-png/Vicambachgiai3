@@ -10,41 +10,6 @@
   <meta property="og:type" content="website">
   <link rel="canonical" href="./">
   <link rel="icon" href="brand/favicon.png" type="image/png">
-  <script>
-    (function () {
-      var h = String(location.hash || "");
-      if (!h || h === "#" || h === "#/" || h === "#/") document.documentElement.classList.add("vcbg-home-boot");
-    })();
-  </script>
-  <style>
-    #vcbg-dino-loader{display:none;position:fixed;inset:0;z-index:2147483646;background:#070b14;align-items:center;justify-content:center;opacity:1;visibility:visible;transition:opacity .22s ease,visibility .22s ease}
-    .vcbg-home-boot #vcbg-dino-loader{display:flex}
-    #vcbg-dino-loader.vcbg-loader-out{opacity:0;visibility:hidden;pointer-events:none}
-    .vcbg-loader-stage{width:min(88vw,560px);display:flex;flex-direction:column;align-items:center;gap:34px;transform:translateY(-2vh)}
-    .vcbg-loader-brand{display:flex;flex-direction:column;align-items:center;gap:10px}
-    .vcbg-loader-brand img{width:86px;height:86px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(139,105,255,.22))}
-    .vcbg-loader-name{font-family:'Saira ExtraCondensed',system-ui,sans-serif;font-weight:600;font-size:34px;letter-spacing:.5px;color:#f3f5fb;line-height:1}
-    .vcbg-runway{position:relative;width:100%;height:126px;overflow:hidden}
-    .vcbg-ground{position:absolute;left:0;right:0;bottom:21px;height:2px;background:linear-gradient(90deg,rgba(236,239,246,.82) 0 52%,transparent 52% 64%,rgba(236,239,246,.82) 64% 78%,transparent 78% 100%);background-size:88px 2px;animation:vcbgGround 1s linear infinite}
-    .vcbg-dino{position:absolute;left:18%;bottom:23px;width:72px;height:66px;animation:vcbgDinoBob .22s steps(2,end) infinite}
-    .vcbg-dino svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}
-    .vcbg-dino .leg-a{animation:vcbgLegA .18s steps(1,end) infinite;transform-origin:30px 55px}
-    .vcbg-dino .leg-b{animation:vcbgLegB .18s steps(1,end) infinite;transform-origin:44px 55px}
-    .vcbg-cactus{position:absolute;bottom:23px;right:-40px;width:28px;height:54px;animation:vcbgCactus 1.65s linear infinite}
-    .vcbg-cactus::before,.vcbg-cactus::after{content:"";position:absolute;background:#858891}
-    .vcbg-cactus::before{left:11px;bottom:0;width:7px;height:54px;border-radius:2px}
-    .vcbg-cactus::after{left:2px;bottom:18px;width:24px;height:7px;box-shadow:0 -9px 0 -2px #858891,17px -13px 0 -3px #858891}
-    .vcbg-cactus.c2{animation-delay:.82s;transform:scale(.72);opacity:.78}
-    .vcbg-dust{position:absolute;left:16%;bottom:28px;width:4px;height:4px;background:#d7dbe4;box-shadow:-12px 5px 0 rgba(215,219,228,.8),-22px -2px 0 rgba(215,219,228,.55);animation:vcbgDust .48s linear infinite}
-    @keyframes vcbgGround{to{background-position:-88px 0}}
-    @keyframes vcbgCactus{from{transform:translateX(0)}to{transform:translateX(-660px)}}
-    @keyframes vcbgDinoBob{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(0)}}
-    @keyframes vcbgLegA{0%,49%{transform:translateY(0)}50%,100%{transform:translateY(5px)}}
-    @keyframes vcbgLegB{0%,49%{transform:translateY(5px)}50%,100%{transform:translateY(0)}}
-    @keyframes vcbgDust{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-26px)}}
-    @media (max-width:600px){.vcbg-loader-stage{width:86vw;gap:28px}.vcbg-loader-brand img{width:74px;height:74px}.vcbg-loader-name{font-size:30px}.vcbg-runway{height:116px}.vcbg-dino{left:14%;width:68px;height:62px}}
-    @media (prefers-reduced-motion:reduce){.vcbg-ground,.vcbg-dino,.vcbg-cactus,.vcbg-dust,.vcbg-dino .leg-a,.vcbg-dino .leg-b{animation-duration:1.8s}}
-  </style>
   <script src="js/hero-snapshot.js?v=20260820b"></script>
   <script src="js/hero-preload.js?v=20260820b"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,42 +23,6 @@
 <body>
   <a class="sr-only" href="#app">Bỏ qua điều hướng</a>
   <div id="app"></div>
-
-  <div id="vcbg-dino-loader" aria-hidden="true">
-    <div class="vcbg-loader-stage">
-      <div class="vcbg-loader-brand">
-        <img src="brand/favicon.png" alt="">
-        <div class="vcbg-loader-name">ViCamBachGiai</div>
-      </div>
-      <div class="vcbg-runway">
-        <div class="vcbg-ground"></div>
-        <div class="vcbg-dust"></div>
-        <div class="vcbg-dino">
-          <svg viewBox="0 0 64 60" aria-hidden="true">
-            <g fill="#f0f1f4">
-              <rect x="29" y="4" width="25" height="8"/>
-              <rect x="27" y="11" width="30" height="9"/>
-              <rect x="27" y="18" width="22" height="7"/>
-              <rect x="24" y="22" width="21" height="9"/>
-              <rect x="19" y="27" width="25" height="17"/>
-              <rect x="13" y="32" width="12" height="12"/>
-              <rect x="7" y="28" width="7" height="13"/>
-              <rect x="2" y="24" width="6" height="13"/>
-              <rect x="45" y="16" width="8" height="4"/>
-              <rect x="25" y="42" width="10" height="7"/>
-              <rect x="38" y="42" width="10" height="7"/>
-            </g>
-            <rect x="45" y="7" width="3" height="3" fill="#070b14"/>
-            <g class="leg-a" fill="#f0f1f4"><rect x="24" y="47" width="7" height="9"/><rect x="20" y="54" width="11" height="4"/></g>
-            <g class="leg-b" fill="#f0f1f4"><rect x="40" y="47" width="7" height="9"/><rect x="40" y="54" width="12" height="4"/></g>
-          </svg>
-        </div>
-        <div class="vcbg-cactus c1"></div>
-        <div class="vcbg-cactus c2"></div>
-      </div>
-    </div>
-  </div>
-
   <div class="toast-wrap" id="toasts" aria-live="polite"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.js"></script>
   <script src="js/config.js?v=20260817p"></script>
@@ -104,43 +33,5 @@
   <script src="js/fast-boot.js?v=20260821a"></script>
   <script src="app.js?v=20260820f"></script>
   <script src="js/hero-smooth.js?v=20260820c"></script>
-  <script>
-    (function () {
-      if (!document.documentElement.classList.contains("vcbg-home-boot")) return;
-      var loader = document.getElementById("vcbg-dino-loader");
-      if (!loader) return;
-      var started = performance.now();
-      var minMs = 2200;
-      var maxMs = 2950;
-      var finished = false;
-
-      function heroLooksReady() {
-        var candidates = document.querySelectorAll('#app [class*="hero"] img, #app [class*="banner"] img, #app img');
-        var loaded = 0;
-        for (var i = 0; i < candidates.length; i++) {
-          var img = candidates[i];
-          if (img.complete && img.naturalWidth > 0) loaded++;
-          if (loaded >= 3) return true;
-        }
-        return document.querySelectorAll('#app a[href*="truyen"], #app [class*="card"]').length >= 3;
-      }
-
-      function reveal() {
-        if (finished) return;
-        finished = true;
-        loader.classList.add("vcbg-loader-out");
-        document.documentElement.classList.remove("vcbg-home-boot");
-        setTimeout(function () { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 260);
-      }
-
-      function check() {
-        var elapsed = performance.now() - started;
-        if (elapsed >= maxMs) return reveal();
-        if (elapsed >= minMs && heroLooksReady()) return reveal();
-        requestAnimationFrame(check);
-      }
-      requestAnimationFrame(check);
-    })();
-  </script>
 </body>
 </html>

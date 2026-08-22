@@ -1137,6 +1137,17 @@
           ${coverImg(o.cover, o.title)}
           <b>${esc(o.title)}</b>
         </a>`).join("")}</div>
+      </section>` : ""}
+      ${relatedStories.length ? `<section class="same-author recommended-stories">
+        <div class="same-head">
+          <h3>Đề xuất tác giả khác</h3>
+          <span>${relatedStories.length} truyện</span>
+        </div>
+        <div class="same-rail">${relatedStories.map((o) => `<a class="same-card" href="#/truyen/${esc(o.slug)}">
+          ${coverImg(o.cover, o.title)}
+          <b>${esc(o.title)}</b>
+          <small>${esc(o.author || "—")}</small>
+        </a>`).join("")}</div>
       </section>` : ""}`;
     const sideStoryCard = (o) => `<a class="story-side-card" href="#/truyen/${esc(o.slug)}">
         ${coverImg(o.cover, o.title)}

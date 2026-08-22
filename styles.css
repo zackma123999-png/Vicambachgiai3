@@ -920,6 +920,17 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.25;
   font-weight: 600;
 }
+.same-card small {
+  display: block;
+  margin-top: 0.18rem;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.66rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recommended-stories { margin-top: 1.35rem; }
 .toc-box, .rate-box {
   border-top: 1px solid var(--line);
   padding-top: 0.85rem;

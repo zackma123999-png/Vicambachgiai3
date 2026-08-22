@@ -332,14 +332,44 @@
   .story-page{padding-top:.45rem}
   .story-detail-layout.is-intro{grid-template-columns:minmax(0,1fr) clamp(9.3rem,17vw,10.25rem);gap:.65rem}
   .story-page .story-hero{--landscape-cover-w:clamp(8.7rem,19vw,10.4rem);gap:.75rem;height:calc(var(--landscape-cover-w) * 1.5)}
-  .story-page .story-info h1{font-size:clamp(1.15rem,2.7vw,1.55rem)}
-  .story-landscape-meta .landscape-info-body p{font-size:.58rem;line-height:1.25;margin-bottom:.18rem}
-  .story-landscape-meta .landscape-info-body strong{font-size:.55rem}
+  .story-page .story-info{
+    grid-template-rows:minmax(0,1fr) auto auto;
+    gap:clamp(.25rem,.65vh,.42rem);
+  }
+  .story-page .story-copy{
+    grid-row:1;
+    min-height:0;
+    overflow:hidden;
+  }
+  .story-page .story-info h1{
+    margin:.02rem 0 .14rem;
+    font-size:clamp(1rem,2.45vw,1.32rem);
+    line-height:1.08;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .story-page .story-info .badge{font-size:.54rem}
+  .story-page .story-info .by{font-size:.65rem;margin-bottom:.14rem}
+  .story-page .chip{padding:.08rem .35rem;font-size:.52rem}
+  .story-landscape-meta{display:none}
+  .story-page .story-metrics{grid-row:2}
+  .story-page .story-acts{grid-row:3}
   .story-page .story-tabs{margin:.4rem 0}
   .story-page .story-tabs a{padding:.4rem .15rem .35rem;font-size:.64rem}
   .story-page .intro-card{min-height:clamp(8.5rem,30vh,12rem);padding:.7rem .85rem}
   .story-page .intro-body{font-size:.7rem;line-height:1.5}
   .story-page .intro-body.is-clamp{max-height:15em}
+  .story-page .story-tab>.info-card{
+    display:block;
+    margin-top:.55rem;
+    padding:.72rem .85rem .78rem;
+    border-radius:11px;
+  }
+  .story-page .story-tab>.info-card .info-title{margin-bottom:.45rem;font-size:.66rem}
+  .story-page .story-tab>.info-card .info-body{padding-left:.65rem}
+  .story-page .story-tab>.info-card .info-body p{font-size:.67rem;line-height:1.48;margin-bottom:.28rem}
   .story-landscape-sidebar{padding-top:.55rem}
   .story-side-scroll{top:.4rem;max-height:calc(100vh - .8rem)}
   .story-side-list{gap:.5rem}

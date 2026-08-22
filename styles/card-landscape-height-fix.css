@@ -1,14 +1,42 @@
-/* Homepage story-card fix for landscape only.
-   Keeps the original card width/layout, preserves all content, and does not touch the hero/banner. */
-@media (orientation: landscape) and (max-height: 600px) and (min-width: 720px) {
+/* Homepage story cards: responsive landscape sizing only.
+   Scope: cards inside the three story rails. Does NOT touch outer rail panels, hero/banner, or site functions. */
+@media (orientation: landscape) and (min-width: 720px) {
+  /* Keep each card at a sensible responsive width so neighbouring cards never overlap. */
+  .rail {
+    grid-auto-columns: clamp(22rem, 44vw, 31rem);
+  }
+
+  /* Let the whole card grow/shrink naturally with its cover + text content. */
   .wide-card {
     height: auto;
-    min-height: 22rem;
+    min-height: 0;
     max-height: none;
+    overflow: hidden;
+    grid-template-columns: clamp(8.75rem, 30%, 10.75rem) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  /* The cover keeps its own 2:3 ratio instead of forcing the card to a fixed height. */
+  .wide-cover {
+    align-self: start;
+    min-width: 0;
+  }
+
+  .wide-cover .cover-frame {
+    height: auto;
+    aspect-ratio: 2 / 3;
+    width: 100%;
+  }
+
+  /* Text column always keeps its own space and cannot be covered by the image column. */
+  .wide-body {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .wide-title h3 {
-    font-size: clamp(1.05rem, 2.2vw, 1.42rem);
+    font-size: clamp(1.05rem, 1.8vw, 1.42rem);
     line-height: 1.12;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -16,9 +44,5 @@
     overflow: hidden;
     overflow-wrap: anywhere;
     word-break: normal;
-  }
-
-  .wide-body {
-    min-height: 0;
   }
 }

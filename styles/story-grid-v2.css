@@ -197,7 +197,7 @@
   }
 }
 
-/* Tablet / landscape: card stays a slider item; only its internals rebalance. */
+/* Tablet / non-mobile: keep the slider item, and rebalance internals. */
 @media (min-width: 641px) {
   .wide-card {
     --book-cover-w: clamp(9rem, 34%, 11rem);
@@ -210,10 +210,37 @@
   }
 }
 
-/* Desktop: stop cover growth; extra width goes to the info column, not card height. */
+/* LANDSCAPE: make each slider card a little wider, then enlarge the cover proportionally.
+   The cover remains 2:3; we increase its WIDTH, never stretch its HEIGHT.
+   This removes the visual bottom gap and keeps cover + info aligned. */
+@media (orientation: landscape) and (min-width: 641px) {
+  .rail {
+    grid-auto-columns: minmax(540px, 52%) !important;
+  }
+
+  .wide-card {
+    --book-cover-w: clamp(10.5rem, 35%, 12.25rem);
+    gap: clamp(0.58rem, 1.05vw, 0.78rem) !important;
+  }
+
+  .wide-body {
+    justify-content: space-between !important;
+  }
+
+  .wide-title h3 {
+    font-size: clamp(1.22rem, 1.85vw, 1.58rem) !important;
+    -webkit-line-clamp: 3 !important;
+  }
+
+  .wide-body .by {
+    font-size: clamp(0.86rem, 1.15vw, 1rem) !important;
+  }
+}
+
+/* Desktop: stop cover growth after a sensible landscape size. */
 @media (min-width: 1100px) {
   .wide-card {
-    --book-cover-w: clamp(9.5rem, 31%, 11rem);
+    --book-cover-w: clamp(10.5rem, 33%, 12.25rem);
   }
   .wide-title h3 {
     font-size: clamp(1.24rem, 1.45vw, 1.58rem) !important;

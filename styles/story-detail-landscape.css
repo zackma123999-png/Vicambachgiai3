@@ -8,8 +8,14 @@
 /* Phone portrait: use the full natural cover height and distribute the
    right-hand groups evenly, while keeping the action row level with the cover. */
 @media (max-width:719px) and (orientation:portrait){
-  .story-page .story-hero{align-items:stretch}
-  .story-page .story-cover{align-self:stretch}
+  .story-page .story-hero{
+    --phone-cover-w:clamp(7.4rem,34vw,12.5rem);
+    grid-template-columns:var(--phone-cover-w) minmax(0,1fr);
+    height:calc(var(--phone-cover-w) * 1.5);
+    align-items:stretch;
+  }
+  .story-page .story-cover{width:var(--phone-cover-w);height:100%;align-self:stretch}
+  .story-page .story-cover .cover-frame{width:100%;height:100%;aspect-ratio:2/3}
   .story-page .story-info{
     height:100%;
     align-self:stretch;
@@ -18,8 +24,12 @@
   }
   .story-page .story-copy{flex:0 0 auto}
   .story-page .story-info h1{
-    font-size:clamp(1.58rem,6.15vw,2rem);
+    font-size:clamp(1.78rem,6.7vw,2.24rem);
     line-height:1.05;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
   }
   .story-page .story-info .badge{font-size:clamp(.66rem,1.85vw,.76rem)}
   .story-page .story-info .by{font-size:clamp(.83rem,2.25vw,.96rem)}
@@ -45,6 +55,10 @@
   .story-page .story-tab .info-body p{
     font-size:15px !important;
     line-height:1.58 !important;
+  }
+  .story-page .story-tab .info-body{
+    padding-left:0 !important;
+    border-left:0 !important;
   }
 }
 
@@ -391,7 +405,7 @@
   }
   .story-page .story-info h1{
     margin:.02rem 0 .14rem;
-    font-size:clamp(1.18rem,2.8vw,1.52rem);
+    font-size:clamp(1.42rem,3.25vw,1.78rem);
     line-height:1.06;
     display:-webkit-box;
     -webkit-line-clamp:3;
@@ -422,12 +436,16 @@
   .story-side-list{gap:.5rem}
 
   .story-page .story-tab .intro-body{
-    font-size:15px !important;
-    line-height:1.56 !important;
+    font-size:16px !important;
+    line-height:1.62 !important;
   }
   .story-page .story-tab .info-body p{
-    font-size:14px !important;
-    line-height:1.52 !important;
+    font-size:15px !important;
+    line-height:1.58 !important;
+  }
+  .story-page .story-tab .info-body{
+    padding-left:0 !important;
+    border-left:0 !important;
   }
 }
 

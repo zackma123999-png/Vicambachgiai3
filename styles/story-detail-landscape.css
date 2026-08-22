@@ -1,42 +1,55 @@
-/* ViCamBachGiai — large landscape story layout.
-   Only iPad landscape and laptop/desktop screens are affected. */
+/* ViCamBachGiai — balanced large-landscape story layout.
+   iPad landscape and laptop/desktop only. */
 .story-landscape-meta{display:none}
 
 @media (min-width:1024px) and (orientation:landscape){
   .story-page{
     width:min(1240px,calc(100% - 3rem));
     max-width:1240px;
-    padding-top:1rem;
+    padding-top:.9rem;
   }
 
   .story-page .story-hero{
-    grid-template-columns:clamp(11.5rem,16.5vw,12.75rem) minmax(0,1fr) clamp(15.5rem,22vw,18rem);
-    gap:clamp(1.2rem,2.1vw,1.7rem);
+    --landscape-cover-w:clamp(10.75rem,16.5vw,12.25rem);
+    grid-template-columns:var(--landscape-cover-w) minmax(0,1fr) clamp(14.75rem,22vw,17.5rem);
+    gap:clamp(1rem,1.9vw,1.55rem);
+    height:calc(var(--landscape-cover-w) * 1.5);
     align-items:stretch;
   }
 
   .story-page .story-cover{
     grid-column:1;
-    align-self:start;
-    width:100%;
-    max-width:12.75rem;
+    width:var(--landscape-cover-w);
+    height:100%;
+    max-width:none;
+    align-self:stretch;
   }
 
   .story-page .story-cover .cover-frame{
     width:100%;
-    height:auto;
+    height:100%;
     aspect-ratio:2/3;
-    border-radius:11px;
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  .story-page .story-cover .cover-frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center 18%;
   }
 
   .story-page .story-info{
     grid-column:2/4;
     display:grid;
-    grid-template-columns:minmax(0,1fr) clamp(15.5rem,22vw,18rem);
-    grid-template-rows:auto 1fr auto;
-    column-gap:clamp(1.2rem,2.1vw,1.7rem);
-    row-gap:.7rem;
-    min-height:100%;
+    grid-template-columns:minmax(0,1fr) clamp(14.75rem,22vw,17.5rem);
+    grid-template-rows:auto minmax(0,1fr) auto;
+    column-gap:clamp(1rem,1.9vw,1.55rem);
+    row-gap:.48rem;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
     align-self:stretch;
     padding:0;
   }
@@ -44,45 +57,56 @@
   .story-page .story-copy{
     grid-column:1;
     grid-row:1;
+    min-width:0;
     align-self:start;
+    gap:.1rem;
   }
 
   .story-page .story-info .badge{
-    font-size:.7rem;
-    letter-spacing:.14em;
+    margin:0;
+    font-size:.67rem;
+    letter-spacing:.13em;
   }
 
   .story-page .story-info h1{
     max-width:42rem;
-    margin:.2rem 0 .36rem;
-    font-size:clamp(1.9rem,2.7vw,2.45rem);
-    line-height:1.03;
-    letter-spacing:-.02em;
+    margin:.05rem 0 .22rem;
+    font-size:clamp(1.68rem,2.45vw,2.25rem);
+    line-height:1.02;
+    letter-spacing:-.018em;
   }
 
   .story-page .story-info .by{
-    margin-bottom:.45rem;
-    font-size:.9rem;
+    margin:0 0 .22rem;
+    font-size:.82rem;
   }
 
+  .story-page .story-info .tags{gap:.22rem}
   .story-page .chip{
-    padding:.18rem .58rem;
-    font-size:.7rem;
+    padding:.13rem .5rem;
+    font-size:.64rem;
   }
 
   .story-landscape-meta{
+    position:relative;
     grid-column:1;
     grid-row:2/4;
-    display:block;
-    align-self:end;
+    display:flex;
+    flex-direction:column;
     min-width:0;
-    padding-top:.4rem;
+    min-height:0;
+    overflow:hidden;
+    align-self:stretch;
+    padding:.1rem 0 1rem;
+    background:transparent;
+    border:0;
   }
 
   .story-landscape-meta h2{
-    margin:0 0 .65rem;
+    flex:0 0 auto;
+    margin:0 0 .38rem;
     color:#b9acf0;
-    font-size:.72rem;
+    font-size:.68rem;
     font-weight:700;
     letter-spacing:.13em;
     text-transform:uppercase;
@@ -91,34 +115,57 @@
   .story-landscape-meta .landscape-info-body{
     display:flex;
     flex-direction:column;
-    gap:.3rem;
+    gap:.2rem;
+    min-height:0;
     max-width:42rem;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    padding:0 .3rem .8rem 0;
+    -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 76%,transparent 100%);
+    mask-image:linear-gradient(to bottom,#000 0,#000 76%,transparent 100%);
+  }
+
+  .story-landscape-meta .landscape-info-body::-webkit-scrollbar{
+    display:none;
+    width:0;
+    height:0;
   }
 
   .story-landscape-meta .landscape-info-body p{
     display:grid;
     grid-template-columns:max-content minmax(0,1fr);
-    column-gap:.55rem;
+    column-gap:.5rem;
     align-items:baseline;
     margin:0;
     color:#d9dceb;
-    font-size:.82rem;
-    line-height:1.4;
+    font-size:.73rem;
+    line-height:1.32;
   }
 
-  .story-landscape-meta .landscape-info-body p.landscape-info-line{
-    display:block;
-  }
-
+  .story-landscape-meta .landscape-info-body p.landscape-info-line{display:block}
   .story-landscape-meta .landscape-info-body strong{
     color:#858da2;
-    font-size:.76rem;
+    font-size:.69rem;
     font-weight:500;
   }
-
   .story-landscape-meta .landscape-info-body span{
     min-width:0;
     overflow-wrap:anywhere;
+  }
+
+  .story-landscape-meta::after{
+    content:"⌄";
+    position:absolute;
+    left:50%;
+    bottom:.02rem;
+    transform:translateX(-50%);
+    color:#b9a8ff;
+    font-size:1rem;
+    line-height:1;
+    pointer-events:none;
+    text-shadow:0 0 12px rgba(160,139,255,.42);
   }
 
   .story-page .story-metrics{
@@ -128,7 +175,8 @@
     display:grid;
     grid-template-columns:repeat(4,minmax(0,1fr));
     width:100%;
-    margin:.15rem 0 0;
+    min-height:0;
+    margin:.05rem 0 0;
     border:0;
     border-radius:0;
     background:transparent;
@@ -137,16 +185,15 @@
 
   .story-page .metric{
     min-width:0;
-    padding:.15rem .32rem;
+    padding:.14rem .22rem .18rem;
     border-left:1px solid rgba(168,154,230,.14);
     background:transparent;
   }
 
   .story-page .metric:first-child{border-left:0}
-
-  .story-page .metric-ico{font-size:.72rem}
-  .story-page .metric b{font-size:.82rem}
-  .story-page .metric small{font-size:.54rem;white-space:nowrap}
+  .story-page .metric-ico{font-size:.66rem}
+  .story-page .metric b{font-size:.76rem}
+  .story-page .metric small{font-size:.48rem;white-space:nowrap}
 
   .story-page .story-acts{
     grid-column:2;
@@ -154,63 +201,60 @@
     align-self:end;
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:.5rem;
-    padding-left:.1rem;
+    gap:.4rem;
+    margin:0;
+    padding:0;
   }
 
   .story-page .story-acts .btn{
-    min-height:37px;
-    height:37px;
-    padding:0 .65rem;
-    border-radius:9px;
-    font-size:.72rem;
+    min-width:0;
+    min-height:34px;
+    height:34px;
+    padding:0 .5rem;
+    border-radius:8px;
+    font-size:.66rem;
+    white-space:nowrap;
   }
 
   .story-page .story-acts .btn:first-child{
     grid-column:1/3;
-    background:linear-gradient(180deg,rgba(190,177,246,.28),rgba(134,113,215,.2));
-    border-color:rgba(196,181,253,.58);
-    box-shadow:0 0 0 1px rgba(196,181,253,.1),0 7px 18px rgba(80,62,150,.14);
+    background:linear-gradient(180deg,rgba(190,177,246,.3),rgba(134,113,215,.21));
+    border-color:rgba(196,181,253,.56);
+    box-shadow:0 6px 16px rgba(80,62,150,.13);
   }
 
-  .story-page .story-tabs{
-    margin:.8rem 0 .75rem;
-  }
-
+  .story-page .story-tabs{margin:.68rem 0 .66rem}
   .story-page .story-tabs a{
-    padding:.64rem .2rem .52rem;
-    font-size:.82rem;
+    padding:.58rem .2rem .47rem;
+    font-size:.77rem;
   }
 
-  .story-page .intro-card{
-    padding:1.15rem 1.3rem 1rem;
-  }
-
+  .story-page .intro-card{padding:1rem 1.2rem .95rem}
   .story-page .intro-title{
-    margin-bottom:.62rem;
-    font-size:.82rem;
+    margin-bottom:.55rem;
+    font-size:.78rem;
   }
-
   .story-page .intro-body{
     max-width:72rem;
-    font-size:clamp(.9rem,1.25vw,1rem);
-    line-height:1.62;
+    font-size:clamp(.84rem,1.15vw,.96rem);
+    line-height:1.56;
   }
-
   .story-page .intro-body.is-clamp{
-    -webkit-line-clamp:8;
-    max-height:12.96em;
+    -webkit-line-clamp:7;
+    max-height:10.92em;
   }
 
-  .story-page .story-tab>.info-card{
-    display:none;
-  }
-
-  .story-page .same-author{margin-top:.9rem}
+  .story-page .story-tab>.info-card{display:none}
+  .story-page .same-author{margin-top:.85rem}
 }
 
 @media (min-width:1440px) and (orientation:landscape){
-  .story-page{
-    width:min(1240px,calc(100% - 5rem));
+  .story-page{width:min(1240px,calc(100% - 5rem))}
+  .story-page .story-hero{
+    --landscape-cover-w:12.25rem;
+    grid-template-columns:var(--landscape-cover-w) minmax(0,1fr) 17.5rem;
+  }
+  .story-page .story-info{
+    grid-template-columns:minmax(0,1fr) 17.5rem;
   }
 }

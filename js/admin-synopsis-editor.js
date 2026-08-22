@@ -27,7 +27,7 @@
       '<select data-se-gap title="Khoảng cách đoạn"><option value="0">Đoạn 0</option><option value="8" selected>Đoạn 8</option><option value="16">Đoạn 16</option><option value="24">Đoạn 24</option></select>' +
       '<button type="button" data-se-cmd="removeFormat" title="Xóa định dạng">Tx</button>' +
       '</div><div class="synopsis-rich" contenteditable="true" role="textbox" aria-multiline="true"></div>' +
-      '<div class="editor-hint">Chỉ định dạng phần Văn án / Giới thiệu trong quản trị. Có thể căn lề, đổi font, cỡ chữ, giãn dòng và khoảng cách đoạn.</div>';
+      '<div class="editor-hint">Định dạng chỉ dùng để soạn trong quản trị. Khi lưu, hệ thống chỉ ghi nội dung sạch để không bao giờ lộ mã HTML ngoài trang truyện.</div>';
     ta.style.display = "none";
     ta.parentNode.insertBefore(shell, ta.nextSibling);
     var ed = shell.querySelector(".synopsis-rich");
@@ -37,10 +37,33 @@
         return "<p>" + p.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>") + "</p>";
       }).join("");
     }
-    var initial = ta.value || "";
-    ed.innerHTML = /<\/?(?:p|div|span|br|b|strong|i|em)\b/i.test(initial) ? initial : plainToHtml(initial);
 
-    function sync() { ta.value = ed.innerHTML; }
+    function htmlToPlain(html) {
+      var box = document.createElement("div");
+      box.innerHTML = String(html || "");
+      box.querySelectorAll("br").forEach(function (br) { br.replaceWith("\n"); });
+      box.querySelectorAll("p,div,li,blockquote,h1,h2,h3,h4,h5,h6").forEach(function (el) {
+        if (el.nextSibling) el.appendChild(document.createTextNode("\n\n"));
+      });
+      return String(box.textContent || "")
+        .replace(/\u00a0/g, " ")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    }
+
+    var initial = ta.value || "";
+    var hadHtml = /<\/?(?:p|div|span|br|b|strong|i|em|font)\b/i.test(initial);
+    ed.innerHTML = hadHtml ? initial : plainToHtml(initial);
+
+    /* Critical fix: never write rich HTML back into synopsis. */
+    function sync() {
+      ta.value = htmlToPlain(ed.innerHTML);
+    }
+
+    /* Clean legacy synopsis that already contains raw HTML as soon as admin opens it. */
+    if (hadHtml) sync();
+
     function cmd(name, value) {
       ed.focus();
       try { document.execCommand(name, false, value || null); } catch (_) {}

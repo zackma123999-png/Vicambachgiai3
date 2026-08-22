@@ -27,6 +27,24 @@
   overflow:visible !important;
 }
 
+/* Large serif titles need extra descender room for letters such as g and y. */
+.story-page .story-copy{
+  overflow:visible !important;
+}
+
+.story-page .story-info h1{
+  line-height:1.12 !important;
+  padding-bottom:.12em;
+  margin-bottom:.16rem !important;
+  overflow:visible;
+}
+
+.story-page .story-info .by,
+.story-page .story-info .tags{
+  position:relative;
+  z-index:1;
+}
+
 .story-page .story-metrics,
 .story-page .story-acts{
   position:relative;

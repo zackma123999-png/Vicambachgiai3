@@ -1,0 +1,18 @@
+/* Homepage story-section shells only.
+   Make the three rails (Đang lên sóng / Đã hoàn thành / Sắp ra mắt)
+   use the available viewport width consistently across phone, tablet and desktop.
+   Does not target hero/banner, story cards, reader signal, or any functionality. */
+.rails {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+}
+
+/* Keep inner content breathing room inside each section while the outer shell reaches the screen edges. */
+.rail-panel {
+  width: 100%;
+  max-width: none;
+}

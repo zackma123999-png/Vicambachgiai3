@@ -864,6 +864,7 @@
         <div class="hero-nav"><div class="hero-dots">${dots}</div></div>
       </section>
       <div class="wrap">${socialStrip()}</div>
+      <div class="wrap home-signal-label"><span>Thư Viện Tín Hiệu</span></div>
       <div class="wrap rails">
         ${rail("Đang lên sóng", ongoing, "cyan")}
         ${rail("Đã hoàn thành", done, "violet")}

@@ -16,3 +16,22 @@
   width: 100%;
   max-width: none;
 }
+
+.home-signal-label{
+  padding-top:.72rem;
+}
+
+.home-signal-label span{
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:.38rem .78rem;
+  border:1px solid rgba(159,141,230,.3);
+  border-radius:999px;
+  background:rgba(102,76,178,.1);
+  color:#9f8de6;
+  font-size:.86rem;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}

@@ -1,158 +1,175 @@
-/* Unified responsive system for story cover + information layouts.
-   Scope: homepage story cards and story detail only.
-   IMPORTANT: intentionally does NOT target or modify the hero/banner. */
+/* Responsive corrections for story cover + information layouts only.
+   Scope: homepage story cards and story detail header.
+   IMPORTANT: does NOT target the hero/banner, section rails, navigation, carousel behaviour,
+   authentication, reader controls, comments, or any other existing feature. */
 
-/* ---------- Homepage story rails/cards ---------- */
+/* ---------- Homepage story cards ---------- */
 .rail {
-  /* One continuous rule for phone portrait, phone landscape, tablet and laptop. */
+  /* Preserve the existing horizontal rail/carousel behaviour. */
   grid-auto-columns: clamp(19rem, 88vw, 34rem);
-  align-items: stretch;
 }
 
 .wide-card {
   container-type: inline-size;
+  width: 100%;
   height: auto;
-  min-height: clamp(18rem, 46vw, 23.5rem);
+  min-height: 0;
   max-height: none;
   overflow: hidden;
-  grid-template-columns: minmax(0, 36%) minmax(0, 64%);
-  align-items: stretch;
+
+  /* Cover gets a bounded width; info receives all remaining horizontal space. */
+  grid-template-columns: clamp(7rem, 31%, 10.25rem) minmax(0, 1fr);
+  align-items: start;
 }
 
-/* Cover and info are one responsive unit: they always share the same card height. */
 .wide-cover {
   min-width: 0;
   min-height: 0;
-  align-self: stretch;
+  align-self: start;
   display: block;
 }
 
+/* The cover itself is always 2:3. Its height is derived from width, never from card height. */
 .wide-cover .cover-frame {
   width: 100%;
-  height: 100%;
-  min-height: 100%;
-  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
 }
 
 .wide-cover .cover-frame img {
+  display: block;
   width: 100%;
   height: 100%;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
 }
 
 .wide-body {
   min-width: 0;
   min-height: 0;
-  height: 100%;
-  overflow: visible;
+  height: auto;
+  overflow: hidden;
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: clamp(0.2rem, 1.15cqw, 0.38rem);
+  gap: clamp(0.22rem, 1.15cqw, 0.42rem);
 }
 
-/* Long titles wrap naturally instead of being cut. */
 .wide-title h3 {
-  font-size: clamp(0.94rem, 5.2cqw, 1.52rem);
-  line-height: 1.08;
-  display: block;
-  overflow: visible;
-  -webkit-line-clamp: unset;
-  -webkit-box-orient: initial;
+  margin: 0;
+  font-size: clamp(0.94rem, 4.5cqw, 1.34rem);
+  line-height: 1.12;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
   overflow-wrap: anywhere;
   word-break: normal;
   text-wrap: balance;
 }
 
-/* Metadata scales from the card width, not from a device breakpoint. */
 .wide-body .by {
-  font-size: clamp(0.70rem, 3.05cqw, 0.90rem);
+  font-size: clamp(0.70rem, 2.75cqw, 0.88rem);
+  line-height: 1.25;
   white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
   overflow-wrap: anywhere;
 }
 
 .wide-body .pill {
-  font-size: clamp(0.58rem, 2.45cqw, 0.72rem);
+  font-size: clamp(0.58rem, 2.25cqw, 0.71rem);
 }
 
-.pill-row {
+.pill-row,
+.wide-stats {
   flex-wrap: wrap;
   min-width: 0;
 }
 
 .wide-stats {
-  font-size: clamp(0.64rem, 2.55cqw, 0.78rem);
-  flex-wrap: wrap;
-  min-width: 0;
+  font-size: clamp(0.64rem, 2.35cqw, 0.77rem);
 }
 
 .wide-latest {
-  font-size: clamp(0.64rem, 2.55cqw, 0.78rem);
   min-width: 0;
   margin-top: auto;
+  font-size: clamp(0.64rem, 2.35cqw, 0.77rem);
 }
 
 .wide-latest b {
   white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
   overflow-wrap: anywhere;
   line-height: 1.16;
 }
 
-/* Very short landscape screens: reduce only spacing/type slightly;
-   do not lock the card or cover to a separate fixed size. */
-@media (orientation: landscape) and (max-height: 500px) {
+/* Small phones: compact the card without changing its structure or behaviour. */
+@media (max-width: 480px) {
   .wide-card {
-    min-height: clamp(17rem, 42vw, 21rem);
-  }
-
-  .wide-body {
-    gap: clamp(0.14rem, 0.9cqw, 0.28rem);
+    grid-template-columns: clamp(6.75rem, 33%, 8.25rem) minmax(0, 1fr);
   }
 }
 
-/* ---------- Story detail / cover + info header ---------- */
+/* Wider devices: the cover may grow moderately, then stops.
+   Extra screen width remains available to the info/rail instead of making the cover endlessly taller. */
+@media (min-width: 768px) {
+  .wide-card {
+    grid-template-columns: clamp(8.25rem, 30%, 10.75rem) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .wide-card {
+    grid-template-columns: clamp(8.75rem, 28%, 11rem) minmax(0, 1fr);
+  }
+}
+
+/* ---------- Story detail: cover + information header ---------- */
 .story-hero {
   container-type: inline-size;
-  grid-template-columns: minmax(7.5rem, 32%) minmax(0, 68%);
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  grid-template-columns: clamp(7.5rem, 30%, 13rem) minmax(0, 1fr);
   gap: clamp(0.65rem, 2.2vw, 1.35rem);
-  min-height: clamp(15rem, 52vw, 30rem);
-  align-items: stretch;
+  align-items: start;
 }
 
 .story-cover {
   width: 100%;
   min-width: 0;
   min-height: 0;
-  align-self: stretch;
+  align-self: start;
 }
 
 .story-cover .cover-frame {
   width: 100%;
-  height: 100%;
-  min-height: 100%;
-  aspect-ratio: auto;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
 }
 
 .story-cover .cover-frame img {
+  display: block;
   width: 100%;
   height: 100%;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
 }
 
 .story-info {
   min-width: 0;
   min-height: 0;
-  height: 100%;
-  overflow: visible;
+  height: auto;
+  overflow: hidden;
   align-self: stretch;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: clamp(0.35rem, 1.5cqw, 0.7rem);
+  gap: clamp(0.35rem, 1.45cqw, 0.7rem);
 }
 
 .story-copy,
@@ -163,43 +180,56 @@
 }
 
 .story-info h1 {
-  font-size: clamp(1.06rem, 5.2cqw, 2.2rem);
-  line-height: 1.08;
+  font-size: clamp(1.06rem, 4.6cqw, 2rem);
+  line-height: 1.1;
   overflow-wrap: anywhere;
   word-break: normal;
   text-wrap: balance;
 }
 
 .story-info .by {
-  font-size: clamp(0.72rem, 2.65cqw, 0.96rem);
+  font-size: clamp(0.72rem, 2.5cqw, 0.94rem);
   white-space: normal;
   overflow-wrap: anywhere;
 }
 
 .story-info .chip {
-  font-size: clamp(0.60rem, 2.2cqw, 0.78rem);
+  font-size: clamp(0.60rem, 2.05cqw, 0.77rem);
 }
 
 .story-metrics .metric b {
-  font-size: clamp(0.76rem, 2.5cqw, 1rem);
+  font-size: clamp(0.76rem, 2.35cqw, 0.98rem);
 }
 
 .story-metrics .metric small {
-  font-size: clamp(0.52rem, 1.8cqw, 0.68rem);
+  font-size: clamp(0.52rem, 1.7cqw, 0.67rem);
 }
 
+/* Preserve the existing three story actions; only allow them to fit their available width. */
 .story-acts {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .story-acts .btn {
   min-width: 0;
-  font-size: clamp(0.62rem, 2.15cqw, 0.84rem);
-  padding-inline: clamp(0.2rem, 1.2cqw, 0.45rem);
+  font-size: clamp(0.62rem, 2cqw, 0.82rem);
+  padding-inline: clamp(0.2rem, 1.1cqw, 0.45rem);
 }
 
-@media (orientation: landscape) and (max-height: 500px) {
+@media (max-width: 480px) {
   .story-hero {
-    min-height: clamp(14rem, 44vw, 22rem);
+    grid-template-columns: clamp(7rem, 32%, 8.5rem) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .story-hero {
+    grid-template-columns: clamp(9.5rem, 27%, 13.5rem) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .story-hero {
+    grid-template-columns: clamp(10.5rem, 23%, 14rem) minmax(0, 1fr);
   }
 }

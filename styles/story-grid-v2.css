@@ -253,3 +253,57 @@
     font-size: clamp(0.82rem, 0.8vw, 0.96rem) !important;
   }
 }
+
+/* --- LANDSCAPE COMPACT OPTION 2 ---
+   Only affects story cards when the device is physically in landscape.
+   Portrait layout, hero/banner size, hero covers, and all other features stay untouched. */
+@media (orientation: landscape) and (min-width: 641px) {
+  .rail {
+    grid-auto-columns: minmax(390px, 36%) !important;
+    gap: clamp(0.52rem, 0.75vw, 0.68rem) !important;
+  }
+
+  .wide-card {
+    --book-cover-w: clamp(8.35rem, 31%, 9.65rem);
+    gap: clamp(0.46rem, 0.68vw, 0.6rem) !important;
+    padding: clamp(0.42rem, 0.62vw, 0.54rem) !important;
+  }
+
+  .wide-cover .cover-frame {
+    aspect-ratio: 2 / 3 !important;
+  }
+
+  .wide-body {
+    gap: clamp(0.32rem, 0.48vw, 0.46rem) !important;
+  }
+
+  .wide-title {
+    padding-right: 1.35rem !important;
+  }
+
+  .wide-title h3 {
+    font-size: clamp(1.28rem, 1.55vw, 1.62rem) !important;
+    line-height: 1.05 !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  .wide-body .by {
+    font-size: clamp(0.88rem, 0.95vw, 1rem) !important;
+    line-height: 1.18 !important;
+  }
+
+  .wide-card .pill {
+    font-size: clamp(0.72rem, 0.72vw, 0.82rem) !important;
+    padding: 0.18rem 0.42rem !important;
+  }
+
+  .wide-stats {
+    font-size: clamp(0.76rem, 0.74vw, 0.86rem) !important;
+  }
+
+  .wide-latest {
+    margin-top: auto !important;
+    font-size: clamp(0.78rem, 0.76vw, 0.88rem) !important;
+    padding: 0.38rem 0.48rem 0.42rem !important;
+  }
+}

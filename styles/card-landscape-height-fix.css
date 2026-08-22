@@ -1,48 +1,143 @@
-/* Homepage story cards: responsive landscape sizing only.
-   Scope: cards inside the three story rails. Does NOT touch outer rail panels, hero/banner, or site functions. */
-@media (orientation: landscape) and (min-width: 720px) {
-  /* Keep each card at a sensible responsive width so neighbouring cards never overlap. */
+/* Responsive cover + information layout for story cards and story detail only.
+   IMPORTANT: this file does NOT target or modify the hero/banner. */
+
+/* ---------- Homepage story cards ---------- */
+.rail {
+  /* Phone portrait: give each card enough width for both cover and text,
+     while still leaving the next card partially visible for horizontal swipe. */
+  grid-auto-columns: minmax(19rem, 88vw);
+}
+
+.wide-card {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  grid-template-columns: clamp(7.4rem, 34%, 9.2rem) minmax(0, 1fr);
+  align-items: start;
+}
+
+.wide-cover {
+  align-self: start;
+  min-width: 0;
+}
+
+.wide-cover .cover-frame {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+
+.wide-body {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  align-self: stretch;
+}
+
+/* Long titles remain readable instead of being cut after two lines. */
+.wide-title h3 {
+  font-size: clamp(0.96rem, 3.8vw, 1.36rem);
+  line-height: 1.08;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-wrap: balance;
+}
+
+/* Keep the right-side metadata compact enough to stay balanced with the cover. */
+.wide-body .by {
+  font-size: clamp(0.72rem, 2.8vw, 0.88rem);
+}
+
+.wide-body .pill {
+  font-size: clamp(0.60rem, 2.25vw, 0.70rem);
+}
+
+.wide-stats {
+  font-size: clamp(0.66rem, 2.2vw, 0.76rem);
+}
+
+.wide-latest {
+  font-size: clamp(0.66rem, 2.2vw, 0.76rem);
+}
+
+/* Tablet portrait / small landscape: cover and text grow together. */
+@media (min-width: 720px) {
   .rail {
-    grid-auto-columns: clamp(22rem, 44vw, 31rem);
+    grid-auto-columns: clamp(27rem, 56vw, 32rem);
   }
 
-  /* Let the whole card grow/shrink naturally with its cover + text content. */
   .wide-card {
-    height: auto;
-    min-height: 0;
-    max-height: none;
-    overflow: hidden;
-    grid-template-columns: clamp(8.75rem, 30%, 10.75rem) minmax(0, 1fr);
-    align-items: stretch;
-  }
-
-  /* The cover keeps its own 2:3 ratio instead of forcing the card to a fixed height. */
-  .wide-cover {
-    align-self: start;
-    min-width: 0;
-  }
-
-  .wide-cover .cover-frame {
-    height: auto;
-    aspect-ratio: 2 / 3;
-    width: 100%;
-  }
-
-  /* Text column always keeps its own space and cannot be covered by the image column. */
-  .wide-body {
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
+    grid-template-columns: clamp(9.5rem, 32%, 11.5rem) minmax(0, 1fr);
   }
 
   .wide-title h3 {
-    font-size: clamp(1.05rem, 1.8vw, 1.42rem);
-    line-height: 1.12;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
+    font-size: clamp(1.05rem, 2.15vw, 1.46rem);
     -webkit-line-clamp: 3;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-    word-break: normal;
+  }
+}
+
+/* Laptop / wide screens: cards scale up moderately, never to the point of overlapping. */
+@media (min-width: 1100px) {
+  .rail {
+    grid-auto-columns: clamp(29rem, 40vw, 34rem);
+  }
+
+  .wide-card {
+    grid-template-columns: clamp(10.5rem, 31%, 12.5rem) minmax(0, 1fr);
+  }
+
+  .wide-title h3 {
+    font-size: clamp(1.10rem, 1.55vw, 1.52rem);
+  }
+}
+
+/* ---------- Story detail: cover + information ---------- */
+.story-hero {
+  grid-template-columns: clamp(7.6rem, 34vw, 10rem) minmax(0, 1fr);
+  gap: clamp(0.7rem, 2.4vw, 1.35rem);
+  align-items: start;
+}
+
+.story-cover {
+  width: 100%;
+  min-width: 0;
+  align-self: start;
+}
+
+.story-cover .cover-frame {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+}
+
+.story-info {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  align-self: stretch;
+}
+
+.story-info h1 {
+  font-size: clamp(1.08rem, 4vw, 2.15rem);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  text-wrap: balance;
+}
+
+@media (min-width: 720px) {
+  .story-hero {
+    grid-template-columns: clamp(10.5rem, 28vw, 14rem) minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .story-hero {
+    grid-template-columns: clamp(12.5rem, 22vw, 16rem) minmax(0, 1fr);
   }
 }

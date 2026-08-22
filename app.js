@@ -864,17 +864,6 @@
         <div class="hero-nav"><div class="hero-dots">${dots}</div></div>
       </section>
       <div class="wrap">${socialStrip()}</div>
-      <section class="wrap explore-head">
-        <p class="kicker">Thư viện tín hiệu</p>
-        <div class="explore-row">
-          <h2>Khám phá truyện</h2>
-          <div class="sort-pills">
-            <a class="on" href="#/kham-pha?sort=updated">✦ Mới cập nhật</a>
-            <a href="#/kham-pha?sort=views">◎ Nhiều lượt đọc</a>
-            <a href="#/kham-pha?sort=az">A–Z</a>
-          </div>
-        </div>
-      </section>
       <div class="wrap rails">
         ${rail("Đang lên sóng", ongoing, "cyan")}
         ${rail("Đã hoàn thành", done, "violet")}

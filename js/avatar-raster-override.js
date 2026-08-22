@@ -8,7 +8,7 @@
   function picked(a){const m=String(a||'').match(/^vca:(\d{1,2})$/);if(!m)return -1;const i=Number(m[1]);return i>=0&&i<ASSETS.length?i:-1}
   function indexFor(u){const p=picked(u&&u.avatar);return p>=0?p:hash(keyOf(u))%ASSETS.length}
   function srcByIndex(i){i=Number(i);return ASSETS[(i>=0&&i<ASSETS.length)?i:0]}
-  function realAvatar(u){const a=u&&u.avatar?String(u.avatar):'';return /^(https?:|data:image\/|covers\/|brand\/)/i.test(a)?a:''}
+  function realAvatar(u){const a=u&&u.avatar?String(u.avatar):'';return /^(https?:|covers\/|brand\/)/i.test(a)?a:''}
   function srcFor(u){return realAvatar(u)||srcByIndex(indexFor(u||{}))}
   function decorate(el,u,admin){
     if(!el)return;const src=srcFor(u||{});el.classList.add('vc-pool-avatar');el.classList.toggle('vc-admin-avatar',!!admin);

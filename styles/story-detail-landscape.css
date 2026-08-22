@@ -36,6 +36,16 @@
     font-size:clamp(.78rem,2.2vw,.86rem);
     line-height:1.56;
   }
+
+  /* Fixed phone reading scale: do not let Safari viewport sizing enlarge it. */
+  .story-page .story-tab .intro-body{
+    font-size:.78rem !important;
+    line-height:1.56 !important;
+  }
+  .story-page .story-tab .info-body p{
+    font-size:.74rem !important;
+    line-height:1.52 !important;
+  }
 }
 
 @media (min-width:640px) and (max-width:1366px) and (orientation:landscape){
@@ -410,6 +420,15 @@
   .story-landscape-sidebar{padding-top:.55rem}
   .story-side-scroll{top:.4rem;max-height:calc(100vh - .8rem)}
   .story-side-list{gap:.5rem}
+
+  .story-page .story-tab .intro-body{
+    font-size:.66rem !important;
+    line-height:1.48 !important;
+  }
+  .story-page .story-tab .info-body p{
+    font-size:.64rem !important;
+    line-height:1.46 !important;
+  }
 }
 
 @media (min-width:1367px) and (orientation:landscape){

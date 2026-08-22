@@ -327,8 +327,9 @@
   }
 }
 
-/* Short landscape phones: preserve the same composition at a compact scale. */
-@media (min-width:640px) and (max-width:959px) and (orientation:landscape){
+/* Landscape phones are detected by their short viewport height.
+   Width alone is unreliable on iOS because Safari can expose a wider layout viewport. */
+@media (min-width:640px) and (max-width:1366px) and (max-height:600px) and (orientation:landscape){
   .story-page{padding-top:.45rem}
   .story-detail-layout.is-intro{grid-template-columns:minmax(0,1fr) clamp(9.3rem,17vw,10.25rem);gap:.65rem}
   .story-page .story-hero{--landscape-cover-w:clamp(8.7rem,19vw,10.4rem);gap:.75rem;height:calc(var(--landscape-cover-w) * 1.5)}
@@ -343,24 +344,24 @@
   }
   .story-page .story-info h1{
     margin:.02rem 0 .14rem;
-    font-size:clamp(1rem,2.45vw,1.32rem);
-    line-height:1.08;
+    font-size:clamp(1.18rem,2.8vw,1.52rem);
+    line-height:1.06;
     display:-webkit-box;
     -webkit-line-clamp:3;
     -webkit-box-orient:vertical;
     overflow:hidden;
   }
-  .story-page .story-info .badge{font-size:.54rem}
-  .story-page .story-info .by{font-size:.65rem;margin-bottom:.14rem}
-  .story-page .chip{padding:.08rem .35rem;font-size:.52rem}
+  .story-page .story-info .badge{font-size:.59rem}
+  .story-page .story-info .by{font-size:.74rem;margin-bottom:.16rem}
+  .story-page .chip{padding:.09rem .38rem;font-size:.56rem}
   .story-landscape-meta{display:none}
   .story-page .story-metrics{grid-row:2}
   .story-page .story-acts{grid-row:3}
   .story-page .story-tabs{margin:.4rem 0}
   .story-page .story-tabs a{padding:.4rem .15rem .35rem;font-size:.64rem}
   .story-page .intro-card{min-height:clamp(8.5rem,30vh,12rem);padding:.7rem .85rem}
-  .story-page .intro-body{font-size:.7rem;line-height:1.5}
-  .story-page .intro-body.is-clamp{max-height:15em}
+  .story-page .intro-body{font-size:.74rem;line-height:1.52}
+  .story-page .intro-body.is-clamp{max-height:15.2em}
   .story-page .story-tab>.info-card{
     display:block;
     margin-top:.55rem;
@@ -369,7 +370,7 @@
   }
   .story-page .story-tab>.info-card .info-title{margin-bottom:.45rem;font-size:.66rem}
   .story-page .story-tab>.info-card .info-body{padding-left:.65rem}
-  .story-page .story-tab>.info-card .info-body p{font-size:.67rem;line-height:1.48;margin-bottom:.28rem}
+  .story-page .story-tab>.info-card .info-body p{font-size:.7rem;line-height:1.5;margin-bottom:.28rem}
   .story-landscape-sidebar{padding-top:.55rem}
   .story-side-scroll{top:.4rem;max-height:calc(100vh - .8rem)}
   .story-side-list{gap:.5rem}

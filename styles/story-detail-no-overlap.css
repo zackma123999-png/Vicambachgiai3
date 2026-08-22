@@ -75,6 +75,37 @@
   min-height:calc(3.9rem + env(safe-area-inset-bottom));
 }
 
+/* Keep long tables of contents inside a dedicated vertical scroller. */
+.story-page .toc-box{
+  min-height:0;
+}
+
+.story-page .toc-box .chapter-list{
+  max-height:min(58dvh,34rem);
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  scrollbar-gutter:stable;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(159,139,232,.52) rgba(14,18,32,.55);
+  border-top:1px solid rgba(168,154,230,.14);
+  border-bottom:1px solid rgba(168,154,230,.14);
+  -webkit-overflow-scrolling:touch;
+}
+
+.story-page .toc-box .chapter-list::-webkit-scrollbar{width:6px}
+.story-page .toc-box .chapter-list::-webkit-scrollbar-track{background:rgba(14,18,32,.55)}
+.story-page .toc-box .chapter-list::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(159,139,232,.52);
+}
+
+.story-dock .dock-fav{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
 /* iOS must not enlarge text again when the device rotates. */
 html{
   -webkit-text-size-adjust:100%;

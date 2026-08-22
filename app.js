@@ -1229,7 +1229,7 @@
       </main>
       <div class="story-dock">
         ${latestHref ? `<a class="btn btn-cyan dock-read" href="${latestHref}">Chương mới</a>` : ""}
-        <button class="btn btn-ghost dock-fav" id="btnFavDock">${fav ? "Đã lưu" : "Lưu trữ"}</button>
+        <button class="btn btn-ghost dock-fav" type="button" id="btnShareStory">Chia sẻ</button>
       </div>` +
       footer();
     bindChrome();
@@ -1266,14 +1266,30 @@
         const r = VCBG.toggleFavorite(s.id);
         toast(r.on ? "Đã thêm vào tủ truyện." : "Đã xóa khỏi tủ truyện.");
         if ($("#btnFav")) $("#btnFav").textContent = r.on ? "Đã lưu" : "Lưu trữ";
-        if ($("#btnFavDock")) $("#btnFavDock").textContent = r.on ? "Đã lưu" : "Lưu trữ";
       } catch (e) {
         if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
         else toast(e.message);
       }
     };
     if ($("#btnFav")) $("#btnFav").onclick = toggleFav;
-    if ($("#btnFavDock")) $("#btnFavDock").onclick = toggleFav;
+    if ($("#btnShareStory")) {
+      $("#btnShareStory").onclick = async () => {
+        const shareData = {
+          title: s.title + " — ViCamBachGiai",
+          text: "Đọc " + s.title + " trên ViCamBachGiai",
+          url: location.href,
+        };
+        try {
+          if (navigator.share) await navigator.share(shareData);
+          else {
+            await navigator.clipboard.writeText(location.href);
+            toast("Đã sao chép liên kết truyện.");
+          }
+        } catch (e) {
+          if (e && e.name !== "AbortError") toast("Chưa thể chia sẻ liên kết.");
+        }
+      };
+    }
     if ($("#btnFol"))
       $("#btnFol").onclick = () => {
         try {

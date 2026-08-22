@@ -1130,12 +1130,14 @@
       </article>
       ${sameAuthor.length ? `<section class="same-author">
         <div class="same-head">
-          <h3>Cùng ${esc(s.author)}</h3>
+          <h3>Cùng tác giả</h3>
           <span>${sameAuthor.length} truyện</span>
         </div>
         <div class="same-rail">${sameAuthor.map((o) => `<a class="same-card" href="#/truyen/${esc(o.slug)}">
           ${coverImg(o.cover, o.title)}
           <b>${esc(o.title)}</b>
+          <small>${esc(o.author || "—")}</small>
+          <em>${esc(statusLabel(o.status))}</em>
         </a>`).join("")}</div>
       </section>` : ""}
       ${relatedStories.length ? `<section class="same-author recommended-stories">
@@ -1147,6 +1149,7 @@
           ${coverImg(o.cover, o.title)}
           <b>${esc(o.title)}</b>
           <small>${esc(o.author || "—")}</small>
+          <em>${esc(statusLabel(o.status))}</em>
         </a>`).join("")}</div>
       </section>` : ""}`;
     const sideStoryCard = (o) => `<a class="story-side-card" href="#/truyen/${esc(o.slug)}">

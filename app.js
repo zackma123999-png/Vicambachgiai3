@@ -1149,6 +1149,10 @@
                 <p class="by">Tác giả: <span>${esc(s.author || "—")}</span></p>
                 <div class="tags">${tagsLine}</div>
               </div>
+              <aside class="story-landscape-meta" aria-label="Thông tin truyện">
+                <h2>Thông tin truyện</h2>
+                <div class="landscape-info-body">${formatStoryInfo(infoText)}</div>
+              </aside>
               <div class="story-metrics" role="list">
                 <div class="metric" role="listitem"><span class="metric-ico" aria-hidden="true">👁</span><b>${s.stats.views || 0}</b><small>Lượt xem</small></div>
                 <div class="metric" role="listitem"><span class="metric-ico" aria-hidden="true">★</span><b>${s.stats.rating_avg || 0}</b><small>Đánh giá</small></div>

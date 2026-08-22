@@ -1,15 +1,16 @@
 /* Tap-driven paragraph comments for the reader.
-   Keeps the reader layout untouched and reveals the comment affordance only after tapping a paragraph. */
+   Keeps the reader layout untouched and lets the existing reader chrome react to the same tap. */
 (function () {
   var hideTimer = 0;
+  var HIDE_MS = 3000; // matches the existing reader chrome auto-hide timing in app.js
 
   function activeReader() {
     return document.querySelector('.reader-page');
   }
 
   function clearTargets(except) {
-    document.querySelectorAll('.reader-page .r-p.is-comment-target').forEach(function (p) {
-      if (p !== except) p.classList.remove('is-comment-target');
+    document.querySelectorAll('.reader-page .r-p.vc-comment-target').forEach(function (p) {
+      if (p !== except) p.classList.remove('vc-comment-target');
     });
     if (!except) clearTimeout(hideTimer);
   }
@@ -17,13 +18,13 @@
   function revealTarget(p) {
     clearTimeout(hideTimer);
     clearTargets(p);
-    p.classList.add('is-comment-target');
+    p.classList.add('vc-comment-target');
     hideTimer = setTimeout(function () {
-      p.classList.remove('is-comment-target');
-    }, 2000);
+      p.classList.remove('vc-comment-target');
+    }, HIDE_MS);
   }
 
-  // Block the old long-press paragraph menu before its listener receives pointerdown.
+  // Keep the old long-press paragraph menu disabled. A normal tap is enough.
   document.addEventListener('pointerdown', function (e) {
     var p = e.target && e.target.closest && e.target.closest('.reader-page p.r-p');
     if (!p || e.target.closest('.p-bubble')) return;
@@ -37,19 +38,18 @@
     var bubble = e.target.closest && e.target.closest('.p-bubble');
     if (bubble) {
       clearTimeout(hideTimer);
-      clearTargets(bubble.closest('p.r-p'));
       return;
     }
 
     var p = e.target.closest && e.target.closest('.reader-page p.r-p');
     if (p && !e.target.closest('a,button,.r-engage')) {
-      // A normal tap only reveals the floating comment icon. It never changes line wrapping.
+      // Do NOT stop propagation here: the page's existing click handler must also
+      // receive this tap so its current navigation bars appear at the same time.
       revealTarget(p);
-      e.stopPropagation();
       return;
     }
 
-    if (!e.target.closest('.drawer,.drawer-bg,.vc-cmt-panel,.vc-cmt-backdrop')) clearTargets(null);
+    if (!e.target.closest('.drawer,.drawer-bg,.vc-comment-drawer,.vc-comment-backdrop')) clearTargets(null);
   }, true);
 
   function routeParaKey() {

@@ -1094,6 +1094,8 @@
     const fol = VCBG.isFollow(s.id);
     const commentsN = VCBG.storyCommentCount(s.id);
     const sameAuthor = VCBG.storiesByAuthor(s.author, s.id);
+    const relatedStories = VCBG.listStories({ sort: "updated" })
+      .filter((o) => o.id !== s.id && !sameAuthor.some((a) => a.id === o.id));
     const tab = ["intro", "toc", "rate"].includes(route.q.tab) ? route.q.tab : "intro";
     const qs = (extra) => {
       const p = new URLSearchParams();
@@ -1136,6 +1138,22 @@
           <b>${esc(o.title)}</b>
         </a>`).join("")}</div>
       </section>` : ""}`;
+    const sideStoryCard = (o) => `<a class="story-side-card" href="#/truyen/${esc(o.slug)}">
+        ${coverImg(o.cover, o.title)}
+        <span class="story-side-copy"><b>${esc(o.title)}</b><small>${esc(o.author || "—")}</small><em>${esc(statusLabel(o.status))}</em></span>
+      </a>`;
+    const landscapeSidebar = `<aside class="story-landscape-sidebar" aria-label="Truyện liên quan">
+        <div class="story-side-scroll">
+          ${sameAuthor.length ? `<section class="story-side-section">
+            <h2>Cùng tác giả</h2>
+            <div class="story-side-list">${sameAuthor.map(sideStoryCard).join("")}</div>
+          </section>` : ""}
+          ${relatedStories.length ? `<section class="story-side-section story-side-other">
+            <h2>Đề xuất khác</h2>
+            <div class="story-side-list">${relatedStories.map(sideStoryCard).join("")}</div>
+          </section>` : ""}
+        </div>
+      </aside>`;
     const tocHtml = `<div class="toc-box">
         <div class="toc-head">
           <strong>${filtered.length} chương</strong>
@@ -1155,6 +1173,8 @@
     app().innerHTML =
       header() +
       `<main class="wrap story-page">
+        <div class="story-detail-layout ${tab === "intro" ? "is-intro" : "is-secondary"}">
+        <div class="story-detail-primary">
         <section class="story-top">
           <div class="story-hero">
             <div class="story-cover">${coverImg(s.cover, "Bìa " + s.title, true)}</div>
@@ -1189,6 +1209,9 @@
           <a class="${tab === "rate" ? "on" : ""}" href="${qs({ tab: "rate" })}">Đánh giá</a>
         </nav>
         <section class="story-tab">${tab === "intro" ? introHtml : tab === "toc" ? tocHtml : rateHtml}</section>
+        </div>
+        ${tab === "intro" ? landscapeSidebar : ""}
+        </div>
       </main>
       <div class="story-dock">
         ${latestHref ? `<a class="btn btn-cyan dock-read" href="${latestHref}">Chương mới</a>` : ""}

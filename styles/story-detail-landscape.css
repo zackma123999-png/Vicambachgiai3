@@ -89,16 +89,25 @@
   }
 
   .story-landscape-meta .landscape-info-body{
-    display:grid;
-    grid-template-columns:max-content minmax(0,1fr);
-    column-gap:1rem;
-    row-gap:.34rem;
-    max-width:40rem;
+    display:flex;
+    flex-direction:column;
+    gap:.3rem;
+    max-width:42rem;
   }
 
   .story-landscape-meta .landscape-info-body p{
-    display:contents;
+    display:grid;
+    grid-template-columns:max-content minmax(0,1fr);
+    column-gap:.55rem;
+    align-items:baseline;
     margin:0;
+    color:#d9dceb;
+    font-size:.82rem;
+    line-height:1.4;
+  }
+
+  .story-landscape-meta .landscape-info-body p.landscape-info-line{
+    display:block;
   }
 
   .story-landscape-meta .landscape-info-body strong{
@@ -107,10 +116,9 @@
     font-weight:500;
   }
 
-  .story-landscape-meta .landscape-info-body p{
-    color:#d9dceb;
-    font-size:.82rem;
-    line-height:1.4;
+  .story-landscape-meta .landscape-info-body span{
+    min-width:0;
+    overflow-wrap:anywhere;
   }
 
   .story-page .story-metrics{

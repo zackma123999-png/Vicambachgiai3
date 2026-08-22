@@ -1178,7 +1178,7 @@
               <div class="story-acts">
                 ${readHref ? `<a class="btn btn-cyan" href="${readHref}">${readLabel}</a>` : `<span class="btn" disabled>Chưa có chương</span>`}
                 <button class="btn btn-ghost" id="btnFav">${fav ? "Đã lưu" : "Lưu trữ"}</button>
-                <button class="btn btn-ghost" id="btnFol">${fol ? "Đang theo" : "Theo dõi"}</button>
+                <button class="btn btn-ghost" id="btnFol">♡ ${fol ? "Đã thả tim" : "Thả tim"}</button>
               </div>
             </div>
           </div>
@@ -1241,8 +1241,8 @@
       $("#btnFol").onclick = () => {
         try {
           const r = VCBG.toggleFollow(s.id);
-          toast(r.on ? "Đã theo dõi truyện." : "Đã bỏ theo dõi.");
-          $("#btnFol").textContent = r.on ? "Đang theo" : "Theo dõi";
+          toast(r.on ? "Đã thả tim truyện." : "Đã bỏ thả tim.");
+          $("#btnFol").textContent = r.on ? "♥ Đã thả tim" : "♡ Thả tim";
         } catch (e) {
           if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
           else toast(e.message);

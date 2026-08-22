@@ -1177,8 +1177,8 @@
               </div>
               <div class="story-acts">
                 ${readHref ? `<a class="btn btn-cyan" href="${readHref}">${readLabel}</a>` : `<span class="btn" disabled>Chưa có chương</span>`}
-                <button class="btn btn-ghost" id="btnFav">${fav ? "Đã lưu" : "Lưu trữ"}</button>
-                <button class="btn btn-ghost" id="btnFol">♡ ${fol ? "Đã thả tim" : "Thả tim"}</button>
+                                <button class="btn btn-ghost" id="btnFol">♡ ${fol ? "Đã thả tim" : "Thả tim"}</button>
+<button class="btn btn-ghost" id="btnFav">${fav ? "Đã lưu" : "Lưu trữ"}</button>
               </div>
             </div>
           </div>

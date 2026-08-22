@@ -1,4 +1,27 @@
 /* ViCamBachGiai — glass shelves for same-author and recommended stories. */
+.story-page .info-more{
+  display:flex;
+  width:100%;
+  min-height:44px;
+  margin-top:.85rem;
+  padding:.55rem .85rem;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(168,154,230,.3);
+  border-radius:11px;
+  background:linear-gradient(180deg,rgba(24,21,46,.48),rgba(13,15,29,.55));
+  color:#cbb9ff;
+  font-size:.88rem;
+  font-weight:650;
+  line-height:1.2;
+  text-align:center;
+}
+
+.story-page .info-more:active{
+  border-color:rgba(192,174,255,.58);
+  background:rgba(42,34,78,.52);
+}
+
 .story-page .same-author{
   margin-top:1rem;
   padding:clamp(.85rem,3vw,1.15rem);

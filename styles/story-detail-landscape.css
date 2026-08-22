@@ -5,6 +5,39 @@
 /* The wrapper is layout-neutral outside landscape phones/tablets. */
 .story-detail-layout,.story-detail-primary{min-width:0}
 
+/* Phone portrait: use the full natural cover height and distribute the
+   right-hand groups evenly, while keeping the action row level with the cover. */
+@media (max-width:719px) and (orientation:portrait){
+  .story-page .story-hero{align-items:stretch}
+  .story-page .story-cover{align-self:stretch}
+  .story-page .story-info{
+    height:100%;
+    align-self:stretch;
+    justify-content:space-between;
+    gap:clamp(.42rem,1.25vh,.72rem);
+  }
+  .story-page .story-copy{flex:0 0 auto}
+  .story-page .story-info h1{
+    font-size:clamp(1.58rem,6.15vw,2rem);
+    line-height:1.05;
+  }
+  .story-page .story-info .badge{font-size:clamp(.66rem,1.85vw,.76rem)}
+  .story-page .story-info .by{font-size:clamp(.83rem,2.25vw,.96rem)}
+  .story-page .chip{font-size:clamp(.64rem,1.85vw,.75rem)}
+  .story-page .story-metrics,.story-page .story-acts{flex:0 0 auto;margin-top:0}
+  .story-page .intro-card{padding:clamp(.82rem,2.4vw,1rem) clamp(.82rem,2.6vw,1.05rem)}
+  .story-page .intro-title{margin-bottom:.52rem;font-size:clamp(.72rem,2vw,.82rem)}
+  .story-page .intro-body{
+    font-size:clamp(.82rem,2.3vw,.9rem);
+    line-height:1.62;
+  }
+  .story-page .intro-body.is-clamp{max-height:16.2em}
+  .story-page .story-tab>.info-card .info-body p{
+    font-size:clamp(.78rem,2.2vw,.86rem);
+    line-height:1.56;
+  }
+}
+
 @media (min-width:640px) and (max-width:1366px) and (orientation:landscape){
   .story-page{
     width:min(100% - 1.5rem,1240px);
@@ -334,11 +367,15 @@
   .story-detail-layout.is-intro{grid-template-columns:minmax(0,1fr) clamp(9.3rem,17vw,10.25rem);gap:.65rem}
   .story-page .story-hero{--landscape-cover-w:clamp(8.7rem,19vw,10.4rem);gap:.75rem;height:calc(var(--landscape-cover-w) * 1.5)}
   .story-page .story-info{
-    grid-template-rows:minmax(0,1fr) auto auto;
-    gap:clamp(.25rem,.65vh,.42rem);
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    align-self:stretch;
+    justify-content:space-between;
+    gap:clamp(.38rem,1.15vh,.68rem);
   }
   .story-page .story-copy{
-    grid-row:1;
+    flex:0 0 auto;
     min-height:0;
     overflow:hidden;
   }
@@ -355,12 +392,11 @@
   .story-page .story-info .by{font-size:.74rem;margin-bottom:.16rem}
   .story-page .chip{padding:.09rem .38rem;font-size:.56rem}
   .story-landscape-meta{display:none}
-  .story-page .story-metrics{grid-row:2}
-  .story-page .story-acts{grid-row:3}
+  .story-page .story-metrics,.story-page .story-acts{flex:0 0 auto;margin-top:0}
   .story-page .story-tabs{margin:.4rem 0}
   .story-page .story-tabs a{padding:.4rem .15rem .35rem;font-size:.64rem}
   .story-page .intro-card{min-height:clamp(8.5rem,30vh,12rem);padding:.7rem .85rem}
-  .story-page .intro-body{font-size:.74rem;line-height:1.52}
+  .story-page .intro-body{font-size:.7rem;line-height:1.52}
   .story-page .intro-body.is-clamp{max-height:15.2em}
   .story-page .story-tab>.info-card{
     display:block;

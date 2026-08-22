@@ -19,7 +19,7 @@
 .vc-avatar-close{width:44px;height:44px;font-size:1.5rem;font-weight:600}
 .vc-avatar-grid{padding:1rem 1.1rem 1.15rem;gap:.78rem .7rem}
 .vc-avatar-option{min-width:0;border-radius:18px;padding:.5rem .2rem .6rem;gap:.42rem;font-size:.78rem;background:rgba(255,255,255,.022)}
-.vc-avatar-option img{width:min(92px,100%);aspect-ratio:1;height:auto;border:1px solid rgba(157,116,255,.65);background:#0c1328;object-fit:cover}
+.vc-avatar-option img{width:min(92px,100%);aspect-ratio:1;height:auto;border:0;background:#0c1328;object-fit:cover}
 .vc-avatar-option span{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vc-avatar-option:focus-visible{outline:2px solid #b79aff;outline-offset:2px}.vc-avatar-option.is-selected{border-color:#9b76ff;background:rgba(140,98,255,.15)}
 .vc-avatar-picker footer{padding:1rem 1.2rem calc(1rem + env(safe-area-inset-bottom))}.vc-avatar-save{min-width:150px;padding:.78rem 1.2rem;font-size:.92rem;background:linear-gradient(135deg,#7955db,#643cc5)}

@@ -1,4 +1,4 @@
-/* ViCamBachGiai — account avatar picker using the approved demo-style pool. */
+/* ViCamBachGiai — account avatar picker using the approved raster demo pool. */
 (function(){
   function isAccount(){return /^\/?tai-khoan(?:\?|$)/.test((location.hash||'').replace(/^#/,''));}
   function close(){document.querySelector('.vc-avatar-picker-backdrop')?.remove();}
@@ -7,12 +7,12 @@
     close();
     const opts=VICAM_AVATARS.options||[];
     const back=document.createElement('div');back.className='vc-avatar-picker-backdrop';
-    back.innerHTML='<section class="vc-avatar-picker" role="dialog" aria-modal="true" aria-label="Đổi avatar"><header><div><h2>Đổi avatar</h2><p>Chọn một avatar từ kho ViCam</p></div><button type="button" class="vc-avatar-close" aria-label="Đóng">×</button></header><div class="vc-avatar-grid">'+opts.map((s,i)=>'<button type="button" class="vc-avatar-option" data-i="'+i+'" aria-label="'+s[0]+'"><img src="'+VICAM_AVATARS.srcByIndex(i)+'" alt=""><span>'+s[0]+'</span></button>').join('')+'</div><footer><span>Avatar sẽ được đồng bộ ở mọi nơi.</span><button type="button" class="vc-avatar-save" disabled>Lưu avatar</button></footer></section>';
+    back.innerHTML='<section class="vc-avatar-picker" role="dialog" aria-modal="true" aria-label="Đổi avatar"><header><div><h2>Đổi avatar</h2><p>Chọn một avatar từ kho ViCam</p></div><button type="button" class="vc-avatar-close" aria-label="Đóng">×</button></header><div class="vc-avatar-grid">'+opts.map((name,i)=>'<button type="button" class="vc-avatar-option" data-i="'+i+'" aria-label="'+name+'"><img src="'+VICAM_AVATARS.srcByIndex(i)+'" alt=""><span>'+name+'</span></button>').join('')+'</div><footer><span>Avatar sẽ được đồng bộ ở mọi nơi.</span><button type="button" class="vc-avatar-save" disabled>Lưu avatar</button></footer></section>';
     document.body.appendChild(back);
-    let chosen='';
+    let chosen=-1;
     back.querySelector('.vc-avatar-close').onclick=close;back.onclick=e=>{if(e.target===back)close()};
-    back.querySelectorAll('.vc-avatar-option').forEach(btn=>btn.onclick=()=>{back.querySelectorAll('.vc-avatar-option').forEach(x=>x.classList.remove('is-selected'));btn.classList.add('is-selected');chosen=VICAM_AVATARS.srcByIndex(Number(btn.dataset.i));back.querySelector('.vc-avatar-save').disabled=false});
-    back.querySelector('.vc-avatar-save').onclick=()=>{if(!chosen)return;try{VCBG.updateProfile({avatar:chosen});VICAM_AVATARS.sync();const preview=document.querySelector('.vc-avatar-account-preview');if(preview)preview.src=chosen;close();if(window.toast)toast('Đã đổi avatar.');}catch(e){alert(e&&e.message?e.message:'Không đổi được avatar.')}};
+    back.querySelectorAll('.vc-avatar-option').forEach(btn=>btn.onclick=()=>{back.querySelectorAll('.vc-avatar-option').forEach(x=>x.classList.remove('is-selected'));btn.classList.add('is-selected');chosen=Number(btn.dataset.i);back.querySelector('.vc-avatar-save').disabled=false});
+    back.querySelector('.vc-avatar-save').onclick=()=>{if(chosen<0)return;try{VCBG.updateProfile({avatar:'vca:'+chosen});VICAM_AVATARS.sync();const preview=document.querySelector('.vc-avatar-account-preview');if(preview)preview.src=VICAM_AVATARS.srcByIndex(chosen);close();if(window.toast)toast('Đã đổi avatar.');}catch(e){alert(e&&e.message?e.message:'Không đổi được avatar.')}};
   }
   function inject(){
     if(!isAccount()||!window.VCBG||!VCBG.currentUser())return;

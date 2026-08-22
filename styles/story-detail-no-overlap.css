@@ -81,9 +81,9 @@
 }
 
 .story-page .toc-box .chapter-list{
-  max-height:min(58dvh,34rem);
+  max-height:none;
   overflow-x:hidden;
-  overflow-y:auto;
+  overflow-y:visible;
   overscroll-behavior-y:contain;
   scrollbar-gutter:stable;
   scrollbar-width:thin;
@@ -91,6 +91,11 @@
   border-top:1px solid rgba(168,154,230,.14);
   border-bottom:1px solid rgba(168,154,230,.14);
   -webkit-overflow-scrolling:touch;
+}
+
+.story-page .toc-box .chapter-list.is-scrollable{
+  height:clamp(16rem,40dvh,24rem);
+  overflow-y:auto;
 }
 
 .story-page .toc-box .chapter-list::-webkit-scrollbar{width:6px}

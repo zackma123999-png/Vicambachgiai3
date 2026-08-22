@@ -1175,7 +1175,7 @@
           <a class="btn btn-ghost" href="${qs({ sort: sortDesc ? "asc" : "desc", tab: "toc" })}">${sortDesc ? "Cũ → mới" : "Mới → cũ"}</a>
         </div>
         ${groups.length > 1 ? `<div class="toc-groups">${groups.map((g, i) => `<a class="${i === gIdx ? "on" : ""}" href="${qs({ tab: "toc", g: i })}">${g.a}–${g.b}</a>`).join("")}</div>` : ""}
-        <ul class="chapter-list">${slice.map((c) => `<li><a href="#/truyen/${esc(s.slug)}/chuong-${c.number}" class="${readIds.includes(c.id) ? "read" : ""}">
+        <ul class="chapter-list${slice.length > 5 ? " is-scrollable" : ""}">${slice.map((c) => `<li><a href="#/truyen/${esc(s.slug)}/chuong-${c.number}" class="${readIds.includes(c.id) ? "read" : ""}">
           <span class="num">${c.number}</span><span>${esc(c.title || "Chương " + c.number)}</span>
           <span class="num">${fmtDate(c.published_at || c.updated_at)}</span></a></li>`).join("")}</ul>
       </div>`;

@@ -11,3 +11,16 @@
 .vc-avatar-option{border:1px solid transparent;border-radius:16px;padding:.45rem .25rem .5rem;background:rgba(255,255,255,.025);color:#cfd4e8;display:flex;flex-direction:column;align-items:center;gap:.38rem;font:inherit;font-size:.72rem}.vc-avatar-option img{width:62px;height:62px;border-radius:50%;display:block}.vc-avatar-option.is-selected{border-color:#9b76ff;background:rgba(140,98,255,.12);box-shadow:0 0 0 1px rgba(155,118,255,.2) inset}.vc-avatar-option.is-selected img{box-shadow:0 0 0 2px #9b76ff}
 .vc-avatar-picker footer{padding:.85rem 1rem calc(.85rem + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:1rem}.vc-avatar-picker footer span{font-size:.74rem;color:#838dab}.vc-avatar-save{border:0;border-radius:999px;padding:.68rem 1rem;background:#7955db;color:#fff;font:inherit;font-weight:600}.vc-avatar-save:disabled{opacity:.38}
 @media(max-width:460px){.vc-avatar-account{grid-template-columns:50px 1fr}.vc-avatar-account-btn{grid-column:2;justify-self:start;margin-top:-.2rem}.vc-avatar-account-preview{width:50px;height:50px}.vc-avatar-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:.55rem;padding:.8rem}.vc-avatar-option img{width:54px;height:54px}.vc-avatar-option{font-size:.66rem}.vc-avatar-picker footer span{display:none}.vc-avatar-picker footer{justify-content:flex-end}}
+
+/* ViCamBachGiai — polished avatar picker v2. */
+.vc-avatar-picker-backdrop{align-items:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
+.vc-avatar-picker{width:min(620px,100%);max-height:min(90dvh,780px);border-color:rgba(153,111,255,.48);border-radius:28px;background:linear-gradient(180deg,#0e1425 0%,#0b1120 100%)}
+.vc-avatar-picker header{padding:1.2rem 1.25rem 1rem}.vc-avatar-picker h2{font-size:1.45rem;letter-spacing:-.02em}.vc-avatar-picker header p{font-size:.88rem;margin-top:.3rem}
+.vc-avatar-close{width:44px;height:44px;font-size:1.5rem;font-weight:600}
+.vc-avatar-grid{padding:1rem 1.1rem 1.15rem;gap:.78rem .7rem}
+.vc-avatar-option{min-width:0;border-radius:18px;padding:.5rem .2rem .6rem;gap:.42rem;font-size:.78rem;background:rgba(255,255,255,.022)}
+.vc-avatar-option img{width:min(92px,100%);aspect-ratio:1;height:auto;border:1px solid rgba(157,116,255,.65);background:#0c1328;object-fit:cover}
+.vc-avatar-option span{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vc-avatar-option:focus-visible{outline:2px solid #b79aff;outline-offset:2px}.vc-avatar-option.is-selected{border-color:#9b76ff;background:rgba(140,98,255,.15)}
+.vc-avatar-picker footer{padding:1rem 1.2rem calc(1rem + env(safe-area-inset-bottom))}.vc-avatar-save{min-width:150px;padding:.78rem 1.2rem;font-size:.92rem;background:linear-gradient(135deg,#7955db,#643cc5)}
+@media(max-width:460px){.vc-avatar-picker{max-height:88dvh;border-radius:25px}.vc-avatar-picker header{padding:1rem}.vc-avatar-picker h2{font-size:1.25rem}.vc-avatar-grid{padding:.85rem;gap:.55rem}.vc-avatar-option{padding:.38rem .12rem .48rem;font-size:.67rem}.vc-avatar-option img{width:min(68px,100%)}.vc-avatar-save{min-width:145px}.vc-avatar-picker footer{padding:.85rem 1rem calc(.85rem + env(safe-area-inset-bottom))}}

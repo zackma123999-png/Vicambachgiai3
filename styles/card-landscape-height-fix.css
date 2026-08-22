@@ -1,9 +1,24 @@
-/* Fix only homepage story-card height in landscape.
-   Scope intentionally excludes hero/banner, section shells, progress bars and portrait layout. */
+/* Homepage story-card fix for landscape only.
+   Keeps the original card width/layout, preserves all content, and does not touch the hero/banner. */
 @media (orientation: landscape) and (max-height: 600px) and (min-width: 720px) {
   .wide-card {
-    height: 17.5rem;
-    min-height: 17.5rem;
-    max-height: 17.5rem;
+    height: auto;
+    min-height: 22rem;
+    max-height: none;
+  }
+
+  .wide-title h3 {
+    font-size: clamp(1.05rem, 2.2vw, 1.42rem);
+    line-height: 1.12;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .wide-body {
+    min-height: 0;
   }
 }

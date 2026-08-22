@@ -24,3 +24,7 @@
 .vc-avatar-option:focus-visible{outline:2px solid #b79aff;outline-offset:2px}.vc-avatar-option.is-selected{border-color:#9b76ff;background:rgba(140,98,255,.15)}
 .vc-avatar-picker footer{padding:1rem 1.2rem calc(1rem + env(safe-area-inset-bottom))}.vc-avatar-save{min-width:150px;padding:.78rem 1.2rem;font-size:.92rem;background:linear-gradient(135deg,#7955db,#643cc5)}
 @media(max-width:460px){.vc-avatar-picker{max-height:88dvh;border-radius:25px}.vc-avatar-picker header{padding:1rem}.vc-avatar-picker h2{font-size:1.25rem}.vc-avatar-grid{padding:.85rem;gap:.55rem}.vc-avatar-option{padding:.38rem .12rem .48rem;font-size:.67rem}.vc-avatar-option img{width:min(68px,100%)}.vc-avatar-save{min-width:145px}.vc-avatar-picker footer{padding:.85rem 1rem calc(.85rem + env(safe-area-inset-bottom))}}
+
+/* Single-ring rule: artwork owns the only visible purple circle. */
+.vc-avatar-account-preview,.vc-avatar-option img{border:0!important;box-shadow:none!important;background:transparent!important}
+.vc-avatar-option.is-selected img{box-shadow:none!important}

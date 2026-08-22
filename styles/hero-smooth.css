@@ -8,11 +8,8 @@
   opacity: 1;
   transform: translateY(0);
 }
-/* Hide dots until the fan is ready so the hero enters as one visual unit. */
-.hero.stack-hero .hero-nav {
-  opacity: 0;
-  transition: opacity 160ms ease;
-}
+/* Keep carousel logic intact but permanently hide the pagination dots. */
+.hero.stack-hero .hero-nav,
 .hero.stack-hero.hero-fan-ready .hero-nav {
-  opacity: 1;
+  display: none !important;
 }

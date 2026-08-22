@@ -134,6 +134,22 @@
       })
       .join("");
   }
+  function formatLandscapeInfo(text) {
+    return String(text || "")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .filter((line) => {
+        const m = line.match(/^([^:]{1,60}):\s*(.*)$/);
+        return !m || Boolean(String(m[2] || "").trim());
+      })
+      .map((line) => {
+        const m = line.match(/^([^:]{1,60}):\s*(.*)$/);
+        if (m) return `<p><strong>${esc(m[1])}:</strong> <span>${esc(m[2])}</span></p>`;
+        return `<p class="landscape-info-line">${esc(line)}</p>`;
+      })
+      .join("");
+  }
   function setMeta(title, desc) {
     document.title = title;
     let m = document.querySelector('meta[name="description"]');
@@ -1151,7 +1167,7 @@
               </div>
               <aside class="story-landscape-meta" aria-label="Thông tin truyện">
                 <h2>Thông tin truyện</h2>
-                <div class="landscape-info-body">${formatStoryInfo(infoText)}</div>
+                <div class="landscape-info-body">${formatLandscapeInfo(infoText)}</div>
               </aside>
               <div class="story-metrics" role="list">
                 <div class="metric" role="listitem"><span class="metric-ico" aria-hidden="true">👁</span><b>${s.stats.views || 0}</b><small>Lượt xem</small></div>

@@ -415,7 +415,7 @@
           ${admin}
         </nav>
         <form class="head-search" id="headSearch" role="search">
-          <button type="button" class="icon-btn search-toggle" id="btnSearch" aria-label="Tìm truyện" aria-expanded="false">⌕</button>
+          <button type="button" class="icon-btn search-toggle" id="btnSearch" aria-label="Tìm truyện" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 4.2 4.2"></path></svg></button>
           <span class="search-ico" aria-hidden="true">⌕</span>
           <input id="qLive" type="search" placeholder="Tìm truyện..." autocomplete="off">
         </form>

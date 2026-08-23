@@ -22,8 +22,9 @@
   object-position:center 18%;
 }
 
-.story-page .story-info h1.title-long{font-size:clamp(1.45rem,4vw,2.6rem) !important}
-.story-page .story-info h1.title-very-long{font-size:clamp(1.18rem,3.25vw,2.2rem) !important}
+.story-page .story-info{container-type:inline-size}
+.story-page .story-info h1.title-long{font-size:clamp(1.35rem,7.4cqi,2.6rem) !important}
+.story-page .story-info h1.title-very-long{font-size:clamp(1.12rem,6.35cqi,2.2rem) !important}
 
 /* iPhone portrait: the whole right column is locked to the natural cover box. */
 @media (max-width:719px) and (orientation:portrait){
@@ -46,7 +47,7 @@
 
   .story-page .story-info{
     display:grid;
-    grid-template-rows:auto minmax(0,1fr) auto auto;
+    grid-template-rows:minmax(0,1fr) auto auto;
     height:100% !important;
     min-height:0;
     max-height:100%;
@@ -54,17 +55,37 @@
     overflow:hidden !important;
   }
 
-  .story-page .story-copy{min-height:0;overflow:hidden !important}
+  .story-page .story-copy{grid-row:1;min-height:0;overflow:hidden !important}
   .story-page .story-info h1{
     display:-webkit-box;
+    font-size:clamp(1.18rem,9cqi,1.82rem) !important;
+    line-height:1.05 !important;
     overflow:hidden !important;
     -webkit-box-orient:vertical;
     -webkit-line-clamp:3;
   }
-  .story-page .story-info h1.title-long{font-size:clamp(1.25rem,5.05vw,1.65rem) !important}
-  .story-page .story-info h1.title-very-long{font-size:clamp(1.08rem,4.45vw,1.48rem) !important}
-  .story-page .story-metrics,
-  .story-page .story-acts{margin-top:0 !important;margin-bottom:0 !important}
+  .story-page .story-info h1.title-long{font-size:clamp(1.04rem,7.5cqi,1.55rem) !important}
+  .story-page .story-info h1.title-very-long{font-size:clamp(.94rem,6.55cqi,1.35rem) !important}
+  .story-page .story-info .badge{font-size:clamp(.55rem,3.45cqi,.7rem)}
+  .story-page .story-info .by{font-size:clamp(.68rem,4.15cqi,.88rem)}
+  .story-page .story-info .tags{gap:clamp(.12rem,1cqi,.24rem)}
+  .story-page .chip{padding:.09rem clamp(.28rem,2.1cqi,.46rem);font-size:clamp(.52rem,3.15cqi,.68rem)}
+  .story-page .story-metrics{
+    grid-row:2;
+    min-height:44px;
+    height:auto;
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+  }
+  .story-page .story-acts{
+    grid-row:3;
+    min-height:34px;
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+  }
+  .story-page .metric b{font-size:clamp(.64rem,4cqi,.82rem)}
+  .story-page .metric small{font-size:clamp(.43rem,2.55cqi,.56rem)}
+  .story-page .story-acts .btn{font-size:clamp(.57rem,3.45cqi,.72rem)}
 }
 
 /* Landscape phones use a shorter, but still immutable, 2:3 cover. */
@@ -95,8 +116,9 @@
   }
 
   .story-page .story-copy{min-height:0;overflow:hidden !important}
-  .story-page .story-info h1.title-long{font-size:clamp(1.18rem,2.75vw,1.52rem) !important}
-  .story-page .story-info h1.title-very-long{font-size:clamp(1.02rem,2.35vw,1.34rem) !important}
+  .story-page .story-info h1{font-size:clamp(1.18rem,8.4cqi,1.72rem) !important}
+  .story-page .story-info h1.title-long{font-size:clamp(1.02rem,7.1cqi,1.48rem) !important}
+  .story-page .story-info h1.title-very-long{font-size:clamp(.92rem,6.15cqi,1.28rem) !important}
 }
 
 @media (min-width:720px) and (max-width:1024px) and (orientation:portrait){
@@ -135,6 +157,10 @@
     align-self:stretch;
     overflow:hidden !important;
   }
+
+  .story-page .story-info h1{font-size:clamp(1.55rem,8.2cqi,2.5rem) !important}
+  .story-page .story-info h1.title-long{font-size:clamp(1.32rem,7.05cqi,2.12rem) !important}
+  .story-page .story-info h1.title-very-long{font-size:clamp(1.12rem,6.1cqi,1.82rem) !important}
 
   .story-page .story-landscape-meta{
     min-height:0;
@@ -191,6 +217,10 @@
     align-self:stretch;
     overflow:hidden !important;
   }
+
+  .story-page .story-info h1{font-size:clamp(1.55rem,7.8cqi,2.5rem) !important}
+  .story-page .story-info h1.title-long{font-size:clamp(1.3rem,6.7cqi,2.08rem) !important}
+  .story-page .story-info h1.title-very-long{font-size:clamp(1.1rem,5.8cqi,1.78rem) !important}
 
   .story-page .story-landscape-meta{
     min-height:0;

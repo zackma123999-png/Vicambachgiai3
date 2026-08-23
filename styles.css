@@ -1387,15 +1387,19 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
+  isolation: isolate;
   background: #0b1220;
-  margin: 0.4rem 0 0.7rem;
+  margin: 0 0 0.7rem;
 }
 .editor-toolbar {
   display: flex; flex-wrap: wrap; gap: 0.28rem;
   padding: 0.45rem;
-  border-bottom: 1px solid var(--line);
+  margin: 0.4rem 0 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: #0e1628;
-  position: sticky; top: 56px; z-index: 6;
+  position: relative;
+  z-index: 1;
 }
 .editor-toolbar button {
   min-width: 36px; min-height: 36px; padding: 0 0.45rem;
@@ -1426,6 +1430,7 @@ a { color: inherit; text-decoration: none; }
 }
 .editor-area a { color: #c4b5fd !important; text-decoration: underline; }
 .editor-area p { margin: 0 0 var(--ed-gap, 0.9em); }
+.editor-area > :first-child { margin-top: 0 !important; }
 .editor-area h2, .editor-area h3 { font-family: var(--serif); font-weight: 500; margin: 1em 0 0.5em; }
 .editor-area img { max-width: 100%; height: auto; border-radius: 6px; }
 .editor-area blockquote {
@@ -1433,23 +1438,19 @@ a { color: inherit; text-decoration: none; }
   border-left: 2px solid var(--accent-line);
 }
 @media (max-width: 640px) {
-  .editor-shell {
-    display: flex;
-    flex-direction: column;
-  }
   .editor-toolbar {
-    position: relative;
-    top: auto;
-    z-index: 1;
-    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
+  .editor-toolbar::-webkit-scrollbar { display: none; }
+  .editor-toolbar button { flex: 0 0 44px; min-width: 44px; min-height: 44px; }
   .editor-area {
-    position: relative;
-    z-index: 0;
-    flex: 0 0 auto;
     min-height: 360px;
     max-height: none;
-    overflow: visible;
+    overflow: hidden;
   }
 }
 .editor-hint { color: var(--muted); font-size: 0.78rem; margin: 0 0 0.9rem; }

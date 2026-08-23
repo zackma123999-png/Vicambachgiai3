@@ -174,7 +174,7 @@
         else VCBG.addComment({chapterId:ctx.ch.id,storyId:ctx.story.id,body,quote:quote||'',para_key:paraKey||''});
         form.body.value=''; toast(form.parent.value?'Đã trả lời.':'Đã đăng bình luận.');
         setTimeout(()=>openDrawer(ctx,quote,paraKey),120);
-      } catch(err) { if (err.code==='AUTH_REQUIRED') location.hash='#/dang-nhap'; else toast(err.message); }
+      } catch(err) { if (err.code==='AUTH_REQUIRED') { if(window.VCBGGoToLogin) window.VCBGGoToLogin(); else location.hash='#/dang-nhap'; } else toast(err.message); }
     };
   }
 

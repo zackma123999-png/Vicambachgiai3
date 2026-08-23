@@ -204,6 +204,83 @@
     return p;
   }
 
+  const AUTH_RETURN_KEY = "vicambachgiai.auth.return.v1";
+
+  function safeInternalPath(value) {
+    let path = String(value || "").trim();
+    if (path.startsWith("#")) path = path.slice(1);
+    if (!path.startsWith("/") || path.startsWith("//")) return "";
+    const name = path.split("?")[0];
+    if (["/dang-nhap", "/dang-ky", "/quen-mat-khau"].includes(name)) return "";
+    return path;
+  }
+
+  function authReturnSnapshot() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(AUTH_RETURN_KEY) || "null");
+      if (!saved || !safeInternalPath(saved.path)) return null;
+      return saved;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function rememberAuthReturn(next) {
+    const path = safeInternalPath(next) || safeInternalPath(readLocationPath());
+    if (!path) return "";
+    try {
+      sessionStorage.setItem(
+        AUTH_RETURN_KEY,
+        JSON.stringify({ path, scrollY: Math.max(0, Math.round(window.scrollY || 0)), at: Date.now() })
+      );
+    } catch (_) {}
+    return path;
+  }
+
+  function loginPath(next) {
+    const path = safeInternalPath(next);
+    return "/dang-nhap" + (path ? "?next=" + encodeURIComponent(path) : "");
+  }
+
+  function goToLogin(next) {
+    const path = rememberAuthReturn(next);
+    return go(loginPath(path));
+  }
+
+  async function replaceRoute(path) {
+    const target = safeInternalPath(path) || "/";
+    currentPath = target;
+    navigating = true;
+    try {
+      history.replaceState(null, "", location.pathname + location.search + "#" + target);
+    } catch (_) {
+      location.hash = "#" + target;
+    }
+    try {
+      return await render();
+    } finally {
+      navigating = false;
+    }
+  }
+
+  async function returnFromAuth(target) {
+    const snapshot = authReturnSnapshot();
+    const path = safeInternalPath(target) || (snapshot && safeInternalPath(snapshot.path)) || "/";
+    const scrollY = snapshot && snapshot.path === path ? Number(snapshot.scrollY) || 0 : 0;
+    try {
+      sessionStorage.removeItem(AUTH_RETURN_KEY);
+    } catch (_) {}
+    await replaceRoute(path);
+    if (scrollY > 0) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+        setTimeout(() => window.scrollTo(0, scrollY), 180);
+      });
+    }
+  }
+
+  window.VCBGGoToLogin = goToLogin;
+
   const READ_KEY = "vicambachgiai.reader.v2";
   function defaultReadSize() {
     const w = window.innerWidth || 390;
@@ -510,7 +587,7 @@
     opts = opts || {};
     const me = VCBG.currentUser();
     if (!me) {
-      go("/dang-nhap");
+      goToLogin();
       return;
     }
     const stories = VCBG.listStories({ sort: "updated" });
@@ -579,7 +656,7 @@
         close();
         go(location.hash || "/");
       } catch (err) {
-        if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+        if (err.code === "AUTH_REQUIRED") goToLogin();
         else toast(err.message);
       }
     };
@@ -661,7 +738,7 @@
             b.classList.toggle("on", r.on);
             b.setAttribute("aria-pressed", r.on);
           } catch (e) {
-            if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
+            if (e.code === "AUTH_REQUIRED") goToLogin();
             else toast(e.message);
           }
         };
@@ -772,7 +849,7 @@
             b.textContent = r.on ? "♥ Đã lưu" : "♡ Lưu trữ";
           }
         } catch (err) {
-          if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+          if (err.code === "AUTH_REQUIRED") goToLogin();
           else toast(err.message);
         }
       };
@@ -1259,7 +1336,7 @@
         toast(r.on ? "Đã thêm vào tủ truyện." : "Đã xóa khỏi tủ truyện.");
         if ($("#btnFav")) $("#btnFav").textContent = r.on ? "Đã lưu" : "Lưu trữ";
       } catch (e) {
-        if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
+        if (e.code === "AUTH_REQUIRED") goToLogin();
         else toast(e.message);
       }
     };
@@ -1289,7 +1366,7 @@
           toast(r.on ? "Đã thả tim truyện." : "Đã bỏ thả tim.");
           $("#btnFol").textContent = r.on ? "♥ Đã thả tim" : "♡ Thả tim";
         } catch (e) {
-          if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
+          if (e.code === "AUTH_REQUIRED") goToLogin();
           else toast(e.message);
         }
       };
@@ -1300,7 +1377,7 @@
           toast("Đã ghi đánh giá.");
           pageStory(Object.assign({}, route, { q: Object.assign({}, route.q, { tab: "rate" }) }));
         } catch (e) {
-          if (e.code === "AUTH_REQUIRED") go("/dang-nhap");
+          if (e.code === "AUTH_REQUIRED") goToLogin();
           else toast(e.message);
         }
       };
@@ -1435,7 +1512,7 @@
         $("#btnBm").setAttribute("aria-pressed", r.on);
         toast(r.on ? "Đã lưu vào tủ truyện." : "Đã bỏ lưu.");
       } catch (err) {
-        if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+        if (err.code === "AUTH_REQUIRED") goToLogin();
         else toast(err.message);
       }
     };
@@ -1445,12 +1522,12 @@
         $("#btnLikeCh").classList.toggle("on", r.on);
         $("#btnLikeCh").querySelector("em").textContent = r.count;
       } catch (err) {
-        if (err.code === "AUTH_REQUIRED") go("/dang-nhap");
+        if (err.code === "AUTH_REQUIRED") goToLogin();
         else toast(err.message);
       }
     };
     $("#btnRate").onclick = () => {
-      if (!VCBG.currentUser()) return go("/dang-nhap");
+      if (!VCBG.currentUser()) return goToLogin();
       overlay(
         `<div class="aa-pad">
           <p class="set-lab">Đánh giá truyện</p>
@@ -1757,17 +1834,25 @@
 
   function needUser(next) {
     if (!VCBG.currentUser()) {
-      go("/dang-nhap");
+      goToLogin(next);
       return false;
     }
     return true;
   }
   function pageAuth(kind) {
     const titles = { login: "Đăng nhập", register: "Tạo tài khoản", forgot: "Quên mật khẩu" };
+    const authRoute = parseHash();
+    const savedReturn = authReturnSnapshot();
+    const returnTarget =
+      safeInternalPath(authRoute.q && authRoute.q.next) ||
+      (savedReturn && safeInternalPath(savedReturn.path)) ||
+      "";
+    const returnQuery = returnTarget ? "?next=" + encodeURIComponent(returnTarget) : "";
     setMeta(titles[kind] + " — ViCamBachGiai", "Tài khoản ViCamBachGiai.");
     app().innerHTML =
       header() +
-      `<main class="wrap" style="max-width:28rem;padding:2rem 1rem">
+      `<main class="wrap auth-page" style="max-width:28rem;padding:2rem 1rem">
+        <button class="auth-back" id="authBack" type="button" aria-label="Quay lại trang trước">← Quay lại trang trước</button>
         <h1 class="hero-title" style="font-size:1.8rem">${titles[kind]}</h1>
         <p class="hero-author">Thư viện Bách Hợp.</p>
         <form id="aForm">
@@ -1782,13 +1867,21 @@
           <button class="btn btn-cyan" type="submit">${kind === "login" ? "Đăng nhập" : kind === "register" ? "Đăng ký" : "Tiếp tục"}</button>
         </form>
         ${""}
-        <p style="margin-top:1rem">${kind !== "login" ? `<a href="#/dang-nhap">Đăng nhập</a> · ` : ""}
-        ${kind !== "register" ? `<a href="#/dang-ky">Đăng ký</a> · ` : ""}
-        <a href="#/quen-mat-khau">Quên mật khẩu</a></p>
+        <p style="margin-top:1rem">${kind !== "login" ? `<a href="#/dang-nhap${returnQuery}">Đăng nhập</a> · ` : ""}
+        ${kind !== "register" ? `<a href="#/dang-ky${returnQuery}">Đăng ký</a> · ` : ""}
+        <a href="#/quen-mat-khau${returnQuery}">Quên mật khẩu</a></p>
         <p class="sub" id="aHint"></p>
       </main>` +
       footer();
     bindChrome();
+    const back = $("#authBack");
+    if (back) {
+      back.onclick = () => {
+        if (returnTarget) returnFromAuth(returnTarget);
+        else if (history.length > 1) history.back();
+        else returnFromAuth("/");
+      };
+    }
     const showErr = (msg) => {
       const el = $("#aErr");
       if (el) el.textContent = msg || "";
@@ -1804,7 +1897,7 @@
       try {
         await VCBG.login({ email, password });
         toast("Đăng nhập thành công.");
-        await go("/");
+        await returnFromAuth(returnTarget || "/");
       } catch (err) {
         showErr(err.message || "Không thể đăng nhập. Vui lòng kiểm tra thông tin và thử lại.");
       } finally {
@@ -1824,11 +1917,11 @@
         } else if (kind === "register") {
           await VCBG.register(fd);
           toast("Tài khoản đã tạo.");
-          go("/");
+          returnFromAuth(returnTarget || "/");
         } else if (fd.password) {
           await VCBG.confirmReset({ password: fd.password });
           toast("Đã đổi mật khẩu.");
-          go("/");
+          returnFromAuth(returnTarget || "/");
         } else {
           const r = await VCBG.requestReset(fd.email);
           $("#aHint").textContent = r.message;
@@ -1946,7 +2039,7 @@
   function needAdmin() {
     const u = VCBG.currentUser();
     if (!u) {
-      go("/dang-nhap");
+      goToLogin();
       return false;
     }
     if (!VCBG.isAdmin()) {
@@ -2654,6 +2747,14 @@
     const a = e.target.closest("a[href]");
     if (!a) return;
     const href = a.getAttribute("href") || "";
+    if (href.startsWith("#/dang-nhap")) {
+      e.preventDefault();
+      const raw = href.slice(1);
+      const query = raw.split("?")[1] || "";
+      const next = new URLSearchParams(query).get("next") || "";
+      goToLogin(next);
+      return;
+    }
     if (href.startsWith("#/")) {
       e.preventDefault();
       go(href);

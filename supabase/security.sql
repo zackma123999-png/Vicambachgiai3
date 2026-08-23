@@ -24,12 +24,18 @@ as $$
 begin
   if tg_op = 'INSERT' then
     new.role := 'reader';
+    if new.avatar = 'vca:16' then
+      raise exception 'Avatar nay chi danh cho quan tri vien';
+    end if;
     if new.status is null or new.status not in ('active', 'banned') then
       new.status := 'active';
     end if;
     return new;
   end if;
   if not public.is_admin() then
+    if new.avatar = 'vca:16' then
+      raise exception 'Avatar nay chi danh cho quan tri vien';
+    end if;
     if new.user_id is distinct from old.user_id
        or new.role is distinct from old.role
        or new.status is distinct from old.status

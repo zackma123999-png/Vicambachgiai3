@@ -1100,7 +1100,7 @@
     };
     const tagItems = [].concat(s.genres || []).concat(s.tags || []);
     const titleLength = Array.from(String(s.title || "")).length;
-    const titleSizeClass = titleLength >= 38 ? "title-very-long" : titleLength >= 23 ? "title-long" : "";
+    const titleSizeClass = titleLength >= 32 ? "title-very-long" : titleLength >= 18 ? "title-long" : "";
     const tagShown = tagItems.slice(0, 3);
     const tagExtra = tagItems.length - tagShown.length;
     const tagsLine = tagShown

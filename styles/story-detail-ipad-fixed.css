@@ -26,6 +26,31 @@
 .story-page .story-info h1.title-long{font-size:clamp(1.35rem,7.4cqi,2.6rem) !important}
 .story-page .story-info h1.title-very-long{font-size:clamp(1.12rem,6.35cqi,2.2rem) !important}
 
+/* The header and the content card share one right edge.  No phone/tablet
+   layout may shrink-wrap the hero or its information column. */
+@media (max-width:1366px){
+  .story-page .story-detail-layout,
+  .story-page .story-detail-primary,
+  .story-page .story-top,
+  .story-page .story-hero{
+    box-sizing:border-box;
+    inline-size:100% !important;
+    max-inline-size:none !important;
+  }
+
+  .story-page .story-hero{
+    justify-self:stretch;
+  }
+
+  .story-page .story-info{
+    box-sizing:border-box;
+    inline-size:100% !important;
+    max-inline-size:none !important;
+    min-inline-size:0;
+    justify-self:stretch;
+  }
+}
+
 /* iPhone portrait: the whole right column is locked to the natural cover box. */
 @media (max-width:719px) and (orientation:portrait){
   .story-page .story-hero{

@@ -22,7 +22,7 @@
         const val = part.slice(i + 1).trim();
         if (!prop || !val) return;
         if (prop === "text-align" && /^(left|center|right|justify)$/i.test(val)) kept.push("text-align: " + val.toLowerCase());
-        else if (/^margin(-(top|right|bottom|left))?$/.test(prop) && /^-?[0-9.]+(px|em|rem|%)$/i.test(val)) kept.push(prop + ": " + val);
+        else if (/^margin(-(top|right|bottom|left))?$/.test(prop) && /^[0-9.]+(px|em|rem|%)$/i.test(val)) kept.push(prop + ": " + val);
         else if (prop === "line-height" && /^[0-9.]+(px|em|rem|%)?$/i.test(val)) kept.push("line-height: " + val);
         else if (prop === "text-indent" && /^-?[0-9.]+(px|em|rem|%)$/i.test(val)) kept.push("text-indent: " + val);
       });
@@ -2513,10 +2513,10 @@
           </div>
           <div class="field"><label>Số chương</label><input name="number" type="number" min="1" value="${num}"></div>
           <div class="field"><label>Tiêu đề</label><input name="title" value="${esc((ch && ch.title) || "")}"></div>
+          <div class="editor-toolbar" role="toolbar" aria-label="Định dạng văn bản">
+            ${tools.map(([c, t, lab]) => `<button type="button" data-cmd="${c}" title="${esc(t)}">${lab}</button>`).join("")}
+          </div>
           <div class="editor-shell">
-            <div class="editor-toolbar" role="toolbar" aria-label="Định dạng văn bản">
-              ${tools.map(([c, t, lab]) => `<button type="button" data-cmd="${c}" title="${esc(t)}">${lab}</button>`).join("")}
-            </div>
             <div class="editor-area" id="ed" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Dán hoặc viết nội dung chương…"></div>
           </div>
           <p class="editor-hint">Dán từ Word/web được giữ đoạn văn, bỏ màu chữ rác. Ảnh nên dưới 2MB.</p>

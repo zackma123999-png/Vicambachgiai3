@@ -1040,54 +1040,6 @@
     return `<option value="">${esc(label)}</option>` + items.map((x) => `<option value="${esc(x.slug)}" ${x.slug === cur ? "selected" : ""}>${esc(x.name)}</option>`).join("");
   }
 
-  function syncPortraitStoryColumns() {
-    const page = $(".story-page");
-    const hero = page && $(".story-hero", page);
-    const cover = page && $(".story-cover", page);
-    const info = page && $(".story-info", page);
-    const intro = page && ($(".intro-card", page) || $(".story-tab", page));
-    if (!page || !hero || !cover || !info || !intro) return;
-
-    [hero, info].forEach((el) => {
-      el.style.removeProperty("inline-size");
-      el.style.removeProperty("width");
-    });
-    info.style.removeProperty("inset-inline-start");
-    info.style.removeProperty("inset-inline-end");
-
-    if ((window.innerHeight || 0) < (window.innerWidth || 0)) return;
-
-    const heroBox = hero.getBoundingClientRect();
-    const coverBox = cover.getBoundingClientRect();
-    const introBox = intro.getBoundingClientRect();
-    const heroStyle = getComputedStyle(hero);
-    const gap = parseFloat(heroStyle.columnGap || heroStyle.gap) || 0;
-    const heroWidth = Math.max(0, introBox.right - heroBox.left);
-    const infoLeft = Math.max(0, coverBox.right - heroBox.left + gap);
-
-    hero.style.setProperty("inline-size", heroWidth + "px", "important");
-    info.style.setProperty("inset-inline-start", infoLeft + "px", "important");
-    info.style.setProperty("inset-inline-end", "0", "important");
-    info.style.setProperty("inline-size", "auto", "important");
-
-    [$(".story-copy", info), $(".story-metrics", info), $(".story-acts", info)].forEach((el) => {
-      if (!el) return;
-      el.style.setProperty("inline-size", "100%", "important");
-      el.style.setProperty("max-inline-size", "none", "important");
-    });
-  }
-
-  function schedulePortraitStoryColumns() {
-    requestAnimationFrame(() => {
-      syncPortraitStoryColumns();
-      setTimeout(syncPortraitStoryColumns, 180);
-    });
-    if (window.__vcbgPortraitStoryColumnsBound) return;
-    window.__vcbgPortraitStoryColumnsBound = true;
-    window.addEventListener("resize", () => requestAnimationFrame(syncPortraitStoryColumns), { passive: true });
-    window.addEventListener("orientationchange", () => setTimeout(syncPortraitStoryColumns, 180), { passive: true });
-  }
-
   function pageStory(route) {
     const s = VCBG.getStoryBySlug(route.slug);
     if (!s) {
@@ -1272,7 +1224,6 @@
         <button class="btn btn-ghost dock-fav" type="button" id="btnShareStory">Chia sẻ</button>
       </div>` +
       footer();
-    schedulePortraitStoryColumns();
     bindChrome();
     const more = $("#btnMore");
     const introBody = $("#introBody");

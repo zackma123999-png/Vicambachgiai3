@@ -1457,7 +1457,6 @@
         <button type="button" class="r-toc" id="btnToc" aria-label="Mục lục"><span></span></button>
         ${next ? `<a class="r-nav r-nav-r" href="#/truyen/${esc(s.slug)}/chuong-${next.number}">Chương sau ›</a>` : `<span class="r-nav r-nav-r is-off">Chương sau ›</span>`}
       </nav>
-      <p class="r-hint">Chạm màn hình để hiện / ẩn thanh công cụ</p>
       <div id="rDraw"></div>
     </div>`;
     const page = $("#reader");

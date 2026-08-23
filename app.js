@@ -1099,6 +1099,8 @@
       return "#/truyen/" + s.slug + (str ? "?" + str : "");
     };
     const tagItems = [].concat(s.genres || []).concat(s.tags || []);
+    const titleLength = Array.from(String(s.title || "")).length;
+    const titleSizeClass = titleLength >= 38 ? "title-very-long" : titleLength >= 23 ? "title-long" : "";
     const tagShown = tagItems.slice(0, 3);
     const tagExtra = tagItems.length - tagShown.length;
     const tagsLine = tagShown
@@ -1185,7 +1187,7 @@
             <div class="story-info">
               <div class="story-copy">
                 <div class="badge">${esc(s.upcoming ? "Sắp ra mắt" : statusLabel(s.status))}</div>
-                <h1>${esc(s.title)}</h1>
+                <h1 class="${titleSizeClass}">${esc(s.title)}</h1>
                 <p class="by">Tác giả: <span>${esc(s.author || "—")}</span></p>
                 <div class="tags">${tagsLine}</div>
               </div>

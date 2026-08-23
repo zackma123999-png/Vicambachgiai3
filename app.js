@@ -103,6 +103,9 @@
   function statusLabel(s) {
     return { ongoing: "Đang lên sóng", completed: "Đã hoàn thành", upcoming: "Sắp ra mắt" }[s] || s;
   }
+  function storyStatusLabel(s) {
+    return s && s.upcoming ? "Sắp ra mắt" : statusLabel(s && s.status);
+  }
   function storyInfoText(s) {
     const raw = String((s && s.description) || "").trim();
     const syn = String((s && s.synopsis) || "").trim();
@@ -115,7 +118,7 @@
       "Tên truyện: " + (s.title || "—"),
       "Tác giả: " + (s.author || "—"),
       kinds.length ? "Thể loại: " + kinds.join(", ") : "",
-      "Tình trạng: " + statusLabel(s.status),
+      "Tình trạng: " + storyStatusLabel(s),
       s.editor ? "Edit: " + s.editor : "",
       s.created_at ? "Ngày bắt đầu: " + fmtDate(s.created_at) : "",
     ]
@@ -345,7 +348,7 @@
       .join("")}</nav>`;
   }
   function storyPills(s) {
-    const bits = [statusLabel(s.status)].concat((s.genres || []).slice(0, 1).map((g) => g.name));
+    const bits = [storyStatusLabel(s)].concat((s.genres || []).slice(0, 1).map((g) => g.name));
     return bits.map((t) => `<span class="pill">${esc(t)}</span>`).join("");
   }
   function latestLine(s) {
@@ -890,9 +893,9 @@
   }
   function pageHome() {
     const featured = VCBG.listStories({ featured: true });
-    const ongoing = VCBG.listStories({ status: "ongoing", sort: "updated" });
+    const ongoing = VCBG.listStories({ status: "ongoing", sort: "updated" }).filter((s) => !s.upcoming);
     const updated = VCBG.listStories({ sort: "updated" }).filter((s) => !s.upcoming);
-    const done = VCBG.listStories({ status: "completed" });
+    const done = VCBG.listStories({ status: "completed" }).filter((s) => !s.upcoming);
     const soon = VCBG.listStories({ upcoming: true });
     const slideMap = new Map();
     featured.concat(ongoing, updated, done, soon).forEach((s) => {
@@ -1206,7 +1209,7 @@
           ${coverImg(o.cover, o.title)}
           <b>${esc(o.title)}</b>
           <small>${esc(o.author || "—")}</small>
-          <em>${esc(statusLabel(o.status))}</em>
+          <em>${esc(storyStatusLabel(o))}</em>
         </a>`).join("")}</div>
       </section>` : ""}
       ${relatedStories.length ? `<section class="same-author recommended-stories">
@@ -1218,12 +1221,12 @@
           ${coverImg(o.cover, o.title)}
           <b>${esc(o.title)}</b>
           <small>${esc(o.author || "—")}</small>
-          <em>${esc(statusLabel(o.status))}</em>
+          <em>${esc(storyStatusLabel(o))}</em>
         </a>`).join("")}</div>
       </section>` : ""}`;
     const sideStoryCard = (o) => `<a class="story-side-card" href="#/truyen/${esc(o.slug)}">
         ${coverImg(o.cover, o.title)}
-        <span class="story-side-copy"><b>${esc(o.title)}</b><small>${esc(o.author || "—")}</small><em>${esc(statusLabel(o.status))}</em></span>
+        <span class="story-side-copy"><b>${esc(o.title)}</b><small>${esc(o.author || "—")}</small><em>${esc(storyStatusLabel(o))}</em></span>
       </a>`;
     const landscapeSidebar = `<aside class="story-landscape-sidebar" aria-label="Truyện liên quan">
         <div class="story-side-scroll">
@@ -2088,7 +2091,7 @@
         <tbody>${list
           .map(
             (s) =>
-              `<tr><td><a href="#/admin/truyen/${s.id}">${esc(s.title)}</a></td><td>${esc(statusLabel(s.status))}</td><td>${s.stats.chapter_count}</td>
+              `<tr><td><a href="#/admin/truyen/${s.id}">${esc(s.title)}</a></td><td>${esc(storyStatusLabel(s))}</td><td>${s.stats.chapter_count}</td>
               <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button data-delst="${s.id}">Xóa</button></td></tr>`
           )
           .join("")}</tbody></table></div>`;
@@ -2372,6 +2375,7 @@
   }
   function adminStoryForm(id) {
     const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, accent: "#8a6a4a", cover: "", genres: [], tags: [] };
+    const selectedStatus = s.upcoming ? "upcoming" : s.status;
     const gids = (s.genres || []).map((g) => g.id);
     const tids = (s.tags || []).map((t) => t.id);
     app().innerHTML =
@@ -2390,13 +2394,12 @@
           </div>
           <div class="field"><label>Trạng thái</label>
             <select name="status">
-              <option value="ongoing" ${s.status === "ongoing" ? "selected" : ""}>Đang lên sóng</option>
-              <option value="completed" ${s.status === "completed" ? "selected" : ""}>Đã hoàn thành</option>
-              <option value="upcoming" ${s.status === "upcoming" ? "selected" : ""}>Sắp ra mắt</option>
+              <option value="ongoing" ${selectedStatus === "ongoing" ? "selected" : ""}>Đang lên sóng</option>
+              <option value="completed" ${selectedStatus === "completed" ? "selected" : ""}>Đã hoàn thành</option>
+              <option value="upcoming" ${selectedStatus === "upcoming" ? "selected" : ""}>Sắp ra mắt</option>
             </select>
           </div>
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
-          <label><input type="checkbox" name="upcoming" ${s.upcoming ? "checked" : ""}> Sắp ra mắt</label>
           <div class="field"><label>Màu chủ đạo banner</label><input name="accent" value="${esc(s.accent || "#8a6a4a")}"></div>
           <div class="field"><label>Bìa</label><input type="file" id="coverFile" accept="image/*">
             <div class="detail-cover" style="margin-top:.6rem">${s.cover ? coverImg(s.cover, "Bìa") : ""}</div>
@@ -2446,7 +2449,7 @@
           description: fd.get("description"),
           status: fd.get("status"),
           featured: e.target.featured.checked,
-          upcoming: e.target.upcoming.checked || fd.get("status") === "upcoming",
+          upcoming: fd.get("status") === "upcoming",
           accent: fd.get("accent"),
           cover,
           genre_ids: $$("[name=genre]:checked").map((x) => x.value),

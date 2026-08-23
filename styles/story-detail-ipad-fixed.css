@@ -1,9 +1,13 @@
-/* ViCamBachGiai — final story-header invariant on every screen.
-   A title or metadata block must never determine the cover height. */
+/* ViCamBachGiai — authoritative story-header geometry.
+   The full-width story-top owns the two columns. The intermediate .story-hero
+   is layout-neutral, so it can never shrink the information column. */
+
+.story-page .story-cover,
+.story-page .story-cover .cover-frame{aspect-ratio:2/3 !important}
 
 .story-page .story-cover{
+  min-width:0;
   height:auto !important;
-  aspect-ratio:2/3 !important;
   align-self:start !important;
   overflow:hidden;
 }
@@ -11,7 +15,6 @@
 .story-page .story-cover .cover-frame{
   width:100%;
   height:100% !important;
-  aspect-ratio:2/3 !important;
   overflow:hidden;
 }
 
@@ -22,340 +25,180 @@
   object-position:center 18%;
 }
 
-.story-page .story-info{container-type:inline-size}
-.story-page .story-info h1.title-long{font-size:clamp(1.35rem,7.4cqi,2.6rem) !important}
-.story-page .story-info h1.title-very-long{font-size:clamp(1.12rem,6.35cqi,2.2rem) !important}
+.story-page .story-info{
+  min-width:0;
+  max-width:none !important;
+  container-type:inline-size;
+}
 
-/* Every visible row must consume the full fluid information column. */
 .story-page .story-info>.story-copy,
 .story-page .story-info>.story-landscape-meta,
 .story-page .story-info>.story-metrics,
 .story-page .story-info>.story-acts{
   box-sizing:border-box;
-  inline-size:100% !important;
-  max-inline-size:none !important;
-  justify-self:stretch !important;
-  align-self:stretch;
+  width:100% !important;
+  max-width:none !important;
+  min-width:0;
 }
 
-/* The header and the content card share one right edge.  No phone/tablet
-   layout may shrink-wrap the hero or its information column. */
-@media (max-width:1366px){
-  .story-page .story-detail-layout,
+.story-page .story-info h1.title-long{font-size:clamp(1.06rem,7.2cqi,2.15rem) !important}
+.story-page .story-info h1.title-very-long{font-size:clamp(.94rem,6.15cqi,1.85rem) !important}
+
+/* Portrait is one primary column. Related-story rails stay below the intro. */
+@media (max-width:1366px) and (orientation:portrait){
+  .story-page .story-detail-layout.is-intro,
+  .story-page .story-detail-layout.is-secondary{
+    display:block !important;
+    width:100% !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:0 !important;
+  }
+
   .story-page .story-detail-primary,
-  .story-page .story-top,
-  .story-page .story-hero{
+  .story-page .story-top{
     box-sizing:border-box;
-    inline-size:100% !important;
-    max-inline-size:none !important;
+    width:100% !important;
+    max-width:none !important;
+    min-width:0;
   }
 
-  .story-page .story-hero{
+  .story-page .story-landscape-sidebar{display:none !important}
+}
+
+/* story-top shares its right edge with the tabs and introduction card. */
+@media (max-width:1366px){
+  .story-page .story-top{
+    --story-cover-w:clamp(7.4rem,34vw,12.5rem);
+    --story-column-gap:clamp(.65rem,2.4vw,1.35rem);
     position:relative;
-    justify-self:stretch;
-  }
-
-  .story-page .story-info{
-    box-sizing:border-box;
-    max-inline-size:none !important;
-    min-inline-size:0;
-    justify-self:stretch;
-  }
-}
-
-/* Single full-width primary column is the safe default. Landscape explicitly
-   opts back into the recommendation rail below. */
-.story-page .story-detail-layout.is-intro,
-.story-page .story-detail-layout.is-secondary{
-  display:block !important;
-  grid-template-columns:minmax(0,1fr) !important;
-  gap:0 !important;
-}
-
-.story-page .story-detail-primary{
-  inline-size:100% !important;
-  max-inline-size:none !important;
-}
-
-.story-page .story-landscape-sidebar{
-  display:none !important;
-}
-
-/* iPhone portrait: the whole right column is locked to the natural cover box. */
-@media (max-width:719px) and (orientation:portrait){
-  .story-page .story-hero{
-    --fixed-cover-w:clamp(7.4rem,34vw,12.5rem);
-    --story-hero-gap:clamp(.65rem,2.4vw,1.35rem);
-    grid-template-columns:var(--fixed-cover-w) minmax(0,1fr);
-    gap:var(--story-hero-gap);
-    height:calc(var(--fixed-cover-w) * 1.5) !important;
-    min-height:calc(var(--fixed-cover-w) * 1.5);
-    max-height:calc(var(--fixed-cover-w) * 1.5);
+    display:grid !important;
+    grid-template-columns:var(--story-cover-w) minmax(0,1fr) !important;
+    grid-template-rows:calc(var(--story-cover-w) * 1.5);
+    column-gap:var(--story-column-gap);
     align-items:stretch;
-    overflow:hidden;
+    width:100% !important;
+    max-width:none !important;
+    min-width:0;
   }
+
+  .story-page .story-hero{display:contents !important}
 
   .story-page .story-cover{
-    width:var(--fixed-cover-w);
-    height:100% !important;
-    max-height:100%;
+    position:static !important;
+    grid-column:1;
+    grid-row:1;
+    width:var(--story-cover-w) !important;
+    max-width:var(--story-cover-w) !important;
+    height:calc(var(--story-cover-w) * 1.5) !important;
+    max-height:calc(var(--story-cover-w) * 1.5) !important;
     align-self:stretch !important;
   }
 
   .story-page .story-info{
-    position:absolute;
-    grid-column:1 / -1 !important;
-    grid-row:1 / -1 !important;
-    inset-block:0;
-    inset-inline-start:calc(var(--fixed-cover-w) + var(--story-hero-gap));
-    inset-inline-end:0;
+    position:static !important;
+    inset:auto !important;
+    grid-column:2;
+    grid-row:1;
     display:grid;
+    grid-template-columns:minmax(0,1fr);
     grid-template-rows:minmax(0,1fr) auto auto;
-    inline-size:auto !important;
+    gap:clamp(.24rem,1.1cqi,.52rem);
+    width:auto !important;
     height:100% !important;
-    min-height:0;
     max-height:100%;
+    min-height:0;
     align-self:stretch;
     overflow:hidden !important;
   }
 
-  .story-page .story-copy{grid-row:1;min-height:0;overflow:hidden !important}
+  .story-page .story-copy{
+    grid-row:1;
+    min-height:0;
+    overflow:hidden !important;
+  }
+
+  .story-page .story-landscape-meta{
+    min-height:0;
+    overflow:hidden;
+  }
+
+  .story-page .story-landscape-meta .landscape-info-body{
+    min-height:0;
+    max-height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .story-page .story-metrics{grid-row:2;margin:0 !important}
+  .story-page .story-acts{grid-row:3;margin:0 !important}
+
   .story-page .story-info h1{
     display:-webkit-box;
-    font-size:clamp(1.18rem,9cqi,1.82rem) !important;
-    line-height:1.05 !important;
+    margin-bottom:.12rem !important;
+    padding-bottom:.06em;
+    font-size:clamp(1.12rem,8.6cqi,1.82rem) !important;
+    line-height:1.06 !important;
     overflow:hidden !important;
     -webkit-box-orient:vertical;
     -webkit-line-clamp:3;
   }
-  .story-page .story-info h1.title-long{font-size:clamp(1.04rem,7.5cqi,1.55rem) !important}
-  .story-page .story-info h1.title-very-long{font-size:clamp(.94rem,6.55cqi,1.35rem) !important}
-  .story-page .story-info .badge{font-size:clamp(.55rem,3.45cqi,.7rem)}
-  .story-page .story-info .by{font-size:clamp(.68rem,4.15cqi,.88rem)}
-  .story-page .story-info .tags{gap:clamp(.12rem,1cqi,.24rem)}
-  .story-page .chip{padding:.09rem clamp(.28rem,2.1cqi,.46rem);font-size:clamp(.52rem,3.15cqi,.68rem)}
-  .story-page .story-metrics{
-    grid-row:2;
-    min-height:44px;
-    height:auto;
-    margin-top:0 !important;
-    margin-bottom:0 !important;
-  }
-  .story-page .story-acts{
-    grid-row:3;
-    min-height:34px;
-    margin-top:0 !important;
-    margin-bottom:0 !important;
-  }
-  .story-page .metric b{font-size:clamp(.64rem,4cqi,.82rem)}
-  .story-page .metric small{font-size:clamp(.43rem,2.55cqi,.56rem)}
-  .story-page .story-acts .btn{font-size:clamp(.57rem,3.45cqi,.72rem)}
+
+  .story-page .story-info .badge{font-size:clamp(.54rem,3.35cqi,.7rem)}
+  .story-page .story-info .by{font-size:clamp(.67rem,4cqi,.9rem)}
+  .story-page .story-info .tags{gap:clamp(.12rem,1cqi,.25rem)}
+  .story-page .chip{padding:.09rem clamp(.27rem,2cqi,.48rem);font-size:clamp(.52rem,3.05cqi,.69rem)}
+  .story-page .metric b{font-size:clamp(.65rem,3.8cqi,.84rem)}
+  .story-page .metric small{font-size:clamp(.43rem,2.45cqi,.57rem)}
+  .story-page .story-acts .btn{font-size:clamp(.57rem,3.3cqi,.74rem)}
 }
 
-/* Landscape phones use a shorter, but still immutable, 2:3 cover. */
-@media (min-width:640px) and (max-width:1366px) and (max-height:600px) and (orientation:landscape){
-  .story-page .story-hero{
-    --fixed-cover-w:clamp(8.7rem,19vw,10.4rem);
-    --story-hero-gap:.75rem;
-    grid-template-columns:var(--fixed-cover-w) minmax(0,1fr);
-    gap:var(--story-hero-gap);
-    height:calc(var(--fixed-cover-w) * 1.5) !important;
-    min-height:calc(var(--fixed-cover-w) * 1.5);
-    max-height:calc(var(--fixed-cover-w) * 1.5);
-    align-items:stretch;
-    overflow:hidden;
-  }
-
-  .story-page .story-cover{
-    width:var(--fixed-cover-w);
-    height:100% !important;
-    max-height:100%;
-    align-self:stretch !important;
-  }
-
-  .story-page .story-info{
-    position:absolute;
-    grid-column:1 / -1 !important;
-    grid-row:1 / -1 !important;
-    inset-block:0;
-    inset-inline-start:calc(var(--fixed-cover-w) + var(--story-hero-gap));
-    inset-inline-end:0;
-    inline-size:auto !important;
-    height:100% !important;
-    min-height:0;
-    max-height:100%;
-    align-self:stretch;
-    overflow:hidden !important;
-  }
-
-  .story-page .story-copy{min-height:0;overflow:hidden !important}
-  .story-page .story-info h1{font-size:clamp(1.18rem,8.4cqi,1.72rem) !important}
-  .story-page .story-info h1.title-long{font-size:clamp(1.02rem,7.1cqi,1.48rem) !important}
-  .story-page .story-info h1.title-very-long{font-size:clamp(.92rem,6.15cqi,1.28rem) !important}
-}
-
+/* iPad portrait: only the second column grows; cover remains immutable. */
 @media (min-width:720px) and (max-width:1366px) and (orientation:portrait){
-  .story-page .story-hero{
-    --ipad-cover-w:clamp(13rem,29vw,16.5rem);
-    --story-hero-gap:clamp(1rem,2.2vw,1.45rem);
-    grid-template-columns:var(--ipad-cover-w) minmax(0,1fr);
-    gap:var(--story-hero-gap);
-    height:calc(var(--ipad-cover-w) * 1.5) !important;
-    min-height:calc(var(--ipad-cover-w) * 1.5);
-    max-height:calc(var(--ipad-cover-w) * 1.5);
-    align-items:stretch;
-    overflow:hidden;
+  .story-page .story-top{
+    --story-cover-w:clamp(13rem,29vw,16.5rem);
+    --story-column-gap:clamp(1rem,2.2vw,1.45rem);
   }
 
-  .story-page .story-cover{
-    width:var(--ipad-cover-w);
-    height:100% !important;
-    min-height:0;
-    max-height:100%;
-    align-self:stretch;
-    overflow:hidden;
+  .story-page .story-info{grid-template-rows:auto minmax(0,1fr) auto auto}
+  .story-page .story-copy{grid-row:1}
+  .story-page .story-landscape-meta{grid-row:2}
+  .story-page .story-metrics{grid-row:3}
+  .story-page .story-acts{grid-row:4}
+  .story-page .story-info h1{font-size:clamp(1.48rem,7.6cqi,2.45rem) !important}
+  .story-page .story-info h1.title-long{font-size:clamp(1.25rem,6.6cqi,2.05rem) !important}
+  .story-page .story-info h1.title-very-long{font-size:clamp(1.08rem,5.7cqi,1.76rem) !important}
+}
+
+/* Landscape keeps its related-story rail. story-top owns only the primary
+   area, so the information column cannot invade the rail. */
+@media (min-width:640px) and (max-width:1366px) and (orientation:landscape){
+  .story-page .story-detail-layout.is-intro{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) clamp(9.3rem,17vw,12.5rem) !important;
+    gap:clamp(.65rem,1.35vw,1rem) !important;
   }
 
-  .story-page .story-cover .cover-frame{
-    width:100%;
-    height:100% !important;
-    max-height:100%;
-    aspect-ratio:2/3;
+  .story-page .story-landscape-sidebar{display:block !important}
+
+  .story-page .story-top{
+    --story-cover-w:clamp(8.7rem,19vw,15.5rem);
+    --story-column-gap:clamp(.75rem,2vw,1.35rem);
   }
 
-  .story-page .story-info{
-    position:absolute;
-    grid-column:1 / -1 !important;
-    grid-row:1 / -1 !important;
-    inset-block:0;
-    inset-inline-start:calc(var(--ipad-cover-w) + var(--story-hero-gap));
-    inset-inline-end:0;
-    display:grid;
-    grid-template-rows:auto minmax(0,1fr) auto auto;
-    inline-size:auto !important;
-    height:100% !important;
-    min-height:0;
-    max-height:100%;
-    align-self:stretch;
-    overflow:hidden !important;
-  }
-
-  .story-page .story-info h1{font-size:clamp(1.55rem,8.2cqi,2.5rem) !important}
-  .story-page .story-info h1.title-long{font-size:clamp(1.32rem,7.05cqi,2.12rem) !important}
-  .story-page .story-info h1.title-very-long{font-size:clamp(1.12rem,6.1cqi,1.82rem) !important}
-
-  .story-page .story-landscape-meta{
-    min-height:0;
-    overflow:hidden;
-  }
-
-  .story-page .story-landscape-meta .landscape-info-body{
-    min-height:0;
-    max-height:100%;
-    overflow-x:hidden;
-    overflow-y:auto;
-    overscroll-behavior-y:contain;
-    touch-action:pan-y;
-    -webkit-overflow-scrolling:touch;
-  }
-
-  .story-page .story-metrics,
-  .story-page .story-acts{margin-top:0 !important;margin-bottom:0 !important}
+  .story-page .story-info{grid-template-rows:auto minmax(0,1fr) auto auto}
+  .story-page .story-copy{grid-row:1}
+  .story-page .story-landscape-meta{grid-row:2}
+  .story-page .story-metrics{grid-row:3}
+  .story-page .story-acts{grid-row:4}
 }
 
 @media (min-width:720px) and (max-width:1366px) and (min-height:601px) and (orientation:landscape){
-  .story-page .story-detail-layout.is-intro{
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) clamp(10.5rem,15.5vw,12.5rem) !important;
-    gap:clamp(.7rem,1.35vw,1rem) !important;
-  }
-
-  .story-page .story-landscape-sidebar{
-    display:block !important;
-  }
-
-  .story-page .story-hero{
-    --ipad-cover-w:clamp(11.5rem,min(23vw,calc(66.667dvh - 8rem)),15.5rem);
-    --story-hero-gap:clamp(1rem,2.2vw,1.45rem);
-    grid-template-columns:var(--ipad-cover-w) minmax(0,1fr);
-    gap:var(--story-hero-gap);
-    height:calc(var(--ipad-cover-w) * 1.5) !important;
-    min-height:calc(var(--ipad-cover-w) * 1.5);
-    max-height:calc(var(--ipad-cover-w) * 1.5);
-    align-items:stretch;
-    overflow:hidden;
-  }
-
-  .story-page .story-cover{
-    width:var(--ipad-cover-w);
-    height:100% !important;
-    min-height:0;
-    max-height:100%;
-    align-self:stretch;
-    overflow:hidden;
-  }
-
-  .story-page .story-cover .cover-frame{
-    width:100%;
-    height:100% !important;
-    max-height:100%;
-    aspect-ratio:2/3;
-  }
-
-  .story-page .story-info{
-    position:absolute;
-    grid-column:1 / -1 !important;
-    grid-row:1 / -1 !important;
-    inset-block:0;
-    inset-inline-start:calc(var(--ipad-cover-w) + var(--story-hero-gap));
-    inset-inline-end:0;
-    display:grid;
-    grid-template-rows:auto minmax(0,1fr) auto auto;
-    inline-size:auto !important;
-    height:100% !important;
-    min-height:0;
-    max-height:100%;
-    align-self:stretch;
-    overflow:hidden !important;
-  }
-
-  .story-page .story-info h1{font-size:clamp(1.55rem,7.8cqi,2.5rem) !important}
-  .story-page .story-info h1.title-long{font-size:clamp(1.3rem,6.7cqi,2.08rem) !important}
-  .story-page .story-info h1.title-very-long{font-size:clamp(1.1rem,5.8cqi,1.78rem) !important}
-
-  .story-page .story-landscape-meta{
-    min-height:0;
-    overflow:hidden;
-  }
-
-  .story-page .story-landscape-meta .landscape-info-body{
-    min-height:0;
-    max-height:100%;
-    overflow-x:hidden;
-    overflow-y:auto;
-    overscroll-behavior-y:contain;
-    touch-action:pan-y;
-    -webkit-overflow-scrolling:touch;
-  }
-
-  .story-page .story-metrics,
-  .story-page .story-acts{margin-top:0 !important;margin-bottom:0 !important}
+  .story-page .story-top{--story-cover-w:clamp(11.5rem,min(23vw,calc(66.667dvh - 8rem)),15.5rem)}
 }
 
-@media (min-width:640px) and (max-width:1366px) and (max-height:600px) and (orientation:landscape){
-  .story-page .story-detail-layout.is-intro{
-    display:grid !important;
-    grid-template-columns:minmax(0,1fr) clamp(9.3rem,17vw,10.25rem) !important;
-    gap:.65rem !important;
-  }
-
-  .story-page .story-landscape-sidebar{
-    display:block !important;
-  }
-}
-
-/* Keep the persistent action dock compact on short landscape screens so it
-   does not cover the cover edge or the story action row. */
 @media (max-width:1366px) and (orientation:landscape){
   .story-page{
     --story-dock-space:calc(3.7rem + env(safe-area-inset-bottom));
@@ -368,7 +211,5 @@
   }
 
   .story-dock .dock-read,
-  .story-dock .dock-fav{
-    min-height:38px;
-  }
+  .story-dock .dock-fav{min-height:38px}
 }

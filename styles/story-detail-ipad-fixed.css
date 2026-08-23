@@ -51,6 +51,26 @@
   }
 }
 
+/* Portrait never reserves the landscape recommendation rail.  The primary
+   column therefore owns the exact same full width as the introduction card. */
+@media (orientation:portrait){
+  .story-page .story-detail-layout.is-intro,
+  .story-page .story-detail-layout.is-secondary{
+    display:block !important;
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:0 !important;
+  }
+
+  .story-page .story-detail-primary{
+    inline-size:100% !important;
+    max-inline-size:none !important;
+  }
+
+  .story-page .story-landscape-sidebar{
+    display:none !important;
+  }
+}
+
 /* iPhone portrait: the whole right column is locked to the natural cover box. */
 @media (max-width:719px) and (orientation:portrait){
   .story-page .story-hero{
@@ -164,7 +184,7 @@
   .story-page .story-info h1.title-very-long{font-size:clamp(.92rem,6.15cqi,1.28rem) !important}
 }
 
-@media (min-width:720px) and (max-width:1024px) and (orientation:portrait){
+@media (min-width:720px) and (max-width:1366px) and (orientation:portrait){
   .story-page .story-hero{
     --ipad-cover-w:clamp(13rem,29vw,16.5rem);
     --story-hero-gap:clamp(1rem,2.2vw,1.45rem);

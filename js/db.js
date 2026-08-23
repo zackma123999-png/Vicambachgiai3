@@ -1337,10 +1337,9 @@
       story.synopsis = String(data.synopsis || "");
       if (data.description != null) story.description = String(data.description || "");
       let status = data.status || "ongoing";
-      let upcoming = !!data.upcoming;
-      if (status === "upcoming") {
+      let upcoming = status === "upcoming";
+      if (upcoming) {
         status = "ongoing";
-        upcoming = true;
       }
       if (status !== "ongoing" && status !== "completed" && status !== "paused") status = "ongoing";
       story.status = status;

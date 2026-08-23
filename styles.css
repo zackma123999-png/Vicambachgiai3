@@ -1433,8 +1433,24 @@ a { color: inherit; text-decoration: none; }
   border-left: 2px solid var(--accent-line);
 }
 @media (max-width: 640px) {
-  .editor-toolbar { position: static; top: auto; }
-  .editor-area { position: relative; z-index: 1; min-height: 360px; }
+  .editor-shell {
+    display: flex;
+    flex-direction: column;
+  }
+  .editor-toolbar {
+    position: relative;
+    top: auto;
+    z-index: 1;
+    flex: 0 0 auto;
+  }
+  .editor-area {
+    position: relative;
+    z-index: 0;
+    flex: 0 0 auto;
+    min-height: 360px;
+    max-height: none;
+    overflow: visible;
+  }
 }
 .editor-hint { color: var(--muted); font-size: 0.78rem; margin: 0 0 0.9rem; }
 .empty { color: var(--muted); padding: 2rem 0; text-align: center; }

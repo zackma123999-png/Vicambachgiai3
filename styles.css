@@ -378,6 +378,21 @@ a { color: inherit; text-decoration: none; }
 }
 .btn-ghost { border-color: rgba(148,187,233,0.22); background: rgba(8,14,28,0.35); }
 .auth-error { color: #f0b2a8; min-height: 1.2em; margin: 0.4rem 0 0.8rem; font-size: 0.88rem; }
+.auth-page .auth-back {
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  min-height:42px;
+  margin:0 0 1.15rem;
+  padding:0 .85rem;
+  border:1px solid rgba(168,154,230,.28);
+  border-radius:999px;
+  background:rgba(18,16,36,.42);
+  color:#d9d3f2;
+  font:600 .86rem/1 "Be Vietnam Pro",sans-serif;
+  cursor:pointer;
+}
+.auth-page .auth-back:active{transform:translateY(1px)}
 .demo-logins { display: flex; flex-direction: column; gap: 0.45rem; margin-top: 1rem; }
 .demo-logins button { width: 100%; }
 .btn-danger { border-color: color-mix(in srgb, var(--danger) 50%, transparent); color: #f0b2a8; }

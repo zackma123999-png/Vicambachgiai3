@@ -829,6 +829,9 @@
 
     updateProfile(patch) {
       const u = requireUser();
+      if (patch.avatar === "vca:16" && u.role !== "admin") {
+        throw new Error("Avatar này chỉ dành cho quản trị viên.");
+      }
       const p = cache.profiles.find((x) => x.id === u.id);
       if (!p) throw new Error("Không tìm thấy hồ sơ.");
       if (patch.display_name) p.display_name = String(patch.display_name).trim();

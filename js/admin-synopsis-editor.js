@@ -38,6 +38,15 @@
       }).join("");
     }
 
+    function pasteToHtml(text) {
+      return String(text || "")
+        .replace(/\r\n?/g, "\n")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+    }
+
     function htmlToPlain(html) {
       var box = document.createElement("div");
       box.innerHTML = String(html || "");
@@ -83,12 +92,23 @@
       ed.style.setProperty("--synopsis-gap", this.value + "px");
       sync();
     });
+    ed.addEventListener("paste", function (e) {
+      e.preventDefault();
+      var clip = e.clipboardData || window.clipboardData;
+      var text = clip ? (clip.getData("text/plain") || clip.getData("text") || "") : "";
+      try {
+        document.execCommand("insertHTML", false, pasteToHtml(text));
+      } catch (_) {
+        document.execCommand("insertText", false, text);
+      }
+      sync();
+    });
     ed.addEventListener("input", sync);
     form.addEventListener("submit", sync, true);
   }
 
   var css = document.createElement("style");
-  css.textContent = '.synopsis-editor-shell{border:1px solid rgba(140,150,180,.24);border-radius:14px;overflow:hidden;background:#080d18}.synopsis-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px;border-bottom:1px solid rgba(140,150,180,.2);background:#0d1423}.synopsis-toolbar button,.synopsis-toolbar select{min-height:36px;border:1px solid rgba(150,140,230,.28);border-radius:9px;background:#10182a;color:#dfe5f3;padding:5px 9px;font:inherit}.synopsis-toolbar button{min-width:38px;cursor:pointer}.synopsis-toolbar button:hover{border-color:#9589e6;background:#171d35}.se-sep{width:1px;height:25px;background:rgba(150,160,190,.22);margin:0 2px}.synopsis-rich{min-height:240px;padding:18px 20px;outline:none;color:#e6e9f2;font-family:"Be Vietnam Pro",sans-serif;font-size:17px;line-height:1.6;overflow-wrap:anywhere}.synopsis-rich p,.synopsis-rich div{margin-top:0;margin-bottom:var(--synopsis-gap,8px)}.synopsis-editor-shell .editor-hint{padding:0 12px 10px}@media(max-width:640px){.synopsis-toolbar{gap:5px;padding:7px}.synopsis-toolbar button{min-width:36px}.synopsis-toolbar select{max-width:118px}.synopsis-rich{min-height:260px;padding:14px;font-size:16px}}';
+  css.textContent = '.synopsis-editor-shell{border:1px solid rgba(140,150,180,.24);border-radius:14px;overflow:hidden;background:#080d18}.synopsis-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px;border-bottom:1px solid rgba(140,150,180,.2);background:#0d1423}.synopsis-toolbar button,.synopsis-toolbar select{min-height:36px;border:1px solid rgba(150,140,230,.28);border-radius:9px;background:#10182a;color:#dfe5f3;padding:5px 9px;font:inherit}.synopsis-toolbar button{min-width:38px;cursor:pointer}.synopsis-toolbar button:hover{border-color:#9589e6;background:#171d35}.se-sep{width:1px;height:25px;background:rgba(150,160,190,.22);margin:0 2px}.synopsis-rich{min-height:240px;padding:18px 20px;outline:none;color:#e6e9f2;font-family:"Be Vietnam Pro",sans-serif;font-size:17px;line-height:1.6;overflow-wrap:anywhere}.synopsis-rich *{color:inherit!important;background-color:transparent!important}.synopsis-rich p,.synopsis-rich div{margin-top:0;margin-bottom:var(--synopsis-gap,8px)}.synopsis-editor-shell .editor-hint{padding:0 12px 10px}@media(max-width:640px){.synopsis-toolbar{gap:5px;padding:7px}.synopsis-toolbar button{min-width:36px}.synopsis-toolbar select{max-width:118px}.synopsis-rich{min-height:260px;padding:14px;font-size:16px}}';
   document.head.appendChild(css);
 
   var observer = new MutationObserver(enhance);

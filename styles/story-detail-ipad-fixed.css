@@ -74,6 +74,8 @@
 
   .story-page .story-info{
     position:absolute;
+    grid-column:1 / -1 !important;
+    grid-row:1 / -1 !important;
     inset-block:0;
     inset-inline-start:calc(var(--fixed-cover-w) + var(--story-hero-gap));
     inset-inline-end:0;
@@ -143,6 +145,8 @@
 
   .story-page .story-info{
     position:absolute;
+    grid-column:1 / -1 !important;
+    grid-row:1 / -1 !important;
     inset-block:0;
     inset-inline-start:calc(var(--fixed-cover-w) + var(--story-hero-gap));
     inset-inline-end:0;
@@ -191,6 +195,8 @@
 
   .story-page .story-info{
     position:absolute;
+    grid-column:1 / -1 !important;
+    grid-row:1 / -1 !important;
     inset-block:0;
     inset-inline-start:calc(var(--ipad-cover-w) + var(--story-hero-gap));
     inset-inline-end:0;
@@ -229,7 +235,7 @@
 
 @media (min-width:720px) and (max-width:1366px) and (min-height:601px) and (orientation:landscape){
   .story-page .story-hero{
-    --ipad-cover-w:clamp(13rem,23vw,15.5rem);
+    --ipad-cover-w:clamp(11.5rem,min(23vw,calc(66.667dvh - 8rem)),15.5rem);
     --story-hero-gap:clamp(1rem,2.2vw,1.45rem);
     grid-template-columns:var(--ipad-cover-w) minmax(0,1fr);
     gap:var(--story-hero-gap);
@@ -258,6 +264,8 @@
 
   .story-page .story-info{
     position:absolute;
+    grid-column:1 / -1 !important;
+    grid-row:1 / -1 !important;
     inset-block:0;
     inset-inline-start:calc(var(--ipad-cover-w) + var(--story-hero-gap));
     inset-inline-end:0;
@@ -292,4 +300,23 @@
 
   .story-page .story-metrics,
   .story-page .story-acts{margin-top:0 !important;margin-bottom:0 !important}
+}
+
+/* Keep the persistent action dock compact on short landscape screens so it
+   does not cover the cover edge or the story action row. */
+@media (max-width:1366px) and (orientation:landscape){
+  .story-page{
+    --story-dock-space:calc(3.7rem + env(safe-area-inset-bottom));
+    padding-bottom:max(4.25rem,var(--story-dock-space)) !important;
+  }
+
+  .story-dock{
+    min-height:calc(3.25rem + env(safe-area-inset-bottom));
+    padding:.34rem .75rem calc(.34rem + env(safe-area-inset-bottom));
+  }
+
+  .story-dock .dock-read,
+  .story-dock .dock-fav{
+    min-height:38px;
+  }
 }

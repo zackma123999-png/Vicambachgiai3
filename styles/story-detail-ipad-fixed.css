@@ -1,0 +1,114 @@
+/* ViCamBachGiai — final iPad story-header invariant.
+   The cover always stays 2:3. Long metadata scrolls inside the matching column. */
+
+@media (min-width:720px) and (max-width:1024px) and (orientation:portrait){
+  .story-page .story-hero{
+    --ipad-cover-w:clamp(13rem,29vw,16.5rem);
+    grid-template-columns:var(--ipad-cover-w) minmax(0,1fr);
+    height:calc(var(--ipad-cover-w) * 1.5) !important;
+    min-height:calc(var(--ipad-cover-w) * 1.5);
+    max-height:calc(var(--ipad-cover-w) * 1.5);
+    align-items:stretch;
+    overflow:hidden;
+  }
+
+  .story-page .story-cover{
+    width:var(--ipad-cover-w);
+    height:100% !important;
+    min-height:0;
+    max-height:100%;
+    align-self:stretch;
+    overflow:hidden;
+  }
+
+  .story-page .story-cover .cover-frame{
+    width:100%;
+    height:100% !important;
+    max-height:100%;
+    aspect-ratio:2/3;
+  }
+
+  .story-page .story-info{
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto auto;
+    height:100% !important;
+    min-height:0;
+    max-height:100%;
+    align-self:stretch;
+    overflow:hidden !important;
+  }
+
+  .story-page .story-landscape-meta{
+    min-height:0;
+    overflow:hidden;
+  }
+
+  .story-page .story-landscape-meta .landscape-info-body{
+    min-height:0;
+    max-height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .story-page .story-metrics,
+  .story-page .story-acts{margin-top:0 !important;margin-bottom:0 !important}
+}
+
+@media (min-width:720px) and (max-width:1366px) and (min-height:601px) and (orientation:landscape){
+  .story-page .story-hero{
+    --ipad-cover-w:clamp(13rem,23vw,15.5rem);
+    grid-template-columns:var(--ipad-cover-w) minmax(0,1fr);
+    height:calc(var(--ipad-cover-w) * 1.5) !important;
+    min-height:calc(var(--ipad-cover-w) * 1.5);
+    max-height:calc(var(--ipad-cover-w) * 1.5);
+    align-items:stretch;
+    overflow:hidden;
+  }
+
+  .story-page .story-cover{
+    width:var(--ipad-cover-w);
+    height:100% !important;
+    min-height:0;
+    max-height:100%;
+    align-self:stretch;
+    overflow:hidden;
+  }
+
+  .story-page .story-cover .cover-frame{
+    width:100%;
+    height:100% !important;
+    max-height:100%;
+    aspect-ratio:2/3;
+  }
+
+  .story-page .story-info{
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr) auto auto;
+    height:100% !important;
+    min-height:0;
+    max-height:100%;
+    align-self:stretch;
+    overflow:hidden !important;
+  }
+
+  .story-page .story-landscape-meta{
+    min-height:0;
+    overflow:hidden;
+  }
+
+  .story-page .story-landscape-meta .landscape-info-body{
+    min-height:0;
+    max-height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+    touch-action:pan-y;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .story-page .story-metrics,
+  .story-page .story-acts{margin-top:0 !important;margin-bottom:0 !important}
+}

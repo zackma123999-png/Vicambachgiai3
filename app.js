@@ -2567,6 +2567,21 @@
         document.execCommand(cmd, false, val);
       } catch (_) {}
     };
+    const focusEditor = () => {
+      try { ed.focus({ preventScroll: true }); } catch (_) { ed.focus(); }
+      const sel = window.getSelection && window.getSelection();
+      if (!sel || (sel.anchorNode && ed.contains(sel.anchorNode))) return;
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(ed);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (_) {}
+    };
+    ed.addEventListener("click", (e) => {
+      if (e.target === ed) requestAnimationFrame(focusEditor);
+    });
     const insertHtml = (html) => {
       ed.focus();
       try {
@@ -2643,6 +2658,13 @@
         }
         else if (c === "clear") run("removeFormat");
         else if (c === "link") {
+          const sel = window.getSelection && window.getSelection();
+          const hasText = sel && !sel.isCollapsed && ed.contains(sel.anchorNode) && ed.contains(sel.focusNode);
+          if (!hasText) {
+            toast("Hãy bôi đen đoạn chữ cần gắn liên kết.");
+            focusEditor();
+            return;
+          }
           const u = prompt("URL liên kết");
           if (u) run("createLink", u);
         } else if (c === "img") {

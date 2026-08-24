@@ -12,6 +12,9 @@
 
   function proxyCover(s) {
     if (!s || !s.id) return "";
+    if (/^https?:\/\//i.test(String(s.cover || s.cover_url || "")) && !/\/functions\/v1\/story-cover/i.test(String(s.cover || s.cover_url || ""))) {
+      return String(s.cover || s.cover_url);
+    }
     var v = Number(s.updated_at || 0) || Date.now();
     return "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=" + encodeURIComponent(s.id) + "&v=" + encodeURIComponent(v);
   }

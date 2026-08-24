@@ -11,7 +11,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: false,
     accent: "#8a6a4a",
     updated_at: 1787096985121,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=bb93bb98-a271-4b22-9947-11b5c4631329&v=1787096985121",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/bb93bb98-a271-4b22-9947-11b5c4631329.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   },
   {
@@ -25,7 +25,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: false,
     accent: "#8a6a4a",
     updated_at: 1787069580529,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=a0844a39-c41e-4a55-b666-ece2c23b3a78&v=1787069580529",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/a0844a39-c41e-4a55-b666-ece2c23b3a78.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   },
   {
@@ -39,7 +39,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: false,
     accent: "#8a6a4a",
     updated_at: 1787069446162,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=1caa74e6-96b5-4ee8-8f06-8e1b3d29b3af&v=1787069446162",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/1caa74e6-96b5-4ee8-8f06-8e1b3d29b3af.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   },
   {
@@ -53,7 +53,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: true,
     accent: "#8a6a4a",
     updated_at: 1787069023505,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=adba0dbb-fff8-4d9f-bf27-43eac534c67b&v=1787069023505",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/adba0dbb-fff8-4d9f-bf27-43eac534c67b.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   },
   {
@@ -67,7 +67,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: true,
     accent: "#8a6a4a",
     updated_at: 1786981746886,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=4375d3a8-7d7c-45e7-9c29-0c054f5881c1&v=1786981746886",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/4375d3a8-7d7c-45e7-9c29-0c054f5881c1.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   },
   {
@@ -81,7 +81,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: false,
     accent: "#8a6a4a",
     updated_at: 1786981604595,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=8548ee4d-bb05-4d04-87ec-ed453f709512&v=1786981604595",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/8548ee4d-bb05-4d04-87ec-ed453f709512.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   },
   {
@@ -95,7 +95,7 @@ window.VCBG_HERO_SNAPSHOT = [
     upcoming: true,
     accent: "#8a6a4a",
     updated_at: 1786981398939,
-    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/functions/v1/story-cover?id=8f6c1a8c-6a4f-425f-800b-5838dc5098fe&v=1786981398939",
+    cover: "https://isawawkxjbnlbuxlhlnk.supabase.co/storage/v1/object/public/covers/8f6c1a8c-6a4f-425f-800b-5838dc5098fe.webp",
     genres: [], tags: [], stats: { views: 0, likes: 0, rating_avg: 0, rating_count: 0, chapter_count: 0, latest_chapter: null }
   }
 ];

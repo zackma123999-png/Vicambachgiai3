@@ -796,6 +796,16 @@
       return currentUser();
     },
 
+    async loginWithGoogle({ redirectTo } = {}) {
+      const fallback = location.origin + location.pathname;
+      const { data, error } = await sb.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirectTo || fallback },
+      });
+      if (error) throwHttp(error, "Không thể mở đăng nhập Google.");
+      return data;
+    },
+
     async login({ email, password }) {
       email = String(email || "").trim().toLowerCase();
       if (!hitRate("login:" + email, 8, 10 * 60 * 1000)) throw new Error("Quá nhiều lần thử. Đợi vài phút.");

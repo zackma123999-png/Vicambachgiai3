@@ -53,6 +53,27 @@
     return Date.now();
   }
 
+  async function optimizeCoverFile(file) {
+    if (!file || !/^image\//i.test(file.type || "")) throw new Error("Tệp bìa không hợp lệ.");
+    const bitmap = await createImageBitmap(file);
+    const maxWidth = 1000;
+    const maxHeight = 1500;
+    const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { alpha: false });
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, 0, 0, width, height);
+    if (bitmap.close) bitmap.close();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.8));
+    if (!blob) throw new Error("Không thể tối ưu ảnh bìa.");
+    return blob;
+  }
+
   function uuid() {
     if (global.crypto && crypto.randomUUID) return crypto.randomUUID();
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -1346,7 +1367,18 @@
       story.featured = !!data.featured;
       story.upcoming = upcoming;
       story.accent = data.accent || "#8a6a4a";
-      if (data.cover) story.cover = data.cover;
+      if (data.cover_file) {
+        const optimized = await optimizeCoverFile(data.cover_file);
+        const path = story.id + ".webp";
+        const { error: uploadError } = await sb.storage.from("covers").upload(path, optimized, {
+          contentType: "image/webp",
+          cacheControl: "31536000",
+          upsert: true,
+        });
+        if (uploadError) throw publicError(uploadError, "Không tải được ảnh bìa.");
+        story.cover = cfg().supabaseUrl.replace(/\/$/, "") + "/storage/v1/object/public/covers/" + path + "?v=" + t;
+      }
+      if (!data.cover_file && data.cover) story.cover = data.cover;
       if (!story.cover) story.cover = "";
       story.updated_at = t;
       cache.story_genres = cache.story_genres.filter((x) => x.story_id !== story.id);

@@ -2,6 +2,21 @@
   margin: 1.15rem 0 1rem;
 }
 
+.auth-google-direct {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.auth-google-direct > div,
+.auth-google-direct iframe {
+  max-width: 100% !important;
+}
+
 .auth-google {
   width: 100%;
   min-height: 48px;

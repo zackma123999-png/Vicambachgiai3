@@ -806,6 +806,20 @@
       return data;
     },
 
+    async loginWithGoogleIdToken({ token, nonce } = {}) {
+      if (!token) throw new Error("Google chưa trả thông tin đăng nhập.");
+      const credentials = { provider: "google", token };
+      if (nonce) credentials.nonce = nonce;
+      const { data, error } = await sb.auth.signInWithIdToken(credentials);
+      if (error) throwHttp(error, "Không thể đăng nhập bằng Google.");
+      sessionUser = data.user;
+      try {
+        await loadOwnProfile();
+        if (!bootstrapped) await refresh();
+      } catch (_) {}
+      return currentUser();
+    },
+
     async login({ email, password }) {
       email = String(email || "").trim().toLowerCase();
       if (!hitRate("login:" + email, 8, 10 * 60 * 1000)) throw new Error("Quá nhiều lần thử. Đợi vài phút.");

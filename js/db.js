@@ -74,6 +74,53 @@
     return blob;
   }
 
+  async function optimizeAudioCoverFile(file) {
+    if (!file || !/^image\//i.test(file.type || "")) throw new Error("Ảnh đĩa không hợp lệ.");
+    const bitmap = await createImageBitmap(file);
+    const size = Math.min(900, bitmap.width, bitmap.height);
+    const sx = Math.max(0, Math.round((bitmap.width - size) / 2));
+    const sy = Math.max(0, Math.round((bitmap.height - size) / 2));
+    const canvas = document.createElement("canvas");
+    canvas.width = 720;
+    canvas.height = 720;
+    const context = canvas.getContext("2d", { alpha: false });
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, sx, sy, size, size, 0, 0, 720, 720);
+    if (bitmap.close) bitmap.close();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.82));
+    if (!blob) throw new Error("Không thể tối ưu ảnh đĩa.");
+    return new File([blob], "audio-cover.webp", { type: "image/webp" });
+  }
+
+  async function uploadChapterMedia(chapterId, file, kind) {
+    if (!file) return "";
+    const isAudio = kind === "audio";
+    const max = isAudio ? 95 * 1024 * 1024 : 8 * 1024 * 1024;
+    if (file.size > max) {
+      throw new Error(isAudio ? "File audio tối đa 95MB. Hãy xuất dạng M4A/MP3 nhẹ hơn." : "Ảnh đĩa tối đa 8MB.");
+    }
+    if (isAudio && !/^audio\//i.test(file.type || "")) throw new Error("Hãy chọn file ghi âm hoặc audio.");
+    const session = await sb.auth.getSession();
+    const token = session && session.data && session.data.session && session.data.session.access_token;
+    if (!token) throw new Error("Phiên đăng nhập đã hết. Hãy đăng nhập lại.");
+    const response = await fetch("/api/chapter-media", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + token,
+        "content-type": file.type || "application/octet-stream",
+        "x-chapter-id": chapterId,
+        "x-media-kind": kind,
+        "x-file-name": encodeURIComponent(file.name || (isAudio ? "chapter-audio" : "audio-cover")),
+      },
+      body: file,
+    });
+    let result = null;
+    try { result = await response.json(); } catch (_) {}
+    if (!response.ok) throw new Error((result && result.error) || "Không tải được file lên kho audio.");
+    return result.url;
+  }
+
   function uuid() {
     if (global.crypto && crypto.randomUUID) return crypto.randomUUID();
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -457,7 +504,7 @@
       settle(
         sb
           .from("chapters")
-          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at"),
+          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds"),
         7000,
         "chapters"
       )
@@ -1474,6 +1521,7 @@
       requireAdmin();
       const t = now();
       let ch = data.id ? cache.chapters.find((c) => c.id === data.id) : null;
+      const isNew = !ch;
       if (!ch) {
         ch = { id: uid(), created_at: t };
         cache.chapters.push(ch);
@@ -1482,6 +1530,19 @@
       ch.number = Number(data.number);
       ch.title = String(data.title || "").trim();
       ch.body = String(data.body || "");
+      ch.audio_title = String(data.audio_title || "").trim();
+      if (data.remove_audio) ch.audio_url = "";
+      if (data.remove_audio_cover) ch.audio_cover_url = "";
+      try {
+        if (data.audio_file) ch.audio_url = await uploadChapterMedia(ch.id, data.audio_file, "audio");
+        if (data.audio_cover_file) {
+          const cover = await optimizeAudioCoverFile(data.audio_cover_file);
+          ch.audio_cover_url = await uploadChapterMedia(ch.id, cover, "cover");
+        }
+      } catch (error) {
+        if (isNew) cache.chapters = cache.chapters.filter((item) => item !== ch);
+        throw error;
+      }
       const wasPublished = !!ch.published_at;
       ch.status = data.status || "draft";
       ch.publish_at = data.publish_at || null;
@@ -1496,6 +1557,10 @@
         chapter_number: ch.number,
         title: ch.title,
         content: ch.body,
+        audio_url: ch.audio_url || null,
+        audio_cover_url: ch.audio_cover_url || null,
+        audio_title: ch.audio_title || null,
+        audio_duration_seconds: ch.audio_duration_seconds || null,
         status: ch.status,
         publish_at: iso(ch.publish_at),
         published_at: iso(ch.published_at),

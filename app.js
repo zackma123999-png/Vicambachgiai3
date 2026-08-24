@@ -2420,15 +2420,12 @@
       footer();
     bindChrome();
     let cover = s.cover || "";
+    let coverFile = null;
     $("#coverFile").onchange = () => {
       const f = $("#coverFile").files[0];
       if (!f) return;
-      const r = new FileReader();
-      r.onload = () => {
-        cover = r.result;
-        toast("Đã chọn bìa.");
-      };
-      r.readAsDataURL(f);
+      coverFile = f;
+      toast("Đã chọn bìa; ảnh sẽ tự tối ưu khi lưu.");
     };
     $("#stForm").onsubmit = async (e) => {
       e.preventDefault();
@@ -2452,6 +2449,7 @@
           upcoming: fd.get("status") === "upcoming",
           accent: fd.get("accent"),
           cover,
+          cover_file: coverFile,
           genre_ids: $$("[name=genre]:checked").map((x) => x.value),
           tag_ids: $$("[name=tag]:checked").map((x) => x.value),
         });

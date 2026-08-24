@@ -1437,7 +1437,9 @@
     const mine = VCBG.myRating(s.id);
     const favOn = VCBG.isFavorite(s.id);
     const bodyHtml = decorateParagraphs(sanitize(ch.body), comments);
-    const audioHtml = ch.audio_url || VCBG.isAdmin() ? chapterAudioPlayer(ch, s) : "";
+    // The player is part of the public reading experience. Uploading and
+    // editing audio remain protected inside the Admin chapter editor.
+    const audioHtml = chapterAudioPlayer(ch, s);
     const chLabel = `Chương ${ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
     app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
       <header class="reader-chrome reader-top" id="rTop">

@@ -1437,6 +1437,7 @@
     const mine = VCBG.myRating(s.id);
     const favOn = VCBG.isFavorite(s.id);
     const bodyHtml = decorateParagraphs(sanitize(ch.body), comments);
+    const audioHtml = ch.audio_url ? chapterAudioPlayer(ch, s) : "";
     const chLabel = `Chương ${ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
     app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
       <header class="reader-chrome reader-top" id="rTop">
@@ -1453,6 +1454,7 @@
       <article class="reader-body" id="rbody">
         <h2>Chương ${ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
         <div class="r-orn" aria-hidden="true"></div>
+        ${audioHtml}
         ${bodyHtml}
         <section class="r-engage" id="rEngage">
           <button type="button" id="btnLikeCh" class="${liked ? "on" : ""}"><span>♡</span><b>Thích chương này</b><em>${likeN}</em></button>
@@ -1503,6 +1505,7 @@
       progT = setTimeout(() => VCBG.saveProgress(s.id, ch.id, ch.number, window.scrollY), 400);
     };
     updateProg();
+    bindChapterAudio();
     $("#btnSet").onclick = (e) => {
       e.stopPropagation();
       openSettings(page);
@@ -1559,6 +1562,57 @@
     };
     $("#btnCmtAll").onclick = () => openComments(s, ch, "", "");
     bindParagraphComments(s, ch, comments);
+  }
+  function chapterAudioPlayer(ch, story) {
+    const cover = ch.audio_cover_url || story.cover || "brand/mark.png";
+    const title = ch.audio_title || `Bản thu chương ${ch.number}`;
+    return `<section class="chapter-audio" data-chapter-audio>
+      <div class="chapter-audio-disc" style="--audio-cover:url('${esc(cover)}')" aria-hidden="true"><i></i></div>
+      <div class="chapter-audio-main">
+        <span class="chapter-audio-kicker">BẢN THU ÂM</span>
+        <strong>${esc(title)}</strong>
+        <div class="chapter-audio-controls">
+          <button type="button" class="chapter-audio-skip" data-audio-back aria-label="Lùi 15 giây">−15</button>
+          <button type="button" class="chapter-audio-play" data-audio-play aria-label="Phát bản thu"><span>▶</span></button>
+          <button type="button" class="chapter-audio-skip" data-audio-next aria-label="Tiến 15 giây">+15</button>
+          <span class="chapter-audio-time" data-audio-time>0:00 / --:--</span>
+        </div>
+        <input class="chapter-audio-range" data-audio-range type="range" min="0" max="1000" value="0" aria-label="Tiến trình bản thu">
+      </div>
+      <audio data-audio preload="none" src="${esc(ch.audio_url)}"></audio>
+    </section>`;
+  }
+  function bindChapterAudio() {
+    $$('[data-chapter-audio]').forEach((box) => {
+      const audio = box.querySelector('[data-audio]');
+      const play = box.querySelector('[data-audio-play]');
+      const range = box.querySelector('[data-audio-range]');
+      const time = box.querySelector('[data-audio-time]');
+      const fmt = (n) => {
+        if (!Number.isFinite(n)) return "--:--";
+        n = Math.max(0, Math.floor(n));
+        return Math.floor(n / 60) + ":" + String(n % 60).padStart(2, "0");
+      };
+      const paint = () => {
+        const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+        range.value = duration ? Math.round((audio.currentTime / duration) * 1000) : 0;
+        time.textContent = fmt(audio.currentTime) + " / " + fmt(audio.duration);
+      };
+      play.onclick = async () => {
+        try {
+          if (audio.paused) await audio.play();
+          else audio.pause();
+        } catch (_) { toast("Không mở được bản thu. Hãy thử lại."); }
+      };
+      box.querySelector('[data-audio-back]').onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 15); };
+      box.querySelector('[data-audio-next]').onclick = () => { audio.currentTime = Math.min(audio.duration || Infinity, audio.currentTime + 15); };
+      range.oninput = () => { if (Number.isFinite(audio.duration)) audio.currentTime = (Number(range.value) / 1000) * audio.duration; };
+      audio.addEventListener("play", () => { box.classList.add("is-playing"); play.querySelector("span").textContent = "Ⅱ"; });
+      audio.addEventListener("pause", () => { box.classList.remove("is-playing"); play.querySelector("span").textContent = "▶"; });
+      audio.addEventListener("ended", () => { box.classList.remove("is-playing"); play.querySelector("span").textContent = "▶"; });
+      audio.addEventListener("timeupdate", paint);
+      audio.addEventListener("loadedmetadata", paint);
+    });
   }
   function decorateParagraphs(html, comments) {
     const box = document.createElement("div");
@@ -2576,6 +2630,14 @@
           </div>
           <div class="field"><label>Số chương</label><input name="number" type="number" min="1" value="${num}"></div>
           <div class="field"><label>Tiêu đề</label><input name="title" value="${esc((ch && ch.title) || "")}"></div>
+          <section class="admin-audio-box">
+            <div class="admin-audio-head"><div class="admin-audio-mini ${ch && ch.audio_url ? "has-audio" : ""}" ${ch && ch.audio_cover_url ? `style="--audio-cover:url('${esc(ch.audio_cover_url)}')"` : ""}></div><div><b>Bản thu âm của chương</b><small>File chỉ tải khi độc giả bấm phát nên không làm nặng lúc mở chương.</small></div></div>
+            <div class="field"><label>Tên hiển thị của bản thu</label><input name="audio_title" value="${esc((ch && ch.audio_title) || "")}" placeholder="Ví dụ: Nghe chương 12"></div>
+            <div class="field"><label>File ghi âm (M4A, MP3, AAC… tối đa 95MB)</label><input name="audio_file" type="file" accept="audio/*,.m4a,.mp3,.aac,.ogg"></div>
+            <div class="field"><label>Ảnh trên đĩa nhạc</label><input name="audio_cover_file" type="file" accept="image/*"></div>
+            ${ch && ch.audio_url ? `<label class="admin-audio-remove"><input name="remove_audio" type="checkbox"> Xóa bản thu hiện tại khỏi chương</label>` : ""}
+            ${ch && ch.audio_cover_url ? `<label class="admin-audio-remove"><input name="remove_audio_cover" type="checkbox"> Bỏ ảnh đĩa hiện tại</label>` : ""}
+          </section>
           <div class="editor-toolbar" role="toolbar" aria-label="Định dạng văn bản">
             ${tools.map(([c, t, lab]) => `<button type="button" data-cmd="${c}" title="${esc(t)}">${lab}</button>`).join("")}
           </div>
@@ -2743,12 +2805,20 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const at = fd.get("publish_at") ? new Date(fd.get("publish_at")).getTime() : null;
+      const saveButton = e.target.querySelector('[type="submit"]');
       try {
+        saveButton.disabled = true;
+        saveButton.textContent = (e.target.elements.audio_file.files[0] || e.target.elements.audio_cover_file.files[0]) ? "Đang tải bản thu…" : "Đang lưu…";
         await VCBG.upsertChapter({
           id: ch ? ch.id : undefined,
           story_id: fd.get("story_id"),
           number: fd.get("number"),
           title: fd.get("title"),
+          audio_title: fd.get("audio_title"),
+          audio_file: e.target.elements.audio_file.files[0] || null,
+          audio_cover_file: e.target.elements.audio_cover_file.files[0] || null,
+          remove_audio: fd.get("remove_audio") === "on",
+          remove_audio_cover: fd.get("remove_audio_cover") === "on",
           body: sanitize(applyParaGap(ed.innerHTML, edGap)),
           status: fd.get("status"),
           publish_at: at,
@@ -2760,6 +2830,9 @@
         go("/admin/chuong?story=" + fd.get("story_id"));
       } catch (err) {
         toast(err.message || "Không lưu được chương.");
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = "Lưu chương";
       }
     };
   }

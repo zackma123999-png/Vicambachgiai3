@@ -457,6 +457,7 @@
           <button type="button" class="btn btn-ghost" id="btnReport">⚑ Báo lỗi nội dung</button>
         </div>
         ${links.length ? `<p class="foot-social">${links.map(([k, l]) => `<a href="${esc(social[k])}" target="_blank" rel="noopener">${l}</a>`).join(" · ")}</p>` : ""}
+        <p class="foot-legal"><a href="/privacy.html">Chính sách quyền riêng tư</a> · <a href="/terms.html">Điều khoản sử dụng</a></p>
         <p class="foot-copy">© ${new Date().getFullYear()} ViCamBachGiai · Bản dịch thuộc về người thực hiện · Vui lòng không đăng lại.</p>
       </div>
     </footer>`;

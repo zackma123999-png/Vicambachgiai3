@@ -1866,15 +1866,7 @@
           kind === "forgot"
             ? ""
             : `<div class="auth-google-block">
-                <button class="btn auth-google" id="googleAuth" type="button">
-                  <svg viewBox="0 0 18 18" aria-hidden="true">
-                    <path fill="#4285F4" d="M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.715v2.258h2.909c1.702-1.567 2.684-3.875 2.684-6.614Z"/>
-                    <path fill="#34A853" d="M9 18c2.43 0 4.468-.806 5.956-2.181l-2.909-2.258c-.806.54-1.835.859-3.047.859-2.344 0-4.328-1.585-5.037-3.714H.956v2.332A9 9 0 0 0 9 18Z"/>
-                    <path fill="#FBBC05" d="M3.963 10.706A5.42 5.42 0 0 1 3.682 9c0-.592.102-1.169.281-1.706V4.962H.956A9 9 0 0 0 0 9c0 1.452.347 2.827.956 4.038l3.007-2.332Z"/>
-                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.507.454 3.44 1.346l2.581-2.581C13.464.893 11.426 0 9 0A9 9 0 0 0 .956 4.962l3.007 2.332C4.672 5.165 6.656 3.58 9 3.58Z"/>
-                  </svg>
-                  <span>Tiếp tục với Google</span>
-                </button>
+                <div class="auth-google-direct" id="googleAuth" aria-live="polite">Đang tải Google…</div>
                 <div class="auth-divider"><span>hoặc dùng email</span></div>
               </div>`
         }
@@ -1932,20 +1924,55 @@
     };
     const googleBtn = $("#googleAuth");
     if (googleBtn) {
-      googleBtn.onclick = async () => {
-        showErr("");
-        googleBtn.disabled = true;
-        const label = googleBtn.querySelector("span");
-        if (label) label.textContent = "Đang mở Google…";
-        rememberAuthReturn(returnTarget || "/");
-        try {
-          await VCBG.loginWithGoogle({ redirectTo: location.origin + location.pathname });
-        } catch (err) {
-          showErr(err.message || "Không thể mở đăng nhập Google.");
-          googleBtn.disabled = false;
-          if (label) label.textContent = "Tiếp tục với Google";
+      let googleAttempts = 0;
+      const mountGoogle = async () => {
+        if (!googleBtn.isConnected) return;
+        if (!(window.google && google.accounts && google.accounts.id)) {
+          googleAttempts += 1;
+          if (googleAttempts >= 60) {
+            googleBtn.textContent = "Không tải được Google. Hãy mở trang bằng Safari và thử lại.";
+            return;
+          }
+          setTimeout(mountGoogle, 180);
+          return;
         }
+        const bytes = crypto.getRandomValues(new Uint8Array(32));
+        const nonce = btoa(String.fromCharCode(...bytes));
+        const encoded = new TextEncoder().encode(nonce);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+        const hashedNonce = Array.from(new Uint8Array(hashBuffer))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+        googleBtn.textContent = "";
+        google.accounts.id.initialize({
+          client_id: "726540465981-pg5i7fnr26ljb0cpi22su28b1lhc4f6b.apps.googleusercontent.com",
+          nonce: hashedNonce,
+          use_fedcm_for_prompt: true,
+          itp_support: true,
+          callback: async (response) => {
+            showErr("");
+            rememberAuthReturn(returnTarget || "/");
+            try {
+              await VCBG.loginWithGoogleIdToken({ token: response.credential, nonce });
+              toast("Đăng nhập Google thành công.");
+              await returnFromAuth(returnTarget || "/");
+            } catch (err) {
+              showErr(err.message || "Không thể đăng nhập bằng Google.");
+              googleBtn.textContent = "Không thể đăng nhập. Tải lại trang để thử lại.";
+            }
+          },
+        });
+        google.accounts.id.renderButton(googleBtn, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          shape: "pill",
+          text: "continue_with",
+          logo_alignment: "left",
+          width: Math.min(400, Math.max(240, Math.floor(googleBtn.getBoundingClientRect().width || 360))),
+        });
       };
+      mountGoogle().catch((err) => showErr(err.message || "Không tải được đăng nhập Google."));
     }
     $("#aForm").onsubmit = async (e) => {
       e.preventDefault();

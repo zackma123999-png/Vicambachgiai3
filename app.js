@@ -1437,7 +1437,7 @@
     const mine = VCBG.myRating(s.id);
     const favOn = VCBG.isFavorite(s.id);
     const bodyHtml = decorateParagraphs(sanitize(ch.body), comments);
-    const audioHtml = ch.audio_url ? chapterAudioPlayer(ch, s) : "";
+    const audioHtml = ch.audio_url || VCBG.isAdmin() ? chapterAudioPlayer(ch, s) : "";
     const chLabel = `Chương ${ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
     app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
       <header class="reader-chrome reader-top" id="rTop">
@@ -1565,21 +1565,22 @@
   }
   function chapterAudioPlayer(ch, story) {
     const cover = ch.audio_cover_url || story.cover || "brand/mark.png";
-    const title = ch.audio_title || `Bản thu chương ${ch.number}`;
-    return `<section class="chapter-audio" data-chapter-audio>
+    const hasAudio = !!ch.audio_url;
+    const title = ch.audio_title || (hasAudio ? `Bản thu chương ${ch.number}` : "Chưa có bản thu — bản xem trước");
+    return `<section class="chapter-audio${hasAudio ? "" : " is-preview"}" data-chapter-audio>
       <div class="chapter-audio-disc" style="--audio-cover:url('${esc(cover)}')" aria-hidden="true"><i></i></div>
       <div class="chapter-audio-main">
         <span class="chapter-audio-kicker">BẢN THU ÂM</span>
         <strong>${esc(title)}</strong>
         <div class="chapter-audio-controls">
           <button type="button" class="chapter-audio-skip" data-audio-back aria-label="Lùi 15 giây">−15</button>
-          <button type="button" class="chapter-audio-play" data-audio-play aria-label="Phát bản thu"><span>▶</span></button>
+          <button type="button" class="chapter-audio-play" data-audio-play aria-label="${hasAudio ? "Phát bản thu" : "Chưa có bản thu"}" ${hasAudio ? "" : "disabled"}><span>▶</span></button>
           <button type="button" class="chapter-audio-skip" data-audio-next aria-label="Tiến 15 giây">+15</button>
           <span class="chapter-audio-time" data-audio-time>0:00 / --:--</span>
         </div>
         <input class="chapter-audio-range" data-audio-range type="range" min="0" max="1000" value="0" aria-label="Tiến trình bản thu">
       </div>
-      <audio data-audio preload="none" src="${esc(ch.audio_url)}"></audio>
+      <audio data-audio preload="none" ${hasAudio ? `src="${esc(ch.audio_url)}"` : ""}></audio>
     </section>`;
   }
   function bindChapterAudio() {

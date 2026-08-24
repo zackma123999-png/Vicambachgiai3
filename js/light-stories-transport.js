@@ -8,6 +8,7 @@
 
   function coverProxy(row) {
     if (!row || !row.id) return "";
+    if (/^https?:\/\//i.test(String(row.cover_url || ""))) return String(row.cover_url);
     var base = (window.VCBG_CONFIG && window.VCBG_CONFIG.supabaseUrl) || "https://isawawkxjbnlbuxlhlnk.supabase.co";
     var v = row.updated_at || "";
     return base.replace(/\/$/, "") + "/functions/v1/story-cover?id=" + encodeURIComponent(row.id) + "&v=" + encodeURIComponent(v);
@@ -60,7 +61,7 @@
       builder.select = function (columns, options) {
         var cols = columns;
         if (!cols || String(cols).trim() === "*") {
-          cols = "id,slug,title,author,synopsis,status,featured,upcoming,created_at,updated_at,editor,accent,published,description";
+          cols = "id,slug,title,author,synopsis,status,featured,upcoming,created_at,updated_at,editor,accent,published,description,cover_url";
         }
         return wrapStoriesQuery(originalSelect(cols, options));
       };

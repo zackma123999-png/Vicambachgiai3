@@ -2101,9 +2101,13 @@
         const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawNonce));
         const hashedNonce = Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, "0")).join("");
         googleBtn.textContent = "";
+        // Do not silently reuse the last Google account on a fresh sign-in.
+        // The website session is still persisted normally after the user chooses.
+        google.accounts.id.disableAutoSelect();
         google.accounts.id.initialize({
           client_id: "726540465981-pg5i7fnr26ljb0cpi22su28b1lhc4f6b.apps.googleusercontent.com",
           nonce: hashedNonce,
+          auto_select: false,
           itp_support: true,
           callback: async (response) => {
             showErr("");
@@ -2124,9 +2128,11 @@
           theme: "outline",
           size: "large",
           shape: "pill",
-          text: "continue_with",
+          text: "signin_with",
           logo_alignment: "left",
-          width: Math.min(400, Math.max(240, Math.floor(googleBtn.getBoundingClientRect().width || 360))),
+          // Google does not personalize standard buttons narrower than 200px.
+          // This prevents the previous account name from taking over the button.
+          width: 190,
         });
       };
       mountGoogle().catch((err) => {

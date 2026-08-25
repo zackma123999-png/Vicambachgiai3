@@ -12,6 +12,10 @@
   font-size: 0.82rem;
 }
 
+.auth-google-direct > div {
+  margin-inline: auto;
+}
+
 .auth-google-direct.is-busy {
   opacity: 0.58;
   pointer-events: none;

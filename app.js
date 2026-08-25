@@ -2054,10 +2054,13 @@
           <h1 class="hero-title" id="authTitle">Đăng nhập</h1>
           <p class="auth-google-intro">Lưu truyện, bình luận và tiếp tục đọc trên mọi thiết bị.</p>
           <div class="auth-google-block">
-            <div class="auth-google-direct" id="googleAuth" aria-live="polite">Đang tải đăng nhập Google…</div>
+            <div class="auth-google-choice">
+              <div class="auth-google-copy"><strong>Chọn tài khoản Google</strong><span>Chạm biểu tượng G để tiếp tục</span></div>
+              <div class="auth-google-direct" id="googleAuth" aria-live="polite">Đang tải…</div>
+            </div>
             <button type="button" class="auth-google-retry" id="googleRetry" hidden>Tải lại trang</button>
           </div>
-          <p class="auth-google-note">Bạn có thể chọn bất kỳ tài khoản Google nào. ViCamBachGiai chỉ nhận tên, email và ảnh đại diện.</p>
+          <p class="auth-google-note">ViCamBachGiai chỉ nhận tên, email và ảnh đại diện.</p>
           <p class="auth-error" id="aErr"></p>
         </section>
       </main>` +
@@ -2123,15 +2126,10 @@
           },
         });
         google.accounts.id.renderButton(googleBtn, {
-          type: "standard",
+          type: "icon",
           theme: "outline",
-          size: "medium",
-          shape: "pill",
-          text: "signin",
-          logo_alignment: "left",
-          // Google does not personalize standard buttons narrower than 200px.
-          // This prevents the previous account name from taking over the button.
-          width: 260,
+          size: "large",
+          shape: "circle",
         });
       };
       mountGoogle().catch((err) => {

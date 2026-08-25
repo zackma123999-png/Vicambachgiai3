@@ -1,29 +1,46 @@
 .auth-google-block {
-  margin: 1.35rem 0 0.75rem;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.auth-google-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid rgba(174, 159, 226, 0.17);
+  border-bottom: 1px solid rgba(174, 159, 226, 0.17);
+}
+
+.auth-google-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.auth-google-copy strong {
+  color: var(--text);
+  font-size: 0.98rem;
+}
+
+.auth-google-copy span {
+  color: var(--muted);
+  font-size: 0.76rem;
 }
 
 .auth-google-direct {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  min-height: 48px;
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
   color: var(--muted);
   font-size: 0.82rem;
-}
-
-.auth-google-direct > div {
-  margin-inline: auto;
 }
 
 .auth-google-direct.is-busy {
   opacity: 0.58;
   pointer-events: none;
-}
-
-.auth-google-direct > div,
-.auth-google-direct iframe {
-  max-width: 100% !important;
 }
 
 .auth-google-only {
@@ -49,9 +66,9 @@
 
 .auth-google-note {
   max-width: 25rem;
-  margin: 0.85rem auto 0;
+  margin: 0.85rem 0 0;
   color: var(--muted);
-  text-align: center;
+  text-align: left;
   font-size: 0.76rem;
   line-height: 1.45;
 }

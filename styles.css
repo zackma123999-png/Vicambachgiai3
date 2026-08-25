@@ -1695,6 +1695,16 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.075em;
   text-transform: uppercase;
 }
+.res-head h2::before {
+  content: "⌘";
+  display: inline-block;
+  margin-right: .42rem;
+  color: #a68bec;
+  font-family: var(--sans);
+  font-size: .72em;
+  font-weight: 400;
+  transform: rotate(45deg);
+}
 .res-head time { color: var(--muted); font-size: 0.68rem; white-space: nowrap; }
 .res-live {
   display: grid;
@@ -1716,25 +1726,46 @@ a { color: inherit; text-decoration: none; }
 .res-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-bottom: 1px solid rgba(155,141,221,.22); }
 .res-metric {
   display: grid;
-  grid-template-columns: 1.2rem minmax(0,1fr);
-  gap: 0.36rem;
+  grid-template-columns: 1.72rem minmax(0,1fr);
+  gap: 0.42rem;
   align-items: center;
-  min-height: 58px;
+  min-height: 64px;
   padding: 0.55rem 0.45rem;
   border-right: 1px solid rgba(155,141,221,.16);
   border-bottom: 1px solid rgba(155,141,221,.13);
 }
 .res-metric:nth-child(3n) { border-right: 0; }
 .res-metric:nth-child(n+4) { border-bottom: 0; }
-.res-icon { color: #aa91ed; font-size: 1rem; text-align: center; }
+.res-icon {
+  width: 1.72rem;
+  height: 1.72rem;
+  display: grid;
+  place-items: center;
+  color: #ad92f0;
+  border: 1px solid rgba(173, 146, 240, .26);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(173,146,240,.09), rgba(105,132,222,.025));
+  box-shadow: inset 0 0 10px rgba(173,146,240,.035);
+}
+.res-icon svg {
+  width: 1.18rem;
+  height: 1.18rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.45;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 .res-metric b { display: block; font-family: var(--serif); font-weight: 500; font-size: 1.05rem; line-height: 1; font-variant-numeric: tabular-nums; }
 .res-metric small { display: block; overflow: hidden; color: var(--muted); font-size: 0.61rem; line-height: 1.25; margin-top: 0.24rem; white-space: nowrap; text-overflow: ellipsis; }
 @media (max-width: 390px) {
   .resonance { padding-left: 1.35rem; }
   .resonance::before { left: .85rem; }
   .res-live { grid-template-columns: 2rem minmax(0,1fr) 3.2rem; }
-  .res-metric { grid-template-columns: 1rem minmax(0,1fr); gap: .25rem; padding-inline: .3rem; }
-  .res-icon { font-size: .88rem; }
+  .res-metric { grid-template-columns: 1.5rem minmax(0,1fr); gap: .3rem; padding-inline: .28rem; }
+  .res-icon { width: 1.5rem; height: 1.5rem; border-radius: 8px; }
+  .res-icon svg { width: 1.02rem; height: 1.02rem; }
   .res-metric b { font-size: .98rem; }
   .res-metric small { font-size: .56rem; }
 }

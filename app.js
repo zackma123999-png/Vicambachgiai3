@@ -485,8 +485,19 @@
   function resonancePanel() {
     const stats = VCBG.publicSiteStats ? VCBG.publicSiteStats() : {};
     const value = (key) => (Number.isFinite(stats[key]) ? fmtCount(stats[key]) : "—");
+    const resonanceIcon = (name) => {
+      const icons = {
+        visits: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12.7 4.7c2.8.8 4.7 4.2 4.1 7.8-.7 3.6-3.6 6.1-6.5 5.4-2.8-.7-4.5-4-3.9-7.6.6-3.7 3.4-6.4 6.3-5.6Z"/><path d="M21.3 14.1c2.6.4 4.6 3.3 4.4 6.5-.2 3.2-2.6 5.7-5.2 5.4-2.7-.3-4.6-3.1-4.4-6.3.2-3.3 2.5-5.9 5.2-5.6Z"/><path d="M9.1 21.4c-1.9 1-3.2 2.6-3.4 4.8M18.4 28.1c1.5-.9 2.5-2.1 2.9-3.8"/></svg>`,
+        members: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="12" cy="10" r="4.5"/><path d="M4.8 26c.4-5 2.9-8 7.2-8s6.8 3 7.2 8M20.4 8.3a4 4 0 0 1 0 7.4M21 19c3.7.4 5.8 2.8 6.2 7"/></svg>`,
+        comments: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7.5h22v15H14l-6.5 5v-5H5Z"/><path d="M10 13h12M10 17.5h8"/></svg>`,
+        views: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3.5 8.3c4.9-.8 9.1.4 12.5 3.4 3.4-3 7.6-4.2 12.5-3.4v16c-4.8-.8-8.9.3-12.5 3-3.6-2.7-7.7-3.8-12.5-3Z"/><path d="M16 12v15.3M10.4 17.1s2.2-2.8 5.6-2.8 5.6 2.8 5.6 2.8S19.4 20 16 20s-5.6-2.9-5.6-2.9Z"/><circle cx="16" cy="17.1" r="1.4"/></svg>`,
+        hearts: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27S4.8 20.1 4.8 12.4C4.8 8.5 7.4 6 10.7 6c2.3 0 4.2 1.2 5.3 3 1.1-1.8 3-3 5.3-3 3.3 0 5.9 2.5 5.9 6.4C27.2 20.1 16 27 16 27Z"/></svg>`,
+        stories: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 5h18v5H7zM5 13.5h20v5H5zM7 22h18v5H7z"/><path d="M10 7.5h12M9 16h13M10 24.5h12"/></svg>`,
+      };
+      return icons[name] || "";
+    };
     const metric = (key, label, icon) => `<div class="res-metric">
-      <span class="res-icon" aria-hidden="true">${icon}</span>
+      <span class="res-icon" aria-hidden="true">${resonanceIcon(icon)}</span>
       <span><b data-res="${key}">${value(key)}</b><small>${label}</small></span>
     </div>`;
     return `<section class="wrap resonance" id="mat-do-cong-huong" aria-labelledby="resTitle">
@@ -502,12 +513,12 @@
         <span class="res-ratio" aria-hidden="true"><i id="resRatio"></i></span>
       </div>
       <div class="res-grid">
-        ${metric("visits_today", "ghé hôm nay", "⌁")}
-        ${metric("members", "thành viên", "♙")}
-        ${metric("comments", "bình luận", "◯")}
-        ${metric("total_views", "lượt xem", "◉")}
-        ${metric("hearts", "lượt thả tim", "♡")}
-        ${metric("published_stories", "truyện đã đăng", "▤")}
+        ${metric("visits_today", "ghé hôm nay", "visits")}
+        ${metric("members", "thành viên", "members")}
+        ${metric("comments", "bình luận", "comments")}
+        ${metric("total_views", "lượt xem", "views")}
+        ${metric("hearts", "lượt thả tim", "hearts")}
+        ${metric("published_stories", "truyện đã đăng", "stories")}
       </div>
     </section>`;
   }

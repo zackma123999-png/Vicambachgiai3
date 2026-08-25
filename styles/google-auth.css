@@ -1,5 +1,5 @@
 .auth-google-block {
-  margin: 1.15rem 0 1rem;
+  margin: 1.6rem 0 0.8rem;
 }
 
 .auth-google-direct {
@@ -44,6 +44,15 @@
 
 .auth-google[disabled] {
   opacity: 0.66;
+}
+
+.auth-google-only { min-height: 58dvh; }
+.auth-google-only .auth-google { justify-content: center; }
+.auth-google-note {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.76rem;
 }
 
 .auth-divider {

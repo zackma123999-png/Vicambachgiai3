@@ -847,7 +847,10 @@
       const fallback = location.origin + location.pathname;
       const { data, error } = await sb.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: redirectTo || fallback },
+        options: {
+          redirectTo: redirectTo || fallback,
+          queryParams: { prompt: "select_account" },
+        },
       });
       if (error) throwHttp(error, "Không thể mở đăng nhập Google.");
       return data;

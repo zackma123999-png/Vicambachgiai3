@@ -30,42 +30,41 @@
   min-height: 58dvh;
 }
 
-.auth-google-card {
-  margin: 2.1rem 0 1rem;
-  padding: clamp(1.35rem, 5vw, 2rem);
-  border: 1px solid rgba(171, 143, 245, 0.22);
-  border-radius: 1.5rem;
-  background: linear-gradient(145deg, rgba(17, 27, 48, 0.76), rgba(10, 15, 29, 0.48));
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(14px);
+.auth-login-content {
+  margin: clamp(2.6rem, 10vh, 5.5rem) 0 clamp(3rem, 12vh, 7rem);
+  padding-inline: 0.15rem;
 }
 
-.auth-google-card .hero-title {
-  margin: 0.35rem 0 0;
-  font-size: clamp(2rem, 9vw, 2.8rem);
-}
-
-.auth-kicker {
+.auth-login-content .hero-title {
   margin: 0;
-  color: #aa8cff;
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.19em;
+  font-size: clamp(2rem, 9vw, 2.8rem);
 }
 
 .auth-google-intro {
   max-width: 24rem;
-  margin: 0.7rem 0 0;
+  margin: 0.65rem 0 0;
   color: var(--muted);
   line-height: 1.55;
 }
 
 .auth-google-note {
-  margin: 0.75rem 0 0;
+  max-width: 25rem;
+  margin: 0.85rem auto 0;
   color: var(--muted);
   text-align: center;
   font-size: 0.76rem;
   line-height: 1.45;
+}
+
+@media (max-width: 480px) {
+  .auth-google-only {
+    padding-top: 1.25rem !important;
+  }
+
+  .auth-login-content {
+    margin-top: 3rem;
+    margin-bottom: 4rem;
+  }
 }
 
 .auth-google-retry {

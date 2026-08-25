@@ -2050,15 +2050,14 @@
       header() +
       `<main class="wrap auth-page auth-google-only" style="max-width:30rem;padding:2rem 1rem">
         <button class="auth-back" id="authBack" type="button" aria-label="Quay lại trang trước">← Quay lại trang trước</button>
-        <section class="auth-google-card" aria-labelledby="authTitle">
-          <p class="auth-kicker">THƯ VIỆN BÁCH HỢP</p>
+        <section class="auth-login-content" aria-labelledby="authTitle">
           <h1 class="hero-title" id="authTitle">Đăng nhập</h1>
           <p class="auth-google-intro">Lưu truyện, bình luận và tiếp tục đọc trên mọi thiết bị.</p>
           <div class="auth-google-block">
             <div class="auth-google-direct" id="googleAuth" aria-live="polite">Đang tải đăng nhập Google…</div>
             <button type="button" class="auth-google-retry" id="googleRetry" hidden>Tải lại trang</button>
           </div>
-          <p class="auth-google-note">ViCamBachGiai chỉ nhận tên, email và ảnh đại diện từ Google.</p>
+          <p class="auth-google-note">Bạn có thể chọn bất kỳ tài khoản Google nào. ViCamBachGiai chỉ nhận tên, email và ảnh đại diện.</p>
           <p class="auth-error" id="aErr"></p>
         </section>
       </main>` +
@@ -2128,11 +2127,11 @@
           theme: "outline",
           size: "large",
           shape: "pill",
-          text: "signin_with",
+          text: "signin",
           logo_alignment: "left",
           // Google does not personalize standard buttons narrower than 200px.
           // This prevents the previous account name from taking over the button.
-          width: 190,
+          width: 198,
         });
       };
       mountGoogle().catch((err) => {

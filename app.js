@@ -2125,13 +2125,13 @@
         google.accounts.id.renderButton(googleBtn, {
           type: "standard",
           theme: "outline",
-          size: "large",
+          size: "medium",
           shape: "pill",
           text: "signin",
           logo_alignment: "left",
           // Google does not personalize standard buttons narrower than 200px.
           // This prevents the previous account name from taking over the button.
-          width: 198,
+          width: 260,
         });
       };
       mountGoogle().catch((err) => {

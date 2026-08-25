@@ -1729,6 +1729,7 @@
     let running = false;
     let raf = 0;
     let last = 0;
+    let carry = 0;
     let speed = readPrefs().autoScrollSpeed || 1;
     const paint = () => {
       if (!pill) return;
@@ -1741,6 +1742,7 @@
       cancelAnimationFrame(raf);
       raf = 0;
       last = 0;
+      carry = 0;
       paint();
     };
     const step = (now) => {
@@ -1755,13 +1757,21 @@
         if (pref.autoNext && nextHref) location.hash = nextHref.slice(1);
         return;
       }
-      scrollBy(0, (speeds[speed] || speeds[1]) * dt / 1000);
+      // Mobile Safari rounds sub-pixel scrollBy values down to zero. Keep the
+      // remainder and move by whole pixels so slow speeds remain visible.
+      carry += (speeds[speed] || speeds[1]) * dt / 1000;
+      if (carry >= 1) {
+        const pixels = Math.floor(carry);
+        carry -= pixels;
+        scrollBy(0, pixels);
+      }
       raf = requestAnimationFrame(step);
     };
     const start = () => {
       if (running) return;
       running = true;
       last = 0;
+      carry = 0;
       paint();
       raf = requestAnimationFrame(step);
     };

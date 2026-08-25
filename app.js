@@ -296,12 +296,14 @@
     return 1.22;
   }
   function readPrefs() {
-    const base = { theme: "dark", size: defaultReadSize(), font: "serif" };
+    const base = { theme: "dark", size: defaultReadSize(), font: "serif", autoScrollSpeed: 1, autoNext: false };
     try {
       const saved = JSON.parse(localStorage.getItem(READ_KEY) || "{}");
       if (saved.theme) base.theme = saved.theme;
       if (saved.size) base.size = Number(saved.size);
       if (saved.font === "sans" || saved.font === "serif") base.font = saved.font;
+      if (Number(saved.autoScrollSpeed)) base.autoScrollSpeed = Math.min(1.5, Math.max(0.5, Number(saved.autoScrollSpeed)));
+      if (typeof saved.autoNext === "boolean") base.autoNext = saved.autoNext;
       return base;
     } catch {
       return base;
@@ -1469,6 +1471,7 @@
         <button type="button" class="r-toc" id="btnToc" aria-label="Mục lục"><span></span></button>
         ${next ? `<a class="r-nav r-nav-r" href="#/truyen/${esc(s.slug)}/chuong-${next.number}">Chương sau ›</a>` : `<span class="r-nav r-nav-r is-off">Chương sau ›</span>`}
       </nav>
+      <button type="button" class="auto-scroll-float" id="autoScrollFloat" aria-label="Tạm dừng tự cuộn" hidden><span>Ⅱ</span><b>TỰ CUỘN</b><em>1.0×</em></button>
       <div id="rDraw"></div>
     </div>`;
     const page = $("#reader");
@@ -1508,9 +1511,10 @@
     };
     updateProg();
     bindChapterAudio();
+    const autoScroll = createAutoScroll(page, next ? `#/truyen/${esc(s.slug)}/chuong-${next.number}` : "");
     $("#btnSet").onclick = (e) => {
       e.stopPropagation();
-      openSettings(page);
+      openSettings(page, autoScroll);
     };
     $("#btnToc").onclick = (e) => {
       e.stopPropagation();
@@ -1719,8 +1723,65 @@
     const x = $("#btnCloseDraw");
     if (x) x.onclick = close;
   }
-  function openSettings(page) {
+  function createAutoScroll(page, nextHref) {
+    const pill = $("#autoScrollFloat");
+    const speeds = { 0.5: 12, 0.75: 18, 1: 26, 1.25: 36, 1.5: 48 };
+    let running = false;
+    let raf = 0;
+    let last = 0;
+    let speed = readPrefs().autoScrollSpeed || 1;
+    const paint = () => {
+      if (!pill) return;
+      pill.hidden = !running;
+      const em = pill.querySelector("em");
+      if (em) em.textContent = String(speed) + "×";
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      raf = 0;
+      last = 0;
+      paint();
+    };
+    const step = (now) => {
+      if (!running || !document.body.contains(page)) return stop();
+      if (!last) last = now;
+      const dt = Math.min(40, now - last);
+      last = now;
+      const max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+      if (scrollY >= max - 2) {
+        stop();
+        const pref = readPrefs();
+        if (pref.autoNext && nextHref) location.hash = nextHref.slice(1);
+        return;
+      }
+      scrollBy(0, (speeds[speed] || speeds[1]) * dt / 1000);
+      raf = requestAnimationFrame(step);
+    };
+    const start = () => {
+      if (running) return;
+      running = true;
+      last = 0;
+      paint();
+      raf = requestAnimationFrame(step);
+    };
+    const setSpeed = (value) => {
+      speed = Math.min(1.5, Math.max(0.5, Number(value) || 1));
+      const p = readPrefs();
+      p.autoScrollSpeed = speed;
+      savePrefs(p);
+      paint();
+    };
+    if (pill) pill.onclick = (e) => { e.stopPropagation(); stop(); };
+    const userStops = () => { if (running) stop(); };
+    page.addEventListener("touchstart", (e) => { if (!e.target.closest("#autoScrollFloat")) userStops(); }, { passive: true });
+    page.addEventListener("wheel", userStops, { passive: true });
+    return { start, stop, setSpeed, isRunning: () => running };
+  }
+
+  function openSettings(page, autoScroll) {
     const p = readPrefs();
+    const speedOptions = [0.5, 0.75, 1, 1.25, 1.5];
     overlay(
       `<div class="aa-pad">
         <p class="set-lab">Cỡ chữ</p>
@@ -1738,6 +1799,12 @@
           <button type="button" class="aa-chip${p.theme === "dark" ? " on" : ""}" data-th="dark">Tối</button>
           <button type="button" class="aa-chip${p.theme === "light" ? " on" : ""}" data-th="light">Sáng</button>
           <button type="button" class="aa-chip${p.theme === "sepia" ? " on" : ""}" data-th="sepia">Kem</button>
+        </div>
+        <div class="auto-scroll-setting">
+          <div class="auto-scroll-setting-head"><div><b>Tự cuộn văn bản</b><small>Đọc rảnh tay, không cần vuốt màn hình</small></div><button type="button" class="auto-scroll-toggle${autoScroll && autoScroll.isRunning() ? " on" : ""}" id="autoScrollToggle">${autoScroll && autoScroll.isRunning() ? "Dừng" : "Bắt đầu"}</button></div>
+          <p class="set-lab">Tốc độ tự cuộn</p>
+          <div class="auto-speed-row">${speedOptions.map((v) => `<button type="button" class="auto-speed${Number(p.autoScrollSpeed) === v ? " on" : ""}" data-auto-speed="${v}">${v}×</button>`).join("")}</div>
+          <label class="auto-next"><span><b>Tự chuyển chương</b><small>Khi cuộn đến cuối chương</small></span><input type="checkbox" id="autoNext" ${p.autoNext ? "checked" : ""}><i></i></label>
         </div>
       </div>`,
       "sheet"
@@ -1771,6 +1838,29 @@
           apply();
         })
     );
+    $$("[data-auto-speed]").forEach((b) => {
+      b.onclick = () => {
+        p.autoScrollSpeed = Number(b.dataset.autoSpeed);
+        savePrefs(p);
+        if (autoScroll) autoScroll.setSpeed(p.autoScrollSpeed);
+        $$("[data-auto-speed]").forEach((x) => x.classList.toggle("on", x === b));
+      };
+    });
+    const autoNext = $("#autoNext");
+    if (autoNext) autoNext.onchange = () => {
+      p.autoNext = autoNext.checked;
+      savePrefs(p);
+    };
+    const autoToggle = $("#autoScrollToggle");
+    if (autoToggle && autoScroll) autoToggle.onclick = () => {
+      if (autoScroll.isRunning()) autoScroll.stop();
+      else {
+        autoScroll.setSpeed(p.autoScrollSpeed);
+        autoScroll.start();
+        const host = $("#rDraw");
+        if (host) host.innerHTML = "";
+      }
+    };
   }
   function openToc(s, all, cur) {
     overlay(

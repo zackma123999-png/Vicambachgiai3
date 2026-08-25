@@ -1714,14 +1714,18 @@
     };
     document.addEventListener("selectionchange", window.__vcbgSel);
   }
-  function overlay(html, side) {
+  function overlay(html, side, onClose) {
     const host = $("#rDraw") || app();
-    const kind = side === "sheet" ? "sheet" : side === "side" ? "side" : "sheet";
+    const kind = side === "settings" ? "settings" : side === "sheet" ? "sheet" : side === "side" ? "side" : "sheet";
     host.innerHTML = `<div class="drawer-bg" id="obg"></div><aside class="drawer ${kind}" role="dialog">${html}</aside>`;
-    const close = () => (host.innerHTML = "");
+    const close = () => {
+      host.innerHTML = "";
+      if (typeof onClose === "function") onClose();
+    };
     $("#obg").onclick = close;
     const x = $("#btnCloseDraw");
     if (x) x.onclick = close;
+    return close;
   }
   function createAutoScroll(page, nextHref) {
     const pill = $("#autoScrollFloat");
@@ -1805,33 +1809,52 @@
   function openSettings(page, autoScroll) {
     const p = readPrefs();
     const speedOptions = [0.5, 0.75, 1, 1.25, 1.5];
-    overlay(
-      `<div class="aa-pad">
-        <p class="set-lab">Cỡ chữ</p>
-        <div class="aa-row">
-          <button type="button" class="aa-chip" data-sz="-">A−</button>
-          <button type="button" class="aa-chip" data-sz="+">A+</button>
+    page.classList.add("settings-open");
+    const closeSettings = overlay(
+      `<div class="aa-pad aa-settings">
+        <div class="aa-tabs" role="tablist" aria-label="Cài đặt đọc">
+          <button type="button" class="on" data-setting-tab="text">Chữ</button>
+          <button type="button" data-setting-tab="theme">Nền</button>
+          <button type="button" data-setting-tab="scroll">Tự cuộn</button>
         </div>
-        <p class="set-lab">Kiểu chữ</p>
-        <div class="aa-row">
-          <button type="button" class="aa-chip${p.font !== "sans" ? " on" : ""}" data-ft="serif">Serif</button>
-          <button type="button" class="aa-chip${p.font === "sans" ? " on" : ""}" data-ft="sans">Sans</button>
-        </div>
-        <p class="set-lab">Màu nền</p>
-        <div class="aa-row">
-          <button type="button" class="aa-chip${p.theme === "dark" ? " on" : ""}" data-th="dark">Tối</button>
-          <button type="button" class="aa-chip${p.theme === "light" ? " on" : ""}" data-th="light">Sáng</button>
-          <button type="button" class="aa-chip${p.theme === "sepia" ? " on" : ""}" data-th="sepia">Kem</button>
-        </div>
-        <div class="auto-scroll-setting">
-          <div class="auto-scroll-setting-head"><div><b>Tự cuộn văn bản</b><small>Đọc rảnh tay, không cần vuốt màn hình</small></div><button type="button" class="auto-scroll-toggle${autoScroll && autoScroll.isRunning() ? " on" : ""}" id="autoScrollToggle">${autoScroll && autoScroll.isRunning() ? "Dừng" : "Bắt đầu"}</button></div>
-          <p class="set-lab">Tốc độ tự cuộn</p>
-          <div class="auto-speed-row">${speedOptions.map((v) => `<button type="button" class="auto-speed${Number(p.autoScrollSpeed) === v ? " on" : ""}" data-auto-speed="${v}">${v}×</button>`).join("")}</div>
-          <label class="auto-next"><span><b>Tự chuyển chương</b><small>Khi cuộn đến cuối chương</small></span><input type="checkbox" id="autoNext" ${p.autoNext ? "checked" : ""}><i></i></label>
-        </div>
+        <section class="aa-panel on" data-setting-panel="text">
+          <p class="set-lab">Cỡ chữ</p>
+          <div class="aa-row">
+            <button type="button" class="aa-chip" data-sz="-">A−</button>
+            <button type="button" class="aa-chip" data-sz="+">A+</button>
+          </div>
+          <p class="set-lab">Kiểu chữ</p>
+          <div class="aa-row">
+            <button type="button" class="aa-chip${p.font !== "sans" ? " on" : ""}" data-ft="serif">Serif</button>
+            <button type="button" class="aa-chip${p.font === "sans" ? " on" : ""}" data-ft="sans">Sans</button>
+          </div>
+        </section>
+        <section class="aa-panel" data-setting-panel="theme">
+          <p class="set-lab">Màu nền đọc</p>
+          <div class="aa-row">
+            <button type="button" class="aa-chip${p.theme === "dark" ? " on" : ""}" data-th="dark">Tối</button>
+            <button type="button" class="aa-chip${p.theme === "light" ? " on" : ""}" data-th="light">Sáng</button>
+            <button type="button" class="aa-chip${p.theme === "sepia" ? " on" : ""}" data-th="sepia">Kem</button>
+          </div>
+        </section>
+        <section class="aa-panel" data-setting-panel="scroll">
+          <div class="auto-scroll-setting">
+            <div class="auto-scroll-setting-head"><div><b>Tự cuộn văn bản</b><small>Đọc rảnh tay, không cần vuốt màn hình</small></div><button type="button" class="auto-scroll-toggle${autoScroll && autoScroll.isRunning() ? " on" : ""}" id="autoScrollToggle">${autoScroll && autoScroll.isRunning() ? "Dừng" : "Bắt đầu"}</button></div>
+            <p class="set-lab">Tốc độ tự cuộn</p>
+            <div class="auto-speed-row">${speedOptions.map((v) => `<button type="button" class="auto-speed${Number(p.autoScrollSpeed) === v ? " on" : ""}" data-auto-speed="${v}">${v}×</button>`).join("")}</div>
+            <label class="auto-next"><span><b>Hết chương tự chuyển chương tiếp</b></span><input type="checkbox" id="autoNext" ${p.autoNext ? "checked" : ""}><i></i></label>
+          </div>
+        </section>
       </div>`,
-      "sheet"
+      "settings",
+      () => page.classList.remove("settings-open")
     );
+    $$('[data-setting-tab]').forEach((tab) => {
+      tab.onclick = () => {
+        $$('[data-setting-tab]').forEach((x) => x.classList.toggle("on", x === tab));
+        $$('[data-setting-panel]').forEach((panel) => panel.classList.toggle("on", panel.dataset.settingPanel === tab.dataset.settingTab));
+      };
+    });
     const apply = () => {
       savePrefs(p);
       page.dataset.theme = p.theme;
@@ -1880,8 +1903,7 @@
       else {
         autoScroll.setSpeed(p.autoScrollSpeed);
         autoScroll.start();
-        const host = $("#rDraw");
-        if (host) host.innerHTML = "";
+        closeSettings();
       }
     };
   }

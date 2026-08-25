@@ -44,6 +44,23 @@
   let sb = null;
   let sessionUser = null;
   let persistQueue = Promise.resolve();
+  const PUBLIC_VISITOR_KEY = "vicambachgiai.public-visitor.v1";
+  const publicMetricListeners = new Set();
+  let publicMetricChannel = null;
+  let publicMetricTimer = null;
+  let publicMetricStarting = false;
+  let publicMetrics = {
+    online: 0,
+    online_guests: 0,
+    online_members: 0,
+    visits_today: null,
+    members: null,
+    comments: null,
+    total_views: null,
+    hearts: null,
+    published_stories: null,
+    updated_at: 0,
+  };
 
   function cfg() {
     return global.VCBG_CONFIG || {};
@@ -182,6 +199,83 @@
     try {
       localStorage.removeItem(key);
     } catch (_) {}
+  }
+
+  function publicVisitorId() {
+    let id = storeGet(PUBLIC_VISITOR_KEY);
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id || "")) {
+      id = uuid();
+      storeSet(PUBLIC_VISITOR_KEY, id);
+    }
+    return id;
+  }
+
+  function emitPublicMetrics(patch) {
+    publicMetrics = { ...publicMetrics, ...(patch || {}), updated_at: now() };
+    publicMetricListeners.forEach((listener) => {
+      try { listener({ ...publicMetrics }); } catch (_) {}
+    });
+  }
+
+  async function refreshPublicMetrics() {
+    try {
+      const { data, error } = await sb.rpc("get_public_site_stats");
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) return;
+      emitPublicMetrics({
+        visits_today: Number(row.visits_today || 0),
+        members: Number(row.members || 0),
+        comments: Number(row.comments || 0),
+        total_views: Number(row.total_views || 0),
+        hearts: Number(row.hearts || 0),
+        published_stories: Number(row.published_stories || 0),
+      });
+    } catch (err) {
+      console.warn("[VCBG public metrics]", err && err.message);
+    }
+  }
+
+  async function startPublicMetrics() {
+    if (publicMetricChannel || publicMetricStarting) return;
+    publicMetricStarting = true;
+    const visitorId = publicVisitorId();
+    try {
+      await sb.rpc("record_site_visit", { p_visitor_key: visitorId });
+    } catch (err) {
+      console.warn("[VCBG visit]", err && err.message);
+    }
+    refreshPublicMetrics();
+    publicMetricTimer = global.setInterval(refreshPublicMetrics, 60 * 1000);
+
+    const me = currentUser();
+    const presenceKey = me ? "member:" + me.id : "guest:" + visitorId;
+    const kind = me ? "member" : "guest";
+    publicMetricChannel = sb.channel("vicam-public-presence", {
+      config: { presence: { key: presenceKey } },
+    });
+    const updatePresence = () => {
+      const state = publicMetricChannel.presenceState() || {};
+      let guests = 0;
+      let members = 0;
+      Object.keys(state).forEach((key) => {
+        const entries = state[key] || [];
+        const entryKind = (entries[0] && entries[0].kind) || (key.indexOf("member:") === 0 ? "member" : "guest");
+        if (entryKind === "member") members += 1;
+        else guests += 1;
+      });
+      emitPublicMetrics({ online: guests + members, online_guests: guests, online_members: members });
+    };
+    publicMetricChannel
+      .on("presence", { event: "sync" }, updatePresence)
+      .on("presence", { event: "join" }, updatePresence)
+      .on("presence", { event: "leave" }, updatePresence)
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await publicMetricChannel.track({ kind, joined_at: new Date().toISOString() });
+        }
+      });
+    publicMetricStarting = false;
   }
 
   function hitRate(key, limit, windowMs) {
@@ -741,6 +835,18 @@
 
     whenReady() {
       return bootPromise || Promise.resolve();
+    },
+
+    publicSiteStats() {
+      return { ...publicMetrics };
+    },
+
+    watchPublicSiteStats(listener) {
+      if (typeof listener !== "function") return () => {};
+      publicMetricListeners.add(listener);
+      listener({ ...publicMetrics });
+      startPublicMetrics();
+      return () => publicMetricListeners.delete(listener);
     },
 
     async init() {

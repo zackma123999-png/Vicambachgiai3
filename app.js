@@ -482,6 +482,54 @@
     }
     return `<span class="${cls || "sig-ava"}">${esc(letter)}</span>`;
   }
+  function resonancePanel() {
+    const stats = VCBG.publicSiteStats ? VCBG.publicSiteStats() : {};
+    const value = (key) => (Number.isFinite(stats[key]) ? fmtCount(stats[key]) : "—");
+    const metric = (key, label, icon) => `<div class="res-metric">
+      <span class="res-icon" aria-hidden="true">${icon}</span>
+      <span><b data-res="${key}">${value(key)}</b><small>${label}</small></span>
+    </div>`;
+    return `<section class="wrap resonance" id="mat-do-cong-huong" aria-labelledby="resTitle">
+      <header class="res-head">
+        <h2 id="resTitle">Mật độ cộng hưởng</h2>
+        <time id="resTime">Đang cập nhật</time>
+      </header>
+      <div class="res-live">
+        <span class="res-broadcast" aria-hidden="true"><i></i></span>
+        <div class="res-live-main"><b><span data-res="online">${value("online")}</span> đang trực tuyến</b>
+          <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai · <span data-res="online_members">${value("online_members")}</span> thành viên</small>
+        </div>
+        <span class="res-ratio" aria-hidden="true"><i id="resRatio"></i></span>
+      </div>
+      <div class="res-grid">
+        ${metric("visits_today", "ghé hôm nay", "⌁")}
+        ${metric("members", "thành viên", "♙")}
+        ${metric("comments", "bình luận", "◯")}
+        ${metric("total_views", "lượt xem", "◉")}
+        ${metric("hearts", "lượt thả tim", "♡")}
+        ${metric("published_stories", "truyện đã đăng", "▤")}
+      </div>
+    </section>`;
+  }
+  function bindResonance() {
+    if (!VCBG.watchPublicSiteStats) return;
+    if (typeof window.__vcbgResonanceUnwatch === "function") window.__vcbgResonanceUnwatch();
+    window.__vcbgResonanceUnwatch = VCBG.watchPublicSiteStats((stats) => {
+      const root = $("#mat-do-cong-huong");
+      if (!root) return;
+      $$('[data-res]', root).forEach((el) => {
+        const n = stats[el.dataset.res];
+        el.textContent = Number.isFinite(n) ? fmtCount(n) : "—";
+      });
+      const ratio = $("#resRatio");
+      if (ratio) ratio.style.width = (stats.online ? Math.round((stats.online_members / stats.online) * 100) : 0) + "%";
+      const time = $("#resTime");
+      if (time && stats.updated_at) {
+        time.textContent = "Cập nhật " + new Date(stats.updated_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+        time.dateTime = new Date(stats.updated_at).toISOString();
+      }
+    });
+  }
   function homeLower() {
     const q = new URLSearchParams((location.hash.split("?")[1] || "").replace(/#.*$/, ""));
     const sort = ["latest", "hot", "talk"].includes(q.get("sig")) ? q.get("sig") : "latest";
@@ -957,10 +1005,12 @@
         ${rail("Đã hoàn thành", done, "violet")}
         ${rail("Sắp ra mắt", soon, "blue")}
       </div>
-      ${homeLower()}` +
+      ${homeLower()}
+      ${resonancePanel()}` +
       footer();
     bindChrome();
     bindRails();
+    bindResonance();
     const deck = banner;
     const n = deck.length;
     const heroEl = $("#hero");

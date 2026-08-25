@@ -2048,18 +2048,19 @@
     setMeta("Đăng nhập — ViCamBachGiai", "Đăng nhập ViCamBachGiai bằng Google.");
     app().innerHTML =
       header() +
-      `<main class="wrap auth-page auth-google-only" style="max-width:28rem;padding:2rem 1rem">
+      `<main class="wrap auth-page auth-google-only" style="max-width:30rem;padding:2rem 1rem">
         <button class="auth-back" id="authBack" type="button" aria-label="Quay lại trang trước">← Quay lại trang trước</button>
-        <h1 class="hero-title" style="font-size:1.8rem">Đăng nhập</h1>
-        <p class="hero-author">Thư viện Bách Hợp.</p>
-        <div class="auth-google-block">
-          <button type="button" class="btn auth-google" id="googleAuth">
-            <svg aria-hidden="true" viewBox="0 0 24 24"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.54h3.24c1.9-1.75 2.98-4.33 2.98-7.41Z"/><path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.36l-3.24-2.54c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.62A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.39 13.93A6.02 6.02 0 0 1 6.07 12c0-.67.12-1.32.32-1.93V7.45H3.04A10 10 0 0 0 2 12c0 1.61.39 3.13 1.04 4.55l3.35-2.62Z"/><path fill="#EA4335" d="M12 5.94c1.47 0 2.79.5 3.83 1.5l2.87-2.87A9.65 9.65 0 0 0 12 2a10 10 0 0 0-8.96 5.45l3.35 2.62C7.18 7.7 9.39 5.94 12 5.94Z"/></svg>
-            <span>Tiếp tục với Google</span>
-          </button>
-        </div>
-        <p class="auth-google-note">Bạn chỉ cần đăng nhập một lần trên thiết bị này.</p>
-        <p class="auth-error" id="aErr"></p>
+        <section class="auth-google-card" aria-labelledby="authTitle">
+          <p class="auth-kicker">THƯ VIỆN BÁCH HỢP</p>
+          <h1 class="hero-title" id="authTitle">Đăng nhập</h1>
+          <p class="auth-google-intro">Lưu truyện, bình luận và tiếp tục đọc trên mọi thiết bị.</p>
+          <div class="auth-google-block">
+            <div class="auth-google-direct" id="googleAuth" aria-live="polite">Đang tải đăng nhập Google…</div>
+            <button type="button" class="auth-google-retry" id="googleRetry" hidden>Tải lại trang</button>
+          </div>
+          <p class="auth-google-note">ViCamBachGiai chỉ nhận tên, email và ảnh đại diện từ Google.</p>
+          <p class="auth-error" id="aErr"></p>
+        </section>
       </main>` +
       footer();
     bindChrome();
@@ -2077,20 +2078,62 @@
       if (msg) toast(msg);
     };
     const googleBtn = $("#googleAuth");
+    const retryBtn = $("#googleRetry");
+    if (retryBtn) retryBtn.onclick = () => location.reload();
     if (googleBtn) {
-      googleBtn.onclick = async () => {
-        showErr("");
-        googleBtn.disabled = true;
-        googleBtn.querySelector("span").textContent = "Đang mở Google…";
-        rememberAuthReturn(returnTarget || "/");
-        try {
-          await VCBG.loginWithGoogle({ redirectTo: location.origin + location.pathname });
-        } catch (err) {
-          showErr(err.message || "Không thể mở đăng nhập Google.");
-          googleBtn.disabled = false;
-          googleBtn.querySelector("span").textContent = "Tiếp tục với Google";
+      let attempts = 0;
+      const mountGoogle = async () => {
+        if (!googleBtn.isConnected) return;
+        if (!(window.google && google.accounts && google.accounts.id)) {
+          attempts += 1;
+          if (attempts >= 50) {
+            googleBtn.textContent = "Google chưa tải được trên trình duyệt này.";
+            if (retryBtn) retryBtn.hidden = false;
+            showErr("Kiểm tra mạng hoặc mở trang bằng Safari rồi tải lại.");
+            return;
+          }
+          setTimeout(mountGoogle, 200);
+          return;
         }
+        const rawNonce = crypto.randomUUID
+          ? crypto.randomUUID()
+          : Array.from(crypto.getRandomValues(new Uint8Array(24)), (n) => n.toString(16).padStart(2, "0")).join("");
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawNonce));
+        const hashedNonce = Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, "0")).join("");
+        googleBtn.textContent = "";
+        google.accounts.id.initialize({
+          client_id: "726540465981-pg5i7fnr26ljb0cpi22su28b1lhc4f6b.apps.googleusercontent.com",
+          nonce: hashedNonce,
+          itp_support: true,
+          callback: async (response) => {
+            showErr("");
+            rememberAuthReturn(returnTarget || "/");
+            googleBtn.classList.add("is-busy");
+            try {
+              await VCBG.loginWithGoogleIdToken({ token: response.credential, nonce: rawNonce });
+              toast("Đăng nhập thành công.");
+              await returnFromAuth(returnTarget || "/");
+            } catch (err) {
+              googleBtn.classList.remove("is-busy");
+              showErr(err.message || "Không thể đăng nhập bằng Google.");
+            }
+          },
+        });
+        google.accounts.id.renderButton(googleBtn, {
+          type: "standard",
+          theme: "outline",
+          size: "large",
+          shape: "pill",
+          text: "continue_with",
+          logo_alignment: "left",
+          width: Math.min(400, Math.max(240, Math.floor(googleBtn.getBoundingClientRect().width || 360))),
+        });
       };
+      mountGoogle().catch((err) => {
+        googleBtn.textContent = "Google chưa tải được trên trình duyệt này.";
+        if (retryBtn) retryBtn.hidden = false;
+        showErr(err.message || "Không thể khởi tạo đăng nhập Google.");
+      });
     }
 
   }

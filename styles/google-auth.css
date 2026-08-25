@@ -1,5 +1,5 @@
 .auth-google-block {
-  margin: 1.6rem 0 0.8rem;
+  margin: 1.35rem 0 0.75rem;
 }
 
 .auth-google-direct {
@@ -12,47 +12,72 @@
   font-size: 0.82rem;
 }
 
+.auth-google-direct.is-busy {
+  opacity: 0.58;
+  pointer-events: none;
+}
+
 .auth-google-direct > div,
 .auth-google-direct iframe {
   max-width: 100% !important;
 }
 
-.auth-google {
-  width: 100%;
-  min-height: 48px;
-  gap: 0.72rem;
-  border: 1px solid rgba(214, 207, 242, 0.25);
-  border-radius: 999px;
-  background: rgba(247, 245, 255, 0.96);
-  color: #171421;
-  font-weight: 650;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2), 0 0 18px rgba(139, 106, 237, 0.08);
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+.auth-google-only {
+  min-height: 58dvh;
 }
 
-.auth-google svg {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
+.auth-google-card {
+  margin: 2.1rem 0 1rem;
+  padding: clamp(1.35rem, 5vw, 2rem);
+  border: 1px solid rgba(171, 143, 245, 0.22);
+  border-radius: 1.5rem;
+  background: linear-gradient(145deg, rgba(17, 27, 48, 0.76), rgba(10, 15, 29, 0.48));
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), inset 0 1px rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(14px);
 }
 
-.auth-google:active {
-  transform: translateY(1px);
-  border-color: rgba(151, 113, 245, 0.55);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 0 20px rgba(141, 102, 242, 0.18);
+.auth-google-card .hero-title {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 9vw, 2.8rem);
 }
 
-.auth-google[disabled] {
-  opacity: 0.66;
+.auth-kicker {
+  margin: 0;
+  color: #aa8cff;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.19em;
 }
 
-.auth-google-only { min-height: 58dvh; }
-.auth-google-only .auth-google { justify-content: center; }
+.auth-google-intro {
+  max-width: 24rem;
+  margin: 0.7rem 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 .auth-google-note {
   margin: 0.75rem 0 0;
   color: var(--muted);
   text-align: center;
   font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.auth-google-retry {
+  display: block;
+  margin: 0.75rem auto 0;
+  padding: 0.62rem 1rem;
+  border: 1px solid rgba(171, 143, 245, 0.35);
+  border-radius: 999px;
+  background: transparent;
+  color: #dcd3f6;
+  font: inherit;
+  font-weight: 650;
+}
+
+.auth-google-retry[hidden] {
+  display: none;
 }
 
 .auth-divider {
@@ -73,5 +98,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-google { transition: none; }
+  .auth-google-direct { transition: none; }
 }

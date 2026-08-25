@@ -1725,11 +1725,14 @@
   }
   function createAutoScroll(page, nextHref) {
     const pill = $("#autoScrollFloat");
+    const scroller = document.scrollingElement || document.documentElement;
     const speeds = { 0.5: 12, 0.75: 18, 1: 26, 1.25: 36, 1.5: 48 };
     let running = false;
     let raf = 0;
     let last = 0;
     let carry = 0;
+    let oldScrollBehavior = "";
+    let behaviorChanged = false;
     let speed = readPrefs().autoScrollSpeed || 1;
     const paint = () => {
       if (!pill) return;
@@ -1743,6 +1746,10 @@
       raf = 0;
       last = 0;
       carry = 0;
+      if (behaviorChanged) {
+        scroller.style.scrollBehavior = oldScrollBehavior;
+        behaviorChanged = false;
+      }
       paint();
     };
     const step = (now) => {
@@ -1750,8 +1757,8 @@
       if (!last) last = now;
       const dt = Math.min(40, now - last);
       last = now;
-      const max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
-      if (scrollY >= max - 2) {
+      const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      if (scroller.scrollTop >= max - 2) {
         stop();
         const pref = readPrefs();
         if (pref.autoNext && nextHref) location.hash = nextHref.slice(1);
@@ -1763,7 +1770,10 @@
       if (carry >= 1) {
         const pixels = Math.floor(carry);
         carry -= pixels;
-        scrollBy(0, pixels);
+        // The site uses smooth scrolling globally. Repeated scrollBy calls can
+        // keep restarting that animation on iOS, making the page look frozen.
+        // Update the real scrolling element directly while auto-scroll runs.
+        scroller.scrollTop = Math.min(max, scroller.scrollTop + pixels);
       }
       raf = requestAnimationFrame(step);
     };
@@ -1772,6 +1782,9 @@
       running = true;
       last = 0;
       carry = 0;
+      oldScrollBehavior = scroller.style.scrollBehavior;
+      scroller.style.scrollBehavior = "auto";
+      behaviorChanged = true;
       paint();
       raf = requestAnimationFrame(step);
     };

@@ -1667,7 +1667,7 @@ a { color: inherit; text-decoration: none; }
 .resonance {
   position: relative;
   width: min(41rem, calc(100% - 1.8rem));
-  margin: 3rem auto 2.35rem;
+  margin: 2.75rem auto 2.15rem;
   padding: 0;
   color: var(--ink);
   background: transparent !important;
@@ -1691,7 +1691,7 @@ a { color: inherit; text-decoration: none; }
 .res-head h2 {
   margin: 0;
   font-family: var(--serif);
-  font-size: clamp(1.55rem,5.7vw,2rem);
+  font-size: clamp(1.48rem,5.35vw,1.9rem);
   font-weight: 400;
   line-height: 1;
   letter-spacing: .02em;
@@ -1701,7 +1701,7 @@ a { color: inherit; text-decoration: none; }
 .res-showcase {
   display: grid;
   grid-template-columns: 1.08fr .92fr;
-  min-height: 14.2rem;
+  min-height: 13.65rem;
   align-items: center;
   margin: 0 .1rem .15rem;
   background: transparent !important;
@@ -1761,13 +1761,13 @@ a { color: inherit; text-decoration: none; }
 .res-metric-views .res-stat-copy b { font-size: 2rem; }
 .res-stat-copy small { display: block; margin-top: .22rem; color: var(--muted); font-size: .53rem; line-height: 1.15; white-space: nowrap; }
 @media (max-width: 560px) {
-  .resonance { width: calc(100% - 1.7rem); margin-top: 2.55rem; }
+  .resonance { width: calc(100% - 1.7rem); margin-top: 2.4rem; }
   .res-head { margin-bottom: .2rem; }
   .res-head > div { gap: .48rem; }
   .res-head > div > i { height: 1.95rem; }
-  .res-head h2 { font-size: 1.46rem; }
+  .res-head h2 { font-size: 1.36rem; }
   .res-head time { font-size: .53rem; }
-  .res-showcase { min-height: 12.6rem; margin-bottom: .02rem; }
+  .res-showcase { min-height: 12.15rem; margin-bottom: .02rem; }
   .res-radar { width: 8.35rem; height: 8.35rem; }
   .res-radar b { font-size: 2.55rem; }
   .res-live > strong { font-size: .94rem; }

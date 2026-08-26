@@ -496,24 +496,26 @@
       };
       return icons[name] || "";
     };
-    const metric = (key, label, icon) => `<div class="res-metric res-metric-${icon}">
+    const metric = (key, label, icon, cls = "") => `<div class="res-metric res-metric-${icon} ${cls}">
       <span class="res-icon" aria-hidden="true">${resonanceIcon(icon)}</span>
       <span><b data-res="${key}">${value(key)}</b><small>${label}</small></span>
     </div>`;
     return `<section class="wrap resonance" id="mat-do-cong-huong" aria-labelledby="resTitle">
       <header class="res-head">
-        <h2 id="resTitle">Mật độ cộng hưởng</h2>
+        <div><i aria-hidden="true"></i><h2 id="resTitle">Mật độ cộng hưởng</h2></div>
         <time id="resTime">Đang cập nhật</time>
       </header>
-      <div class="res-live">
-        <span class="res-broadcast" aria-hidden="true"><i></i></span>
-        <div class="res-live-main"><b><span data-res="online">${value("online")}</span> đang trực tuyến</b>
-          <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai · <span data-res="online_members">${value("online_members")}</span> thành viên</small>
+      <div class="res-feature-row">
+        <div class="res-live">
+          <span class="res-broadcast" aria-hidden="true"><i></i></span>
+          <div class="res-live-main"><b><span data-res="online">${value("online")}</span><em>đang trực tuyến</em></b>
+            <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai · <span data-res="online_members">${value("online_members")}</span> thành viên</small>
+          </div>
+          <span class="res-ratio" aria-hidden="true"><i id="resRatio"></i></span>
         </div>
-        <span class="res-ratio" aria-hidden="true"><i id="resRatio"></i></span>
+        ${metric("visits_today", "Lượt ghé hôm nay", "visits", "res-feature-visits")}
       </div>
-      <div class="res-grid">
-        ${metric("visits_today", "Lượt ghé hôm nay", "visits")}
+      <div class="res-strip">
         ${metric("members", "Thành viên", "members")}
         ${metric("comments", "Bình luận", "comments")}
         ${metric("total_views", "Tổng lượt xem", "views")}

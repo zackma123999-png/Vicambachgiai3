@@ -500,7 +500,7 @@
       <span class="res-illustration" aria-hidden="true">${resonanceIcon(icon)}</span>
       <span class="res-stat-copy"><b data-res="${key}">${value(key)}</b><small>${label}</small></span>
     </div>`;
-    return `<section class="wrap resonance" id="mat-do-cong-huong" aria-labelledby="resTitle">
+    return `<section class="wrap resonance res-editorial-final" id="mat-do-cong-huong" aria-labelledby="resTitle">
       <header class="res-head">
         <div><i aria-hidden="true"></i><h2 id="resTitle">Mật độ cộng hưởng</h2></div>
         <time id="resTime">vừa cập nhật</time>

@@ -487,16 +487,16 @@
     const value = (key) => (Number.isFinite(stats[key]) ? fmtCount(stats[key]) : "—");
     const resonanceIcon = (name) => {
       const icons = {
-        visits: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12.7 4.7c2.8.8 4.7 4.2 4.1 7.8-.7 3.6-3.6 6.1-6.5 5.4-2.8-.7-4.5-4-3.9-7.6.6-3.7 3.4-6.4 6.3-5.6Z"/><path d="M21.3 14.1c2.6.4 4.6 3.3 4.4 6.5-.2 3.2-2.6 5.7-5.2 5.4-2.7-.3-4.6-3.1-4.4-6.3.2-3.3 2.5-5.9 5.2-5.6Z"/><path d="M9.1 21.4c-1.9 1-3.2 2.6-3.4 4.8M18.4 28.1c1.5-.9 2.5-2.1 2.9-3.8"/></svg>`,
-        members: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="12" cy="10" r="4.5"/><path d="M4.8 26c.4-5 2.9-8 7.2-8s6.8 3 7.2 8M20.4 8.3a4 4 0 0 1 0 7.4M21 19c3.7.4 5.8 2.8 6.2 7"/></svg>`,
-        comments: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 7.5h22v15H14l-6.5 5v-5H5Z"/><path d="M10 13h12M10 17.5h8"/></svg>`,
-        views: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3.5 8.3c4.9-.8 9.1.4 12.5 3.4 3.4-3 7.6-4.2 12.5-3.4v16c-4.8-.8-8.9.3-12.5 3-3.6-2.7-7.7-3.8-12.5-3Z"/><path d="M16 12v15.3M10.4 17.1s2.2-2.8 5.6-2.8 5.6 2.8 5.6 2.8S19.4 20 16 20s-5.6-2.9-5.6-2.9Z"/><circle cx="16" cy="17.1" r="1.4"/></svg>`,
-        hearts: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 27S4.8 20.1 4.8 12.4C4.8 8.5 7.4 6 10.7 6c2.3 0 4.2 1.2 5.3 3 1.1-1.8 3-3 5.3-3 3.3 0 5.9 2.5 5.9 6.4C27.2 20.1 16 27 16 27Z"/></svg>`,
-        stories: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 5h18v5H7zM5 13.5h20v5H5zM7 22h18v5H7z"/><path d="M10 7.5h12M9 16h13M10 24.5h12"/></svg>`,
+        visits: `<svg viewBox="0 0 40 40" aria-hidden="true"><ellipse class="res-fill-main" cx="14" cy="13" rx="6" ry="8" transform="rotate(-18 14 13)"/><ellipse class="res-fill-soft" cx="27" cy="25" rx="5.5" ry="7.5" transform="rotate(-18 27 25)"/><circle class="res-fill-soft" cx="6.8" cy="5.4" r="2"/><circle class="res-fill-main" cx="33.2" cy="16.8" r="1.8"/></svg>`,
+        members: `<svg viewBox="0 0 40 40" aria-hidden="true"><circle class="res-fill-main" cx="15" cy="13" r="7"/><path class="res-fill-main" d="M3.5 34c.8-8.2 4.7-12.5 11.5-12.5S25.7 25.8 26.5 34Z"/><circle class="res-fill-soft" cx="28" cy="15" r="5.4"/><path class="res-fill-soft" d="M24 23.3c7.2-.8 11.3 3 12.1 10.7H27c-.4-4.3-1.4-7.8-3-10.7Z"/></svg>`,
+        comments: `<svg viewBox="0 0 40 40" aria-hidden="true"><path class="res-fill-main" d="M4 7h32v22H18l-9.5 7v-7H4Z"/><circle class="res-cut" cx="13" cy="18" r="2"/><circle class="res-cut" cx="20" cy="18" r="2"/><circle class="res-cut" cx="27" cy="18" r="2"/></svg>`,
+        views: `<svg viewBox="0 0 40 40" aria-hidden="true"><path class="res-fill-main" d="M3 7.5c6.5-1 12.2.4 17 4.1v24C15.2 32 9.5 30.7 3 31.8Z"/><path class="res-fill-soft" d="M37 7.5c-6.5-1-12.2.4-17 4.1v24c4.8-3.6 10.5-4.9 17-3.8Z"/><path class="res-cut" d="M11 21s3.5-4.2 9-4.2 9 4.2 9 4.2-3.5 4.2-9 4.2S11 21 11 21Z"/><circle class="res-fill-main" cx="20" cy="21" r="2.6"/></svg>`,
+        hearts: `<svg viewBox="0 0 40 40" aria-hidden="true"><path class="res-fill-main" d="M20 35S3.5 25 3.5 13.8C3.5 8.2 7.4 4.7 12.2 4.7c3.4 0 6.2 1.8 7.8 4.4 1.6-2.6 4.4-4.4 7.8-4.4 4.8 0 8.7 3.5 8.7 9.1C36.5 25 20 35 20 35Z"/><path class="res-shine" d="M9.2 11.6c1.2-2.4 3.2-3.2 5.3-2.1"/></svg>`,
+        stories: `<svg viewBox="0 0 40 40" aria-hidden="true"><rect class="res-fill-main" x="6" y="5" width="28" height="8" rx="2.5"/><rect class="res-fill-soft" x="3.5" y="16" width="30" height="8" rx="2.5"/><rect class="res-fill-third" x="6" y="27" width="28" height="8" rx="2.5"/><path class="res-cut" d="M12 9h16M10 20h17M12 31h16"/></svg>`,
       };
       return icons[name] || "";
     };
-    const metric = (key, label, icon) => `<div class="res-metric">
+    const metric = (key, label, icon) => `<div class="res-metric res-metric-${icon}">
       <span class="res-icon" aria-hidden="true">${resonanceIcon(icon)}</span>
       <span><b data-res="${key}">${value(key)}</b><small>${label}</small></span>
     </div>`;
@@ -513,12 +513,12 @@
         <span class="res-ratio" aria-hidden="true"><i id="resRatio"></i></span>
       </div>
       <div class="res-grid">
-        ${metric("visits_today", "ghé hôm nay", "visits")}
-        ${metric("members", "thành viên", "members")}
-        ${metric("comments", "bình luận", "comments")}
-        ${metric("total_views", "lượt xem", "views")}
-        ${metric("hearts", "lượt thả tim", "hearts")}
-        ${metric("published_stories", "truyện đã đăng", "stories")}
+        ${metric("visits_today", "Lượt ghé hôm nay", "visits")}
+        ${metric("members", "Thành viên", "members")}
+        ${metric("comments", "Bình luận", "comments")}
+        ${metric("total_views", "Tổng lượt xem", "views")}
+        ${metric("hearts", "Lượt thả tim", "hearts")}
+        ${metric("published_stories", "Truyện đã đăng", "stories")}
       </div>
     </section>`;
   }

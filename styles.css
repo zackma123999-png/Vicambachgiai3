@@ -667,7 +667,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--line); border-radius: 999px; padding: 0.4rem 0.75rem; color: var(--muted);
 }
 .site-footer {
-  border-top: 1px solid var(--line); padding: 2.8rem 0 3.5rem; color: var(--muted); font-size: 0.84rem;
+  border-top: 1px solid var(--line); padding: 2.2rem 0 2.8rem; color: var(--muted); font-size: 0.84rem;
   text-align: center;
 }
 .site-footer .brand {
@@ -2050,7 +2050,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   overflow: hidden;
   max-width: 56rem;
-  padding: clamp(2rem,5vw,3.25rem) clamp(1rem,5vw,3.6rem) clamp(1.7rem,4vw,2.65rem);
+  padding: clamp(1.55rem,4vw,2.45rem) clamp(1rem,5vw,3.2rem) clamp(1.35rem,3vw,2rem);
   border: 1px solid transparent;
   border-radius: clamp(1.35rem,4vw,2.15rem);
   background:
@@ -2086,11 +2086,11 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 0 13px rgba(132,105,255,.68);
   pointer-events: none;
 }
-.foot-card .brand { gap: .72rem; }
-.foot-card .brand-mark-img { width: clamp(2.85rem,8vw,4.2rem); height: auto; }
-.foot-card .brand-word-img { width: auto; height: clamp(2.2rem,6vw,3.35rem); }
+.foot-card .brand { gap: .62rem; }
+.foot-card .brand-mark-img { width: clamp(2.5rem,6.8vw,3.55rem); height: auto; }
+.foot-card .brand-word-img { width: auto; height: clamp(1.9rem,5.2vw,2.8rem); }
 .foot-kicker {
-  margin: clamp(1.65rem,5vw,2.55rem) 0 0;
+  margin: clamp(1.05rem,3.2vw,1.65rem) 0 0;
   background: linear-gradient(90deg,#c57aff,#988cff 48%,#73d7f7);
   -webkit-background-clip: text;
   background-clip: text;
@@ -2102,19 +2102,17 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
 }
 .foot-desc {
-  max-width: 42rem;
-  margin: .85rem auto 1.55rem;
+  max-width: 39rem;
+  margin: .58rem auto 1.05rem;
   color: #f0eadf;
-  font-size: clamp(.9rem,3.1vw,1.08rem);
+  font-size: clamp(.86rem,2.8vw,1rem);
   font-weight: 400;
-  line-height: 1.65;
+  line-height: 1.52;
   text-wrap: balance;
 }
 .foot-desc em {
-  background: linear-gradient(90deg,#b9a3ff,#d38bdc);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: none;
+  color: inherit;
   font-style: normal;
 }
 .foot-acts {
@@ -2126,7 +2124,7 @@ a { color: inherit; text-decoration: none; }
 .foot-action {
   position: relative;
   min-width: 0;
-  min-height: 3.15rem;
+  min-height: 2.85rem;
   gap: .65rem;
   overflow: hidden;
   border: 1px solid transparent;
@@ -2157,7 +2155,7 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: center;
   gap: .48rem;
-  margin: 1.35rem 0 0;
+  margin: .95rem 0 0;
   font-size: .92rem;
   letter-spacing: .015em;
 }
@@ -2167,22 +2165,24 @@ a { color: inherit; text-decoration: none; }
 .foot-social-wattpad { color: #ff7f91 !important; }
 .foot-social-youtube { color: #ff858b !important; }
 .foot-social-facebook { color: #83aaf8 !important; }
-.foot-legal { margin: 1.25rem 0 0; color: #909db3; font-size: .78rem; font-style: italic; }
+.foot-legal { margin: .85rem 0 0; color: #909db3; font-size: .76rem; font-style: italic; }
 .foot-legal a:hover { color: #d6d9e6; }
 .foot-copy {
   max-width: 43rem;
-  margin: 1.5rem auto 0;
+  margin: 1rem auto 0;
   color: #718198;
   font-size: .68rem;
   line-height: 1.6;
 }
 @media (max-width: 520px) {
-  .site-footer { padding: 2.25rem 0 3rem; }
-  .foot-card { width: calc(100% - .7rem); padding-inline: .9rem; }
+  .site-footer { padding: 1.8rem 0 2.5rem; }
+  .foot-card { width: calc(100% - .7rem); padding: 1.45rem .9rem 1.25rem; }
+  .foot-card .brand-mark-img { width: 2.7rem; }
+  .foot-card .brand-word-img { height: 2.05rem; }
   .foot-kicker { letter-spacing: .34em; }
   .foot-desc { max-width: 21rem; }
   .foot-acts { gap: .55rem; }
-  .foot-action { min-height: 2.9rem; padding: 0 .72rem; gap: .43rem; font-size: .74rem; }
+  .foot-action { min-height: 2.65rem; padding: 0 .68rem; gap: .4rem; font-size: .72rem; }
   .foot-action svg { width: 1.05rem; height: 1.05rem; }
   .foot-social { font-size: .84rem; }
   .foot-legal { font-size: .7rem; }

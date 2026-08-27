@@ -333,6 +333,25 @@ create policy "notifs_admin" on public.notifications for insert with check (publ
 create policy "poll_insert" on public.poll_votes for insert with check (user_id = auth.uid());
 create policy "inbox_insert" on public.inbox for insert with check (true);
 create policy "inbox_admin" on public.inbox for select using (public.is_admin());
+
+-- Realtime feed on the homepage: comments, replies and reactions update without reload.
+do $$
+declare
+  table_name text;
+begin
+  foreach table_name in array array['comments', 'comment_replies', 'comment_likes']
+  loop
+    if not exists (
+      select 1
+      from pg_publication_tables
+      where pubname = 'supabase_realtime'
+        and schemaname = 'public'
+        and tablename = table_name
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', table_name);
+    end if;
+  end loop;
+end $$;
 create policy "inbox_admin_upd" on public.inbox for update using (public.is_admin());
 
 -- admin catalog writes

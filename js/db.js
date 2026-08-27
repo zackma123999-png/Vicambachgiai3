@@ -46,9 +46,13 @@
   let persistQueue = Promise.resolve();
   const PUBLIC_VISITOR_KEY = "vicambachgiai.public-visitor.v1";
   const publicMetricListeners = new Set();
+  const communityListeners = new Set();
   let publicMetricChannel = null;
   let publicMetricTimer = null;
   let publicMetricStarting = false;
+  let communityChannel = null;
+  let communityStarting = false;
+  let communityRefreshTimer = null;
   let publicMetrics = {
     online: 0,
     online_guests: 0,
@@ -276,6 +280,66 @@
         }
       });
     publicMetricStarting = false;
+  }
+
+  function emitCommunityChange() {
+    communityListeners.forEach((listener) => {
+      try { listener(); } catch (_) {}
+    });
+  }
+
+  async function refreshCommunityData() {
+    try {
+      const [profiles, comments, replies, likes] = await Promise.all([
+        loadOptional("public_profiles").then((rows) => (rows && rows.length ? rows : loadOptional("profiles"))),
+        loadOptional("comments"),
+        loadOptional("comment_replies"),
+        loadOptional("comment_likes"),
+      ]);
+      cache.profiles = (profiles || []).map((p) => {
+        const id = p.user_id || p.id;
+        return { ...p, id, user_id: id, created_at: toMs(p.created_at) };
+      });
+      cache.users = cache.profiles.map((p) => ({
+        id: p.id,
+        email: p.email,
+        role: p.role,
+        status: p.status,
+        created_at: p.created_at,
+      }));
+      cache.comment_likes = likes || [];
+      cache.comments = (comments || []).map((c) => ({
+        ...c,
+        likes: cache.comment_likes.filter((l) => l.comment_id === c.id).map((l) => l.user_id),
+        created_at: toMs(c.created_at),
+      }));
+      cache.comment_replies = (replies || []).map((r) => ({ ...r, created_at: toMs(r.created_at) }));
+      writeSnap();
+      emitCommunityChange();
+    } catch (err) {
+      console.warn("[VCBG community realtime]", err && err.message);
+    }
+  }
+
+  function scheduleCommunityRefresh() {
+    global.clearTimeout(communityRefreshTimer);
+    communityRefreshTimer = global.setTimeout(refreshCommunityData, 90);
+  }
+
+  function startCommunityRealtime() {
+    if (communityChannel || communityStarting || !sb) return;
+    communityStarting = true;
+    communityChannel = sb
+      .channel("vicam-community-feed")
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, scheduleCommunityRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "comment_replies" }, scheduleCommunityRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "comment_likes" }, scheduleCommunityRefresh)
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") communityStarting = false;
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          communityStarting = false;
+        }
+      });
   }
 
   function hitRate(key, limit, windowMs) {
@@ -847,6 +911,21 @@
       listener({ ...publicMetrics });
       startPublicMetrics();
       return () => publicMetricListeners.delete(listener);
+    },
+
+    watchCommunityFeed(listener) {
+      if (typeof listener !== "function") return () => {};
+      communityListeners.add(listener);
+      startCommunityRealtime();
+      return () => {
+        communityListeners.delete(listener);
+        if (!communityListeners.size && communityChannel) {
+          const channel = communityChannel;
+          communityChannel = null;
+          communityStarting = false;
+          Promise.resolve(sb.removeChannel(channel)).catch(() => {});
+        }
+      };
     },
 
     async init() {

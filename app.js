@@ -617,34 +617,32 @@
         </div>
       </article>`;
     };
-    const cardHTML = (c) => {
+    const signalTones = ["violet", "cyan", "coral", "gold"];
+    const cardHTML = (c, index) => {
       const who = (c.user && c.user.display_name) || "Ẩn danh";
       const replies = c.replies || [];
       const firstR = replies.slice(0, 1);
       const rest = replies.slice(1);
-      const loc = [c.story && c.story.title, c.chapter ? "Chương " + c.chapter.number : ""]
-        .filter(Boolean)
-        .join(" · ");
-      return `<article class="sig-card" data-cid="${esc(c.id)}">
+      const tone = signalTones[index % signalTones.length];
+      return `<article class="sig-card sig-tone-${tone}" data-cid="${esc(c.id)}">
         ${avatarHTML(c.user)}
         <div class="sig-main">
           <div class="sig-meta">
             <b>${esc(who)}</b>
-            ${c.staff ? `<span class="sig-badge staff">ViCam</span>` : `<span class="sig-badge">LV.${c.level || 1}</span>`}
             <time>${esc(fmtRel(c.created_at))}</time>
             ${c.hot ? `<span class="sig-hot">★ Đang được chú ý</span>` : ""}
           </div>
+          ${c.story ? `<a class="sig-story-tag" href="${esc(c.href)}">${esc(c.story.title)}</a>` : ""}
           ${
             c.quote
-              ? `<blockquote class="sig-quote"><p>“${esc(c.quote)}”</p>${loc ? `<cite>— ${esc(loc)}</cite>` : ""}</blockquote>`
+              ? `<blockquote class="sig-quote"><span aria-hidden="true">“</span><p>${esc(c.quote)}</p></blockquote>`
               : ""
           }
           <p class="sig-text">${esc(c.body)}</p>
-          ${loc ? `<a class="sig-loc" href="${esc(c.href)}">${esc(loc)}</a>` : ""}
           <div class="sig-acts">
             <button type="button" class="sig-chip${c.liked ? " on" : ""}" data-like="${esc(c.id)}" aria-pressed="${c.liked}">❤ ${c.like_count || 0}</button>
-            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">💬 Trả lời</button>
-            <button type="button" class="sig-act" data-quote="${esc(c.id)}">❝ Trích dẫn</button>
+            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">Trả lời</button>
+            <button type="button" class="sig-act" data-quote="${esc(c.id)}">Trích dẫn</button>
           </div>
           ${firstR.map((r) => replyHTML(c, r, false)).join("")}
           ${rest.map((r) => replyHTML(c, r, true)).join("")}
@@ -660,14 +658,10 @@
       <article class="sig-board">
         <header class="sig-head">
           <div class="sig-brand">
-            <span class="sig-mark" aria-hidden="true">💬</span>
-            <div>
-              <h2>Tín hiệu độc giả <i></i></h2>
-              <p>Nơi mọi cảm xúc về câu chuyện được kết nối.</p>
-            </div>
+            <div><h2>Tín hiệu độc giả <i></i></h2><p>Những cảm xúc vừa được gửi lại.</p></div>
           </div>
+          <span class="sig-live-count"><i></i>${feed.total || 0} bình luận gần đây</span>
         </header>
-        <p class="sig-count">💬 ${feed.total || 0} bình luận · <span class="live-dot"></span> ${feed.talking || 0} người đang trò chuyện</p>
         <div class="sig-tools">
           <div class="sig-tabs">
             ${tab("latest", "Mới nhất")}
@@ -677,7 +671,7 @@
           <label class="sig-filter">
             <span class="sr-only">Chọn truyện</span>
             <select id="sigStory">
-              <option value="">Chọn truyện</option>
+              <option value="">Tất cả truyện</option>
               ${stories.map((s) => `<option value="${esc(s.id)}" ${s.id === storyId ? "selected" : ""}>${esc(s.title)}</option>`).join("")}
             </select>
           </label>
@@ -685,15 +679,15 @@
         <div class="sig-list" id="sigList">${
           shown.length
             ? shown
-                .map((c, i) => cardHTML(c).replace('class="sig-card"', `class="sig-card${i >= 6 ? " is-hidden" : ""}"`))
+                .map((c, i) => cardHTML(c, i).replace('class="sig-card', `class="sig-card${i >= 5 ? " is-hidden" : ""}`))
                 .join("")
-            : `<div class="empty">Chưa có bình luận.</div>`
+            : `<div class="sig-empty"><b>Chưa có tín hiệu mới</b><span>Hãy mở đầu cuộc trò chuyện.</span></div>`
         }</div>
-        ${shown.length > 6 ? `<button type="button" class="sig-more" id="sigMore">Xem thêm bình luận ▾</button>` : ""}
+        ${shown.length > 5 ? `<button type="button" class="sig-more" id="sigMore">Xem thêm bình luận ▾</button>` : ""}
         <div class="sig-compose">
           ${avatarHTML(me && me.profile)}
           <button type="button" class="sig-fake" id="sigOpen">${me ? "Chia sẻ cảm nghĩ của bạn…" : "Đăng nhập để chia sẻ cảm nghĩ…"}</button>
-          <button type="button" class="btn btn-cyan" id="sigJoin">Tham gia trò chuyện</button>
+          <button type="button" class="sig-send" id="sigJoin" aria-label="Tham gia trò chuyện">➤</button>
         </div>
         ${me ? "" : `<p class="sig-login"><a href="#/dang-nhap">Đăng nhập</a> để bình luận và tham gia thảo luận cùng cộng đồng ViCam.</p>`}
       </article>
@@ -779,7 +773,7 @@
     const ta = host.querySelector("textarea");
     if (ta) ta.focus();
   }
-  function bindLowerHome() {
+  function bindLowerHome(skipCommunityWatch) {
     const setSig = (patch) => {
       const p = new URLSearchParams((location.hash.split("?")[1] || "").replace(/#.*$/, ""));
       Object.keys(patch).forEach((k) => {
@@ -842,6 +836,27 @@
     if (qp.get("sig") || qp.get("sigstory")) {
       const board = $("#tin-hieu");
       if (board) board.scrollIntoView({ block: "start" });
+    }
+    const signalBoard = $("#tin-hieu");
+    if (!signalBoard) {
+      if (typeof window.__vcbgCommunityUnwatch === "function") window.__vcbgCommunityUnwatch();
+      window.__vcbgCommunityUnwatch = null;
+    } else if (!skipCommunityWatch && VCBG.watchCommunityFeed) {
+      if (typeof window.__vcbgCommunityUnwatch === "function") window.__vcbgCommunityUnwatch();
+      window.__vcbgCommunityUnwatch = VCBG.watchCommunityFeed(() => {
+        window.clearTimeout(window.__vcbgCommunityPaintTimer);
+        window.__vcbgCommunityPaintTimer = window.setTimeout(() => {
+          if (parseHash().name !== "home") return;
+          const current = $("#tin-hieu");
+          if (!current) return;
+          const holder = document.createElement("div");
+          holder.innerHTML = homeLower();
+          const fresh = holder.firstElementChild;
+          if (!fresh) return;
+          current.replaceWith(fresh);
+          bindLowerHome(true);
+        }, 60);
+      });
     }
   }
   function bindSignalActs() {

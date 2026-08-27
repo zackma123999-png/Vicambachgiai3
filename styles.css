@@ -1917,7 +1917,15 @@ a { color: inherit; text-decoration: none; }
 .res-hero-visits { padding-top: .25rem; }
 .res-visit-art { display: block; width: 8.45rem; height: 7.6rem; margin-bottom: -.2rem; filter: drop-shadow(0 0 14px rgba(219,147,59,.2)); }
 .res-visit-art svg { display: block; width: 100%; height: 100%; }
-.res-visit-art img { display: block; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
+.res-visit-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: lighten;
+  -webkit-mask-image: radial-gradient(ellipse 76% 72% at 50% 50%, #000 52%, rgba(0,0,0,.9) 68%, transparent 100%);
+  mask-image: radial-gradient(ellipse 76% 72% at 50% 50%, #000 52%, rgba(0,0,0,.9) 68%, transparent 100%);
+}
 .res-hero-visits b { font-family: var(--serif); font-size: 3.75rem; font-weight: 400; line-height: .9; font-variant-numeric: tabular-nums; }
 .res-hero-visits small { margin-top: .34rem; color: var(--muted); font-size: .7rem; }
 .res-strip {
@@ -1943,7 +1951,16 @@ a { color: inherit; text-decoration: none; }
 }
 .res-illustration { display: grid; width: 3.35rem; height: 3rem; place-items: end center; }
 .res-illustration svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 5px 8px rgba(0,0,0,.28)); }
-.res-illustration img { display: block; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; filter: drop-shadow(0 5px 9px rgba(0,0,0,.32)); }
+.res-illustration img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: lighten;
+  filter: drop-shadow(0 5px 9px rgba(0,0,0,.32));
+  -webkit-mask-image: radial-gradient(ellipse 78% 76% at 50% 50%, #000 48%, rgba(0,0,0,.92) 66%, transparent 100%);
+  mask-image: radial-gradient(ellipse 78% 76% at 50% 50%, #000 48%, rgba(0,0,0,.92) 66%, transparent 100%);
+}
 .res-metric-views .res-illustration { width: 5.75rem; height: 4.1rem; margin-bottom: -.2rem; }
 .res-stat-copy b { display: block; font-family: var(--serif); font-size: 1.3rem; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
 .res-metric-views .res-stat-copy b { font-size: 2rem; }

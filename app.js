@@ -453,12 +453,13 @@
     return `<footer class="site-footer">
       <div class="wrap foot-card">
         ${logoHTML()}
-        <p class="foot-desc">Nơi lưu giữ những câu chuyện tôi yêu thích và những bản dịch được thực hiện bằng tất cả sự trân trọng.</p>
+        <p class="foot-kicker">Thư viện Bách Hợp</p>
+        <p class="foot-desc">Nơi lưu giữ những câu chuyện tôi yêu thích và những bản dịch được thực hiện <em>bằng tất cả sự trân trọng.</em></p>
         <div class="foot-acts">
-          <button type="button" class="btn btn-ghost" id="btnMsg">✉ Gửi lời nhắn</button>
-          <button type="button" class="btn btn-ghost" id="btnReport">⚑ Báo lỗi nội dung</button>
+          <button type="button" class="btn btn-ghost foot-action foot-action-message" id="btnMsg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg><span>Gửi lời nhắn</span></button>
+          <button type="button" class="btn btn-ghost foot-action foot-action-report" id="btnReport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4"></path><path d="M5 5c5-3 8 3 14 0v10c-6 3-9-3-14 0"></path></svg><span>Báo lỗi nội dung</span></button>
         </div>
-        ${links.length ? `<p class="foot-social">${links.map(([k, l]) => `<a href="${esc(social[k])}" target="_blank" rel="noopener">${l}</a>`).join(" · ")}</p>` : ""}
+        ${links.length ? `<p class="foot-social">${links.map(([k, l]) => `<a class="foot-social-${k}" href="${esc(social[k])}" target="_blank" rel="noopener">${l}</a>`).join('<span aria-hidden="true">·</span>')}</p>` : ""}
         <p class="foot-legal"><a href="/privacy.html">Chính sách quyền riêng tư</a> · <a href="/terms.html">Điều khoản sử dụng</a></p>
         <p class="foot-copy">© ${new Date().getFullYear()} ViCamBachGiai · Bản dịch thuộc về người thực hiện · Vui lòng không đăng lại.</p>
       </div>

@@ -9,3 +9,12 @@
 
 /styles.css
   Cache-Control: no-cache, must-revalidate
+
+/js/db.js
+  Cache-Control: no-cache, must-revalidate
+
+/styles/signal-feed-window.css
+  Cache-Control: no-cache, must-revalidate
+
+/js/signal-feed-window.js
+  Cache-Control: no-cache, must-revalidate

@@ -486,7 +486,9 @@
     const stats = VCBG.publicSiteStats ? VCBG.publicSiteStats() : {};
     const value = (key) => (Number.isFinite(stats[key]) ? fmtCount(stats[key]) : "—");
     const resonanceIcon = (name) => {
-      const illustrated = new Set(["visits", "members", "comments", "views", "hearts", "stories"]);
+      // The visit artwork uses the transparent inline SVG below so its dark
+      // raster canvas can never appear as a pasted-on rectangle.
+      const illustrated = new Set(["members", "comments", "views", "hearts", "stories"]);
       if (illustrated.has(name)) {
         return `<img src="assets/resonance/${name}.webp?v=20260827-illustrated" alt="" decoding="async">`;
       }

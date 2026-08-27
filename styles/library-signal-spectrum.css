@@ -126,8 +126,49 @@
   box-shadow: 0 0 22px color-mix(in srgb,var(--shelf-a) 20%,transparent), inset 0 1px 0 rgba(255,255,255,.06) !important;
 }
 
+/* Touch glow inherits the palette of its own shelf instead of the old global purple. */
+.rail-panel .wide-card::before {
+  background: radial-gradient(
+    72% 88% at 34% 48%,
+    color-mix(in srgb,var(--shelf-a) 31%,transparent),
+    color-mix(in srgb,var(--shelf-b) 12%,transparent) 48%,
+    transparent 76%
+  ) !important;
+}
+
+.rail-panel .wide-card::after {
+  background: linear-gradient(90deg,var(--shelf-a),var(--shelf-b)) !important;
+  filter: blur(9px);
+}
+
+.rail-panel .wide-card:is(.is-selected, :active, :focus-within)::before,
+.rail-panel .wide-card:is(.is-selected, :active, :focus-within)::after {
+  opacity: 1;
+}
+
+.rail-panel .wide-card:is(.is-selected, :active, :focus-within) .cover-frame {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--shelf-a) 84%,#ffffff),
+    0 12px 24px rgba(0,0,0,.32),
+    0 0 23px color-mix(in srgb,var(--shelf-a) 38%,transparent),
+    0 0 34px color-mix(in srgb,var(--shelf-b) 16%,transparent) !important;
+}
+
+.rail-panel.is-glowing {
+  border-color: transparent !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 0 26px color-mix(in srgb,var(--shelf-a) 13%,transparent) !important;
+}
+
+.rail-panel.is-glowing .rail-track span,
+.rail-panel:has(.wide-card:active) .rail-track span,
+.rail-panel:has(.wide-card:focus-within) .rail-track span {
+  box-shadow: 0 0 14px color-mix(in srgb,var(--shelf-a) 52%,transparent) !important;
+}
+
 .rail-panel .wide-cover .cover-frame {
-  box-shadow: 0 0 0 1px color-mix(in srgb,var(--shelf-warm) 25%,transparent), 0 10px 22px rgba(0,0,0,.27);
+  box-shadow: 0 0 0 1px color-mix(in srgb,var(--shelf-warm) 25%,transparent), 0 10px 22px rgba(0,0,0,.27) !important;
 }
 
 .rail-panel .wide-body .by {

@@ -1915,7 +1915,7 @@ a { color: inherit; text-decoration: none; }
 .res-live > strong { margin-top: .12rem; font-family: var(--serif); font-size: 1.15rem; font-weight: 400; letter-spacing: .02em; }
 .res-live > small { margin-top: .12rem; color: var(--muted); font-size: .64rem; }
 .res-hero-visits { padding-top: .25rem; }
-.res-visit-art { display: block; width: 8.45rem; height: 7.6rem; margin-bottom: -.2rem; filter: drop-shadow(0 0 14px rgba(219,147,59,.2)); }
+.res-visit-art { display: block; width: 8.45rem; height: 7.6rem; margin-bottom: -.2rem; filter: none; }
 .res-visit-art svg { display: block; width: 100%; height: 100%; }
 .res-visit-art img {
   display: block;

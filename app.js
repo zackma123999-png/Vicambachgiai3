@@ -533,6 +533,42 @@
       </div>
     </section>`;
   }
+  function recommendationPanel() {
+    const weekly = VCBG.weeklyRanking ? VCBG.weeklyRanking(5) : [];
+    const ranked = weekly.length
+      ? weekly
+      : VCBG.listStories({ sort: "views" }).slice(0, 5).map((story, i) => ({ rank: i + 1, story, week: 0 }));
+    if (!ranked.length) return "";
+    const tones = ["gold", "lavender", "sapphire", "jade", "coral"];
+    return `<section class="wrap medal-picks" aria-labelledby="medalPicksTitle">
+      <header class="medal-picks-head">
+        <span class="medal-picks-emblem" aria-hidden="true">✦</span>
+        <div>
+          <small>BẢNG VINH DANH</small>
+          <h2 id="medalPicksTitle">Kim Bài Đề Cử</h2>
+        </div>
+      </header>
+      <div class="medal-picks-list">
+        ${ranked.map((row, i) => {
+          const s = row.story;
+          const visits = Number(row.week) || 0;
+          return `<a class="medal-pick medal-pick-${tones[i]}" href="#/truyen/${esc(s.slug)}" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
+            <strong class="medal-pick-rank">${String(i + 1).padStart(2, "0")}</strong>
+            <span class="medal-pick-cover">${coverImg(s.cover, "Bìa " + s.title)}</span>
+            <span class="medal-pick-copy">
+              <b>${esc(s.title)}</b>
+              <small>${esc(s.author || "—")}</small>
+            </span>
+            <span class="medal-pick-status">${esc(storyStatusLabel(s))}</span>
+            <span class="medal-pick-stats">
+              <span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span>
+              <span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span>
+            </span>
+          </a>`;
+        }).join("")}
+      </div>
+    </section>`;
+  }
   function bindResonance() {
     if (!VCBG.watchPublicSiteStats) return;
     if (typeof window.__vcbgResonanceUnwatch === "function") window.__vcbgResonanceUnwatch();
@@ -1027,6 +1063,7 @@
         ${rail("Đã hoàn thành", done, "violet")}
         ${rail("Sắp ra mắt", soon, "blue")}
       </div>
+      ${recommendationPanel()}
       ${homeLower()}
       ${resonancePanel()}` +
       footer();

@@ -1660,6 +1660,192 @@ a { color: inherit; text-decoration: none; }
   .rank-row { grid-template-columns: 1.6rem 44px 1fr; }
   .rank-score { display: none; }
 }
+
+/* Kim Bài Đề Cử — danh sách nhỏ gọn, mỗi hạng một sắc độ */
+.medal-picks {
+  margin-top: 3.3rem;
+  margin-bottom: 2.25rem;
+}
+.medal-picks-head {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin: 0 0 1rem .2rem;
+}
+.medal-picks-emblem {
+  display: grid;
+  place-items: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  flex: 0 0 auto;
+  border: 1px solid rgba(220, 181, 95, .65);
+  border-radius: 50%;
+  color: #f1c86f;
+  background: rgba(199, 151, 56, .07);
+  box-shadow: 0 0 20px rgba(211, 164, 67, .12);
+}
+.medal-picks-head small {
+  display: block;
+  margin-bottom: .18rem;
+  color: var(--muted);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .2em;
+}
+.medal-picks-head h2 {
+  margin: 0;
+  color: #ead8b3;
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 4.5vw, 2rem);
+  font-weight: 400;
+  letter-spacing: .015em;
+}
+.medal-picks-list {
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.medal-pick {
+  --rank-tone: #d7b15d;
+  position: relative;
+  display: grid;
+  grid-template-columns: 3.2rem 3.15rem minmax(10rem,1fr) 8.2rem 17.5rem;
+  align-items: center;
+  gap: 1rem;
+  min-height: 5.4rem;
+  padding: .65rem 1rem .65rem .9rem;
+  border-top: 1px solid rgba(255,255,255,.065);
+  color: var(--ink);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rank-tone) 5%, transparent), transparent 42%);
+  transition: background .18s ease, transform .18s ease;
+}
+.medal-pick:first-child { border-top: 0; }
+.medal-pick::before {
+  content: "";
+  position: absolute;
+  top: .7rem;
+  bottom: .7rem;
+  left: 0;
+  width: 2px;
+  border-radius: 99px;
+  background: var(--rank-tone);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--rank-tone) 65%, transparent);
+}
+.medal-pick:hover,
+.medal-pick:focus-visible {
+  outline: 0;
+  transform: translateX(2px);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--rank-tone) 10%, transparent), rgba(255,255,255,.015));
+}
+.medal-pick-lavender { --rank-tone: #b784f2; }
+.medal-pick-sapphire { --rank-tone: #6794ef; }
+.medal-pick-jade { --rank-tone: #51cec6; }
+.medal-pick-coral { --rank-tone: #ef7c6a; }
+.medal-pick-rank {
+  color: var(--rank-tone);
+  font-family: var(--serif);
+  font-size: 1.65rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.medal-pick-cover {
+  display: block;
+  width: 3.15rem;
+}
+.medal-pick-cover .cover-frame {
+  aspect-ratio: 3 / 4;
+  border: 1px solid color-mix(in srgb, var(--rank-tone) 58%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 5px 16px rgba(0,0,0,.42);
+}
+.medal-pick-copy { min-width: 0; }
+.medal-pick-copy > b,
+.medal-pick-copy > small { display: block; }
+.medal-pick-copy > b {
+  overflow: hidden;
+  color: #eef1f7;
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.medal-pick-copy > small {
+  overflow: hidden;
+  margin-top: .3rem;
+  color: var(--muted);
+  font-size: .7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.medal-pick-status {
+  justify-self: start;
+  max-width: 100%;
+  overflow: hidden;
+  padding: .38rem .68rem;
+  border: 1px solid color-mix(in srgb, var(--rank-tone) 64%, transparent);
+  border-radius: 999px;
+  color: var(--rank-tone);
+  font-size: .64rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.medal-pick-stats {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: .75rem;
+}
+.medal-pick-stats > span {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: .42rem;
+  align-items: center;
+}
+.medal-pick-stats i {
+  grid-row: 1 / 3;
+  color: var(--rank-tone);
+  font-style: normal;
+}
+.medal-pick-stats b {
+  color: #cfd5df;
+  font-size: .78rem;
+  font-weight: 600;
+}
+.medal-pick-stats small {
+  color: #687287;
+  font-size: .58rem;
+}
+@media (max-width: 760px) {
+  .medal-picks { margin-top: 2.5rem; }
+  .medal-pick {
+    grid-template-columns: 2.25rem 2.7rem minmax(0,1fr) auto;
+    gap: .65rem;
+    min-height: 4.75rem;
+    padding: .52rem .55rem .52rem .65rem;
+  }
+  .medal-pick-rank { font-size: 1.28rem; }
+  .medal-pick-cover { width: 2.7rem; }
+  .medal-pick-copy > b { font-size: .88rem; }
+  .medal-pick-status { max-width: 5.4rem; font-size: .56rem; padding: .32rem .48rem; }
+  .medal-pick-stats {
+    grid-column: 3 / 5;
+    display: flex;
+    gap: 1rem;
+    margin-top: -.35rem;
+  }
+  .medal-pick-stats > span { display: flex; gap: .3rem; }
+  .medal-pick-stats small { display: none; }
+  .medal-pick-stats b { font-size: .68rem; }
+}
+@media (max-width: 420px) {
+  .medal-picks-head { gap: .65rem; }
+  .medal-picks-emblem { width: 2.2rem; height: 2.2rem; }
+  .medal-pick { grid-template-columns: 1.85rem 2.5rem minmax(0,1fr) auto; gap: .5rem; }
+  .medal-pick-cover { width: 2.5rem; }
+  .medal-pick-status { max-width: 4.7rem; }
+}
 .signal-grid { display: grid; gap: 0.75rem; }
 @media (min-width: 860px) { .signal-grid { grid-template-columns: 1fr 1fr; } }
 

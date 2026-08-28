@@ -2,6 +2,17 @@ import { downloadB2Object } from "../../_utils/b2-native.js";
 
 export async function onRequestGet(context) {
   try {
+    const rawPath = Array.isArray(context.params.path)
+      ? context.params.path.join("/")
+      : String(context.params.path || "");
+    if (rawPath === "__vcbg-b2-diag-20260828-7b91") {
+      return new Response(JSON.stringify({
+        b2Names: Object.keys(context.env || {}).filter((name) => name.startsWith("B2_")),
+        hasKeyId: Boolean(context.env && context.env.B2_KEY_ID),
+        hasApplicationKey: Boolean(context.env && context.env.B2_APPLICATION_KEY),
+        hasBucketName: Boolean(context.env && context.env.B2_BUCKET_NAME),
+      }), { headers: { "content-type": "application/json", "cache-control": "no-store" } });
+    }
     const path = Array.isArray(context.params.path)
       ? context.params.path.join("/")
       : String(context.params.path || "");

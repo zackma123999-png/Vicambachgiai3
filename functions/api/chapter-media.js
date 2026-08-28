@@ -40,6 +40,12 @@ async function requireAdmin(request) {
 export async function onRequestPost(context) {
   try {
     await requireAdmin(context.request);
+    const missingSecrets = ["B2_KEY_ID", "B2_APPLICATION_KEY"].filter(
+      (name) => !String(context.env[name] || "").trim()
+    );
+    if (missingSecrets.length) {
+      return json({ error: "Cloudflare đang thiếu biến: " + missingSecrets.join(", ") }, 503);
+    }
     const kind = context.request.headers.get("x-media-kind") === "cover" ? "cover" : "audio";
     const chapterId = String(context.request.headers.get("x-chapter-id") || "");
     const name = decodeURIComponent(context.request.headers.get("x-file-name") || "");

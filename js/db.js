@@ -117,9 +117,9 @@
   async function uploadChapterMedia(chapterId, file, kind) {
     if (!file) return "";
     const isAudio = kind === "audio";
-    const max = isAudio ? 95 * 1024 * 1024 : 8 * 1024 * 1024;
+    const max = isAudio ? 60 * 1024 * 1024 : 8 * 1024 * 1024;
     if (file.size > max) {
-      throw new Error(isAudio ? "File audio tối đa 95MB. Hãy xuất dạng M4A/MP3 nhẹ hơn." : "Ảnh đĩa tối đa 8MB.");
+      throw new Error(isAudio ? "File audio tối đa 60MB. Nên dùng MP3 96kbps để âm thanh rõ và nhẹ." : "Ảnh đĩa tối đa 8MB.");
     }
     if (isAudio && !/^audio\//i.test(file.type || "")) throw new Error("Hãy chọn file ghi âm hoặc audio.");
     const session = await sb.auth.getSession();

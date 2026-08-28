@@ -1,21 +1,36 @@
+import { downloadB2Object } from "../../_utils/b2-native.js";
+
 export async function onRequestGet(context) {
-  if (!context.env.CHAPTER_AUDIO) return new Response("Kho audio chưa được kết nối.", { status: 503 });
-  const path = Array.isArray(context.params.path) ? context.params.path.join("/") : String(context.params.path || "");
-  if (!path.startsWith("chapters/")) return new Response("Not found", { status: 404 });
-  const object = await context.env.CHAPTER_AUDIO.get(path, { range: context.request.headers });
-  if (!object) return new Response("Not found", { status: 404 });
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set("etag", object.httpEtag);
-  headers.set("accept-ranges", "bytes");
-  headers.set("cache-control", "public, max-age=31536000, immutable");
-  if (object.range) {
-    const offset = object.range.offset || 0;
-    const length = object.range.length || object.size;
-    headers.set("content-range", `bytes ${offset}-${offset + length - 1}/${object.size}`);
-    headers.set("content-length", String(length));
-    return new Response(object.body, { status: 206, headers });
+  try {
+    const path = Array.isArray(context.params.path)
+      ? context.params.path.join("/")
+      : String(context.params.path || "");
+    if (!path.startsWith("chapters/")) return new Response("Not found", { status: 404 });
+
+    const source = await downloadB2Object(
+      context.env,
+      path,
+      context.request.headers.get("range") || ""
+    );
+    if (source.status === 404) return new Response("Not found", { status: 404 });
+    if (!source.ok) {
+      console.error("[chapter-media download]", source.status);
+      return new Response("Không tải được audio.", { status: 502 });
+    }
+
+    const headers = new Headers();
+    ["content-type", "content-length", "content-range", "etag", "last-modified"].forEach((name) => {
+      const value = source.headers.get(name);
+      if (value) headers.set(name, value);
+    });
+    headers.set("accept-ranges", "bytes");
+    headers.set("cache-control", "public, max-age=31536000, immutable");
+    return new Response(source.body, { status: source.status, headers });
+  } catch (error) {
+    if (error.code === "B2_NOT_CONFIGURED") {
+      return new Response("Kho Backblaze B2 chưa được kết nối.", { status: 503 });
+    }
+    console.error("[chapter-media download]", error && error.message);
+    return new Response("Không tải được audio.", { status: 502 });
   }
-  headers.set("content-length", String(object.size));
-  return new Response(object.body, { headers });
 }

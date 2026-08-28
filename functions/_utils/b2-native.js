@@ -2,9 +2,20 @@ let cachedAuth = null;
 
 const AUTH_URL = "https://api.backblazeb2.com/b2api/v4/b2_authorize_account";
 
-function config(env) {
-  const keyId = String(env.B2_KEY_ID || "").trim();
-  const applicationKey = String(env.B2_APPLICATION_KEY || "").trim();
+async function secretValue(value) {
+  if (typeof value === "string") return value.trim();
+  if (value && typeof value.get === "function") {
+    const resolved = await value.get();
+    return String(resolved || "").trim();
+  }
+  return "";
+}
+
+async function config(env) {
+  const [keyId, applicationKey] = await Promise.all([
+    secretValue(env && env.B2_KEY_ID),
+    secretValue(env && env.B2_APPLICATION_KEY),
+  ]);
   if (!keyId || !applicationKey) {
     const error = new Error("B2_NOT_CONFIGURED");
     error.code = "B2_NOT_CONFIGURED";
@@ -52,7 +63,7 @@ async function errorMessage(response) {
 }
 
 export async function authorizeB2(env, force = false) {
-  const { keyId, applicationKey } = config(env);
+  const { keyId, applicationKey } = await config(env);
   if (!force && cachedAuth && cachedAuth.keyId === keyId && cachedAuth.expiresAt > Date.now()) {
     return cachedAuth.value;
   }

@@ -1763,7 +1763,7 @@
         this.notifyFollowers(
           story.id,
           "Chương mới: " + story.title,
-          "Chương " + ch.number + (ch.title ? " — " + ch.title : ""),
+          (ch.number === 0 ? "Mở đầu" : "Chương " + ch.number) + (ch.title ? " — " + ch.title : ""),
           "#/truyen/" + story.slug + "/chuong-" + ch.number
         );
       }

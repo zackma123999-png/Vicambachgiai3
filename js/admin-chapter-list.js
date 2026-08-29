@@ -17,6 +17,17 @@
     const oldList = toolbar && toolbar.nextElementSibling;
     if (!toolbar || !oldList || !oldList.classList.contains("chapter-list")) return;
 
+    const hasIntro = Array.from(oldList.querySelectorAll(".num")).some(function (node) {
+      return node.textContent.trim() === "0";
+    });
+    if (!hasIntro) {
+      const introButton = document.createElement("a");
+      introButton.className = "btn btn-intro";
+      introButton.href = "#/admin/chuong/moi?story=" + encodeURIComponent(pick.value) + "&intro=1";
+      introButton.textContent = "+ Chương mở đầu";
+      toolbar.appendChild(introButton);
+    }
+
     const section = document.createElement("section");
     section.className = "admin-chapters";
     section.setAttribute("aria-label", "Quản lý chương");
@@ -46,19 +57,21 @@
       const status = splitAt >= 0 ? raw.slice(splitAt + 3).trim() : "draft";
 
       const row = document.createElement("li");
-      row.className = "admin-chapter-row";
-      row.dataset.chapterSearch = (number.textContent + " " + title).toLocaleLowerCase("vi");
+      const isIntro = number.textContent.trim() === "0";
+      row.className = "admin-chapter-row" + (isIntro ? " is-intro" : "");
+      row.dataset.chapterSearch = ((isIntro ? "mở đầu mo dau " : number.textContent + " ") + title).toLocaleLowerCase("vi");
 
       number.className = "admin-chapter-number";
+      number.textContent = isIntro ? "◇" : number.textContent;
       link.className = "admin-chapter-title";
-      link.textContent = title || "Chương " + number.textContent.trim();
+      link.textContent = isIntro ? "Mở đầu" + (title ? " — " + title : "") : (title || "Chương " + number.textContent.trim());
 
       const badge = document.createElement("span");
       badge.className = "admin-chapter-status status-" + status;
       badge.textContent = statusLabel(status);
 
       remove.className = "admin-chapter-delete";
-      remove.setAttribute("aria-label", "Xóa chương " + number.textContent.trim());
+      remove.setAttribute("aria-label", isIntro ? "Xóa chương mở đầu" : "Xóa chương " + number.textContent.trim());
       row.append(number, link, badge, remove);
       list.appendChild(row);
     });

@@ -1269,19 +1269,28 @@
     const readIds = VCBG.readChapterIds(s.id);
     const qch = (route.q.chuong || "").toLowerCase();
     const filtered = qch
-      ? chs.filter((c) => String(c.number) === qch || (c.title || "").toLowerCase().includes(qch))
+      ? chs.filter((c) => String(c.number) === qch || (c.number === 0 && ["mở đầu", "mo dau"].includes(qch)) || (c.title || "").toLowerCase().includes(qch))
       : chs;
     const groupSize = 50;
     const groups = [];
     if (filtered.length) {
-      const nums = filtered.map((c) => c.number);
-      const minN = Math.min(...nums);
-      const maxN = Math.max(...nums);
-      const startG = Math.floor((minN - 1) / groupSize) * groupSize + 1;
-      for (let a = startG; a <= maxN; a += groupSize) {
-        const b = a + groupSize - 1;
-        const items = filtered.filter((c) => c.number >= a && c.number <= b);
-        if (items.length) groups.push({ a, b, items });
+      const intro = filtered.find((c) => c.number === 0);
+      const numbered = filtered.filter((c) => c.number > 0);
+      if (numbered.length) {
+        const nums = numbered.map((c) => c.number);
+        const minN = Math.min(...nums);
+        const maxN = Math.max(...nums);
+        const startG = Math.floor((minN - 1) / groupSize) * groupSize + 1;
+        for (let a = startG; a <= maxN; a += groupSize) {
+          const b = a + groupSize - 1;
+          const items = numbered.filter((c) => c.number >= a && c.number <= b);
+          if (items.length) groups.push({ a, b, items });
+        }
+      }
+      if (intro) {
+        if (!groups.length) groups.push({ a: 0, b: 0, items: [intro] });
+        else if (sortDesc) groups[groups.length - 1].items.push(intro);
+        else groups[0].items.unshift(intro);
       }
     }
     const gIdx = Math.min(groups.length ? groups.length - 1 : 0, Math.max(0, Number(route.q.g || 0)));
@@ -1383,7 +1392,7 @@
         </div>
         ${groups.length > 1 ? `<div class="toc-groups">${groups.map((g, i) => `<a class="${i === gIdx ? "on" : ""}" href="${qs({ tab: "toc", g: i })}">${g.a}–${g.b}</a>`).join("")}</div>` : ""}
         <ul class="chapter-list${slice.length > 5 ? " is-scrollable" : ""}">${slice.map((c) => `<li><a href="#/truyen/${esc(s.slug)}/chuong-${c.number}" class="${readIds.includes(c.id) ? "read" : ""}">
-          <span class="num">${c.number}</span><span>${esc(c.title || "Chương " + c.number)}</span>
+          <span class="num ${c.number === 0 ? "intro-num" : ""}">${c.number === 0 ? "◇" : c.number}</span><span>${esc(c.number === 0 ? (c.title || "Mở đầu") : (c.title || "Chương " + c.number))}</span>
           <span class="num">${fmtDate(c.published_at || c.updated_at)}</span></a></li>`).join("")}</ul>
       </div>`;
     const rateHtml = `<div class="rate-box">
@@ -1552,7 +1561,7 @@
     const prev = all[idx - 1];
     const next = all[idx + 1];
     const prefs = readPrefs();
-    setMeta(`${s.title} — Chương ${ch.number} | ViCamBachGiai`, (ch.title || s.title) + " — đọc trên ViCamBachGiai.");
+    setMeta(`${s.title} — ${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number} | ViCamBachGiai`, (ch.title || s.title) + " — đọc trên ViCamBachGiai.");
     VCBG.recordView(s.id, ch.id);
     const liked = VCBG.likedChapter(ch.id);
     const likeN = VCBG.chapterLikeCount(ch.id);
@@ -1570,7 +1579,7 @@
     // The player is part of the public reading experience. Uploading and
     // editing audio remain protected inside the Admin chapter editor.
     const audioHtml = chapterAudioPlayer(ch, s);
-    const chLabel = `Chương ${ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
+    const chLabel = `${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
     app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
       <header class="reader-chrome reader-top" id="rTop">
         <a class="r-ico" href="#/truyen/${esc(s.slug)}" aria-label="Về trang truyện">←</a>
@@ -1584,7 +1593,7 @@
         <span class="r-pct" id="rPct">0%</span>
       </header>
       <article class="reader-body" id="rbody">
-        <h2>Chương ${ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
+        <h2>${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
         <div class="r-orn" aria-hidden="true"></div>
         ${audioHtml}
         ${bodyHtml}
@@ -1595,9 +1604,9 @@
         </section>
       </article>
       <nav class="reader-chrome reader-bot" id="rBot">
-        ${prev ? `<a class="r-nav" href="#/truyen/${esc(s.slug)}/chuong-${prev.number}">‹ Chương trước</a>` : `<span class="r-nav is-off">‹ Chương trước</span>`}
+        ${prev ? `<a class="r-nav" href="#/truyen/${esc(s.slug)}/chuong-${prev.number}">‹ ${prev.number === 0 ? "Mở đầu" : "Chương trước"}</a>` : `<span class="r-nav is-off">‹ Chương trước</span>`}
         <button type="button" class="r-toc" id="btnToc" aria-label="Mục lục"><span></span></button>
-        ${next ? `<a class="r-nav r-nav-r" href="#/truyen/${esc(s.slug)}/chuong-${next.number}">Chương sau ›</a>` : `<span class="r-nav r-nav-r is-off">Chương sau ›</span>`}
+        ${next ? `<a class="r-nav r-nav-r" href="#/truyen/${esc(s.slug)}/chuong-${next.number}">${ch.number === 0 ? "Chương 1" : "Chương sau"} ›</a>` : `<span class="r-nav r-nav-r is-off">Chương sau ›</span>`}
       </nav>
       <button type="button" class="auto-scroll-float" id="autoScrollFloat" aria-label="Tạm dừng tự cuộn" hidden><span>Ⅱ</span><b>TỰ CUỘN</b><em>1.0×</em></button>
       <div id="rDraw"></div>
@@ -2045,7 +2054,7 @@
         <ul class="chapter-list">${all
           .map(
             (c) =>
-              `<li><a class="${c.number === cur ? "on" : ""}" href="#/truyen/${esc(s.slug)}/chuong-${c.number}"><span class="num">${c.number}</span><span>${esc(c.title || "")}</span></a></li>`
+              `<li class="${c.number === 0 ? "intro-toc-row" : ""}"><a class="${c.number === cur ? "on" : ""}" href="#/truyen/${esc(s.slug)}/chuong-${c.number}"><span class="num">${c.number === 0 ? "◇" : c.number}</span><span>${esc(c.number === 0 ? (c.title || "Mở đầu") : (c.title || ""))}</span></a></li>`
           )
           .join("")}</ul>
       </div>`,
@@ -2406,7 +2415,7 @@
     setMeta("Quản trị — ViCamBachGiai", "Bảng điều khiển.");
     if (sub === "truyen" && route.parts[2] === "moi") return adminStoryForm(null);
     if (sub === "truyen" && route.parts[2]) return adminStoryForm(route.parts[2]);
-    if (sub === "chuong" && route.parts[2] === "moi") return adminChapterForm(null, route.q.story);
+    if (sub === "chuong" && route.parts[2] === "moi") return adminChapterForm(null, route.q.story, route.q.intro === "1");
     if (sub === "chuong" && route.parts[2]) return adminChapterForm(route.parts[2]);
     let body = "";
     if (!sub) {
@@ -2799,7 +2808,7 @@
     };
   }
   let editorTimer = null;
-  async function adminChapterForm(id, storyId) {
+  async function adminChapterForm(id, storyId, isIntro) {
     const ch = id ? VCBG.getChapterById(id) : null;
     if (ch) {
       try {
@@ -2810,7 +2819,8 @@
     }
     const stories = VCBG.adminListStories();
     const sid = (ch && ch.story_id) || storyId || (stories[0] && stories[0].id);
-    const num = ch ? ch.number : sid ? VCBG.nextChapterNumber(sid) : 1;
+    const num = ch ? ch.number : isIntro ? 0 : sid ? VCBG.nextChapterNumber(sid) : 1;
+    const introMode = num === 0;
     const tools = [
       ["undo", "Hoàn tác", "↶"],
       ["redo", "Làm lại", "↷"],
@@ -2837,12 +2847,12 @@
     app().innerHTML =
       header() +
       `<main class="wrap admin-shell">${adminNav("/chuong")}<div>
-        <h1>${ch ? "Sửa chương" : "Chương mới"}</h1>
+        <h1>${ch ? (introMode ? "Sửa chương mở đầu" : "Sửa chương") : (introMode ? "Chương mở đầu" : "Chương mới")}</h1>
         <form id="chForm">
           <div class="field"><label>Truyện</label>
             <select name="story_id">${stories.map((s) => `<option value="${s.id}" ${s.id === sid ? "selected" : ""}>${esc(s.title)}</option>`).join("")}</select>
           </div>
-          <div class="field"><label>Số chương</label><input name="number" type="number" min="1" value="${num}"></div>
+          ${introMode ? `<div class="field intro-type-field"><label>Loại chương</label><div class="intro-type-value">◇ Mở đầu <small>Hiển thị trước Chương 1</small></div><input name="number" type="hidden" value="0"></div>` : `<div class="field"><label>Số chương</label><input name="number" type="number" min="1" value="${num}"></div>`}
           <div class="field"><label>Tiêu đề</label><input name="title" value="${esc((ch && ch.title) || "")}"></div>
           <section class="admin-audio-box">
             <div class="admin-audio-head"><div class="admin-audio-mini ${ch && ch.audio_url ? "has-audio" : ""}" ${ch && ch.audio_cover_url ? `style="--audio-cover:url('${esc(ch.audio_cover_url)}')"` : ""}></div><div><b>Bản thu âm của chương</b><small>File chỉ tải khi độc giả bấm phát nên không làm nặng lúc mở chương.</small></div></div>

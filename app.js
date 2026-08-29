@@ -647,6 +647,7 @@
             <button type="button" class="sig-chip${c.liked ? " on" : ""}" data-like="${esc(c.id)}" aria-pressed="${c.liked}">❤ ${c.like_count || 0}</button>
             <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">Trả lời</button>
             <button type="button" class="sig-act" data-quote="${esc(c.id)}">Trích dẫn</button>
+            ${me && me.id !== c.user_id ? `<button type="button" class="sig-act" data-report-comment="bình luận ${esc(c.id)}" data-story-title="${esc((c.story && c.story.title) || "Bình luận")}">⚑ Báo cáo</button>` : ""}
           </div>
           ${firstR.map((r) => replyHTML(c, r, false)).join("")}
           ${rest.map((r) => replyHTML(c, r, true)).join("")}
@@ -2112,6 +2113,7 @@
         <div class="action-row">
           <button class="btn btn-ghost" data-like="${c.id}">♥ ${c.like_count || 0}</button>
           ${me ? `<button class="btn btn-ghost" data-reply="${c.id}">Trả lời</button>` : ""}
+          ${me && me.id !== c.user_id ? `<button class="btn btn-ghost" data-report-comment="bình luận ${esc(c.id)}" data-story-title="${esc(s.title || "Bình luận")}">⚑ Báo cáo</button>` : ""}
           ${me && (me.id === c.user_id || VCBG.isAdmin()) ? `<button class="btn btn-ghost" data-del="${c.id}">Xóa</button>` : ""}
         </div>
         ${(c.replies || [])
@@ -2401,20 +2403,13 @@
   }
   function pageNotifs() {
     if (!needUser()) return;
-    const list = VCBG.myNotifications();
-    VCBG.markNotificationsRead();
-    setMeta("Thông báo — ViCamBachGiai", "Cập nhật theo dõi.");
+    setMeta("Thông báo — ViCamBachGiai", "Trung tâm cập nhật truyện và tương tác.");
     app().innerHTML =
       header() +
-      `<main class="wrap" style="padding:1.2rem 1rem">
-        <h1 class="hero-title" style="font-size:1.8rem">Thông báo</h1>
-        ${
-          list.length
-            ? list
-                .map((n) => `<a class="comment" href="${esc(n.href || "#/")}"><b>${esc(n.title)}</b><p>${esc(n.body)}</p><div class="sub">${fmtDate(n.at)}</div></a>`)
-                .join("")
-            : `<div class="empty">Chưa có thông báo.</div>`
-        }
+      `<main class="wrap vc-notification-page">
+        <section id="vcNotificationCenter" aria-live="polite">
+          <div class="vc-notif-empty"><span>◇</span><b>Đang tải thông báo…</b></div>
+        </section>
       </main>` +
       footer();
     bindChrome();
@@ -2916,6 +2911,7 @@
               <option value="scheduled" ${ch && ch.status === "scheduled" ? "selected" : ""}>Hẹn giờ</option>
             </select>
           </div>
+          ${ch && ch.status === "published" ? `<label class="notify-edit-toggle"><input name="notify_edit" type="checkbox"><span><b>Gửi thông báo về lần chỉnh sửa này</b><small>Chỉ bật khi nội dung thay đổi đáng kể; sửa lỗi nhỏ không cần gửi.</small></span></label>` : ""}
           <div class="field"><label>Hẹn giờ xuất bản</label><input name="publish_at" type="datetime-local" value="${ch && ch.publish_at ? new Date(ch.publish_at).toISOString().slice(0, 16) : ""}"></div>
           <button class="btn btn-primary" type="submit">Lưu chương</button>
         </form>
@@ -3086,6 +3082,7 @@
           body: sanitize(applyParaGap(ed.innerHTML, edGap)),
           status: fd.get("status"),
           publish_at: at,
+          notify_edit: fd.get("notify_edit") === "on",
         });
         try {
           localStorage.removeItem(key);

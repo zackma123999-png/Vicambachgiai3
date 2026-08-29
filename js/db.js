@@ -662,7 +662,7 @@
       settle(
         sb
           .from("chapters")
-          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds"),
+          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds,notify_edit_at"),
         7000,
         "chapters"
       )
@@ -1736,6 +1736,7 @@
       ch.publish_at = data.publish_at || null;
       if (ch.status === "published" && !ch.published_at) ch.published_at = t;
       ch.updated_at = t;
+      if (data.notify_edit) ch.notify_edit_at = t;
       const story = cache.stories.find((s) => s.id === ch.story_id);
       if (story) story.updated_at = t;
       const row = {
@@ -1749,6 +1750,7 @@
         audio_cover_url: ch.audio_cover_url || null,
         audio_title: ch.audio_title || null,
         audio_duration_seconds: ch.audio_duration_seconds || null,
+        notify_edit_at: ch.notify_edit_at ? iso(ch.notify_edit_at) : null,
         status: ch.status,
         publish_at: iso(ch.publish_at),
         published_at: iso(ch.published_at),
@@ -1759,14 +1761,6 @@
         if (error) throw error;
         if (story) await sb.from("stories").update({ updated_at: iso(t) }).eq("id", story.id);
       });
-      if (ch.status === "published" && !wasPublished && story) {
-        this.notifyFollowers(
-          story.id,
-          "Chương mới: " + story.title,
-          (ch.number === 0 ? "Mở đầu" : "Chương " + ch.number) + (ch.title ? " — " + ch.title : ""),
-          "#/truyen/" + story.slug + "/chuong-" + ch.number
-        );
-      }
       return ch;
     },
 

@@ -117,6 +117,52 @@
   background: rgba(174, 159, 226, 0.16);
 }
 
+.auth-email-form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.auth-email-form .field {
+  margin: 0;
+}
+
+.auth-email-form label {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #ded8ee;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.auth-email-form input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(174, 159, 226, 0.24);
+  border-radius: 12px;
+  background: rgba(15, 12, 25, 0.72);
+  color: var(--text);
+  padding: 0.72rem 0.85rem;
+  font: inherit;
+  outline: none;
+}
+
+.auth-email-form input:focus {
+  border-color: rgba(190, 166, 255, 0.72);
+  box-shadow: 0 0 0 3px rgba(151, 113, 238, 0.13);
+}
+
+.auth-email-form .btn {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 0.15rem;
+}
+
+.auth-email-form .btn:disabled {
+  opacity: 0.58;
+  cursor: wait;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-google-direct { transition: none; }
 }

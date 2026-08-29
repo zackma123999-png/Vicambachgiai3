@@ -2182,7 +2182,7 @@
       safeInternalPath(authRoute.q && authRoute.q.next) ||
       (savedReturn && safeInternalPath(savedReturn.path)) ||
       "";
-    setMeta("Đăng nhập — ViCamBachGiai", "Đăng nhập ViCamBachGiai bằng Google.");
+    setMeta("Đăng nhập — ViCamBachGiai", "Đăng nhập ViCamBachGiai bằng Google hoặc email.");
     app().innerHTML =
       header() +
       `<main class="wrap auth-page auth-google-only" style="max-width:30rem;padding:2rem 1rem">
@@ -2198,6 +2198,18 @@
             <button type="button" class="auth-google-retry" id="googleRetry" hidden>Tải lại trang</button>
           </div>
           <p class="auth-google-note">ViCamBachGiai chỉ nhận tên, email và ảnh đại diện.</p>
+          <div class="auth-divider"><span>hoặc</span></div>
+          <form id="emailLogin" class="auth-email-form" autocomplete="on">
+            <div class="field">
+              <label for="emailLoginEmail">Email</label>
+              <input id="emailLoginEmail" name="email" type="email" inputmode="email" autocomplete="username" required>
+            </div>
+            <div class="field">
+              <label for="emailLoginPassword">Mật khẩu</label>
+              <input id="emailLoginPassword" name="password" type="password" autocomplete="current-password" minlength="8" required>
+            </div>
+            <button class="btn btn-primary" type="submit">Đăng nhập bằng email</button>
+          </form>
           <p class="auth-error" id="aErr"></p>
         </section>
       </main>` +
@@ -2216,6 +2228,34 @@
       if (el) el.textContent = msg || "";
       if (msg) toast(msg);
     };
+    const emailForm = $("#emailLogin");
+    if (emailForm) {
+      emailForm.onsubmit = async (event) => {
+        event.preventDefault();
+        showErr("");
+        const submit = emailForm.querySelector('button[type="submit"]');
+        const form = new FormData(emailForm);
+        if (submit) {
+          submit.disabled = true;
+          submit.textContent = "Đang đăng nhập…";
+        }
+        rememberAuthReturn(returnTarget || "/");
+        try {
+          await VCBG.login({
+            email: form.get("email"),
+            password: form.get("password"),
+          });
+          toast("Đăng nhập thành công.");
+          await returnFromAuth(returnTarget || "/");
+        } catch (err) {
+          showErr(err.message || "Không thể đăng nhập bằng email.");
+          if (submit) {
+            submit.disabled = false;
+            submit.textContent = "Đăng nhập bằng email";
+          }
+        }
+      };
+    }
     const googleBtn = $("#googleAuth");
     const retryBtn = $("#googleRetry");
     if (retryBtn) retryBtn.onclick = () => location.reload();

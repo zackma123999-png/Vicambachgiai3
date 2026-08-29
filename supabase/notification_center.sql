@@ -36,6 +36,11 @@ create index if not exists notifications_user_unread_idx
 create index if not exists notifications_story_group_idx
   on public.notifications(user_id, story_id, notification_type, created_at desc);
 
+create index if not exists notifications_story_id_idx on public.notifications(story_id);
+create index if not exists notifications_chapter_id_idx on public.notifications(chapter_id);
+create index if not exists notifications_comment_id_idx on public.notifications(comment_id);
+create index if not exists notifications_actor_id_idx on public.notifications(actor_id);
+
 alter table public.notifications enable row level security;
 
 drop policy if exists notifs_select on public.notifications;

@@ -1709,7 +1709,7 @@
   function chapterAudioPlayer(ch, story) {
     const cover = ch.audio_cover_url || story.cover || "brand/mark.png";
     const hasAudio = !!ch.audio_url;
-    const title = ch.audio_title || (hasAudio ? `Bản thu chương ${ch.number}` : "Chưa có bản thu — bản xem trước");
+    const title = ch.audio_title || (hasAudio ? (ch.number === 0 ? "Bản thu phần mở đầu" : `Bản thu chương ${ch.number}`) : "Chưa có bản thu — bản xem trước");
     return `<section class="chapter-audio${hasAudio ? "" : " is-preview"}" data-chapter-audio>
       <div class="chapter-audio-disc" style="--audio-cover:url('${esc(cover)}')" aria-hidden="true"><i></i></div>
       <div class="chapter-audio-main">

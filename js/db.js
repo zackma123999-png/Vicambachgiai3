@@ -897,6 +897,11 @@
     currentUser,
     isAdmin,
 
+    // Reuse the single authenticated Supabase client across optional UI modules.
+    supabaseClient() {
+      return client();
+    },
+
     whenReady() {
       return bootPromise || Promise.resolve();
     },

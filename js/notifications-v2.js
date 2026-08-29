@@ -1,4 +1,4 @@
-/* ViCamBachGiai — realtime notification center v3. */
+/* ViCamBachGiai — realtime notification center v4. */
 (function () {
   let sb = null;
   let userId = "";
@@ -15,6 +15,10 @@
 
   function client() {
     if (sb) return sb;
+    if (window.VCBG && typeof window.VCBG.supabaseClient === "function") {
+      sb = window.VCBG.supabaseClient();
+      return sb;
+    }
     const cfg = window.VCBG_CONFIG || {};
     if (!window.supabase || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return null;
     sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {

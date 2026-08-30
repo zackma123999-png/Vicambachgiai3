@@ -1,0 +1,199 @@
+/* ViCamBachGiai — targeted home refinements: signal label, medals, social brands */
+
+/* A more editorial identity for the library label without changing its position. */
+.home-signal-label > span {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .52rem 1.05rem .56rem;
+  font-family: "Cormorant Garamond", "Source Serif 4", serif;
+  font-size: clamp(1.05rem, 2.15vw, 1.38rem);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: .115em;
+  text-transform: uppercase;
+  color: #e8ddff;
+  text-shadow: 0 0 15px rgba(174, 139, 255, .24);
+}
+.home-signal-label > span::before {
+  content: "✦";
+  color: #9de6ff;
+  font-family: inherit;
+  font-size: .68em;
+  font-style: normal;
+  text-shadow: 0 0 10px rgba(105, 215, 255, .42);
+}
+.home-signal-label > span::after {
+  content: "";
+  position: absolute;
+  left: 1.05rem;
+  right: 1.05rem;
+  bottom: .25rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(181, 146, 255, .72), rgba(105, 215, 255, .55), transparent);
+}
+
+/* Always show all four networks, while only configured links remain interactive. */
+.social-strip .social-ico {
+  border: 1px solid rgba(255,255,255,.22) !important;
+  color: #fff !important;
+  opacity: 1;
+  filter: none;
+  box-shadow: 0 6px 16px rgba(0,0,0,.24);
+}
+.social-strip .social-youtube { background: #ff0033 !important; }
+.social-strip .social-tiktok {
+  background: #050505 !important;
+  border-color: rgba(255,255,255,.3) !important;
+  box-shadow: -2px 0 0 rgba(37,244,238,.46), 2px 0 0 rgba(254,44,85,.42), 0 6px 16px rgba(0,0,0,.3);
+}
+.social-strip .social-facebook { background: #1877f2 !important; }
+.social-strip .social-wattpad { background: #ff5a1f !important; }
+.social-strip .social-ico.is-disabled {
+  opacity: .72 !important;
+  filter: saturate(.72) brightness(.9) !important;
+  cursor: default !important;
+  pointer-events: none !important;
+}
+.social-strip .social-ico.is-active {
+  opacity: 1 !important;
+  filter: none !important;
+}
+.social-strip .social-ico.is-active:hover,
+.social-strip .social-ico.is-active:focus-visible {
+  transform: translateY(-2px) scale(1.04);
+  border-color: rgba(255,255,255,.65) !important;
+  box-shadow: 0 9px 22px rgba(0,0,0,.32);
+}
+
+/* Full one-line titles: JS progressively reduces only the title size until it fits. */
+.medal-pick-copy > b {
+  max-width: 100%;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  line-height: 1.18 !important;
+}
+
+/* Use the former empty right side for an automatically selected chapter excerpt. */
+.medal-pick {
+  grid-template-columns: 3.2rem 3.15rem minmax(10rem, 1.15fr) 7.8rem minmax(11rem, .9fr) !important;
+  grid-template-rows: auto auto;
+  min-height: 6.35rem;
+}
+.medal-pick-rank { grid-column: 1; grid-row: 1 / 3; }
+.medal-pick-cover { grid-column: 2; grid-row: 1 / 3; align-self: center; }
+.medal-pick-copy { grid-column: 3; grid-row: 1; align-self: end; }
+.medal-pick-status { grid-column: 4; grid-row: 1; align-self: end; }
+.medal-pick-stats {
+  grid-column: 3 / 5;
+  grid-row: 2;
+  align-self: start;
+}
+.medal-pick-quote {
+  grid-column: 5;
+  grid-row: 1 / 3;
+  align-self: stretch;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .24rem;
+  padding: .42rem .65rem .42rem .8rem;
+  border-left: 1px solid color-mix(in srgb, var(--rank-tone) 28%, transparent);
+  color: #b9c1d0;
+}
+.medal-pick-quote q {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  font-family: "Source Serif 4", serif;
+  font-size: .68rem;
+  font-style: italic;
+  line-height: 1.42;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.medal-pick-quote q::before { color: var(--rank-tone); }
+.medal-pick-quote q::after { color: var(--rank-tone); }
+.medal-pick-quote small {
+  color: color-mix(in srgb, var(--rank-tone) 72%, #8b95a8);
+  font-size: .52rem;
+  font-style: normal;
+}
+.medal-pick-quote.is-empty { opacity: .58; }
+
+/* Phones: keep full title on one line and place the quote below the main identity row. */
+@media (max-width: 760px) {
+  .medal-pick {
+    grid-template-columns: 2.25rem 2.7rem minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto auto;
+    min-height: 7.3rem;
+  }
+  .medal-pick-rank { grid-column: 1; grid-row: 1 / 4; }
+  .medal-pick-cover { grid-column: 2; grid-row: 1 / 4; }
+  .medal-pick-copy { grid-column: 3; grid-row: 1; align-self: end; }
+  .medal-pick-status { grid-column: 4; grid-row: 1; }
+  .medal-pick-quote {
+    grid-column: 3 / 5;
+    grid-row: 2;
+    min-height: 2rem;
+    padding: .28rem .45rem;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--rank-tone) 20%, transparent);
+  }
+  .medal-pick-quote q {
+    font-size: .61rem;
+    line-height: 1.32;
+    -webkit-line-clamp: 2;
+  }
+  .medal-pick-quote small { display: none; }
+  .medal-pick-stats {
+    grid-column: 3 / 5;
+    grid-row: 3;
+    margin-top: 0;
+  }
+}
+@media (max-width: 420px) {
+  .medal-pick {
+    grid-template-columns: 1.85rem 2.5rem minmax(0, 1fr) auto !important;
+    min-height: 7rem;
+  }
+  .medal-pick-copy > small { margin-top: .16rem; font-size: .62rem; }
+  .medal-pick-quote q { font-size: .58rem; }
+}
+
+/* Fixed-width landscape sidebar: preserve covers, full titles and quote hierarchy. */
+@media (min-width: 900px) and (orientation: landscape) {
+  .home-desktop-side .medal-pick {
+    grid-template-columns: 30px 42px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    min-height: 8.2rem;
+    align-items: start;
+  }
+  .home-desktop-side .medal-pick-rank { grid-column: 1; grid-row: 1 / 4; align-self: center; }
+  .home-desktop-side .medal-pick-cover { grid-column: 2; grid-row: 1 / 4; align-self: center; }
+  .home-desktop-side .medal-pick-copy { grid-column: 3; grid-row: 1; align-self: start; }
+  .home-desktop-side .medal-pick-quote {
+    grid-column: 3;
+    grid-row: 2;
+    min-height: 2.25rem;
+    padding: .3rem .4rem;
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--rank-tone) 20%, transparent);
+  }
+  .home-desktop-side .medal-pick-quote q {
+    font-size: 9px;
+    line-height: 1.35;
+    -webkit-line-clamp: 2;
+  }
+  .home-desktop-side .medal-pick-quote small { display: none; }
+  .home-desktop-side .medal-pick-stats {
+    grid-column: 3 !important;
+    grid-row: 3;
+    margin-top: 0 !important;
+    align-self: end;
+  }
+}

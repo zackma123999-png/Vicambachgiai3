@@ -4,9 +4,37 @@
     return route === "" || route === "/";
   };
 
+  const isLandscapeDesktop = () =>
+    window.matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
+
+  function syncSidebarOffset() {
+    const grid = document.querySelector("#app .home-desktop-grid");
+    const side = grid?.querySelector(".home-desktop-side");
+    const firstRail = grid?.querySelector(".home-desktop-main .rail-panel");
+    if (!grid || !side || !firstRail) return;
+
+    if (!isLandscapeDesktop()) {
+      side.style.removeProperty("--home-side-offset");
+      return;
+    }
+
+    /* Measure from the grid itself. The sidebar is moved only at paint time;
+       no padding, margin or grid-row sizing is changed. */
+    side.style.setProperty("--home-side-offset", "0px");
+    const gridTop = grid.getBoundingClientRect().top;
+    const railTop = firstRail.getBoundingClientRect().top;
+    side.style.setProperty("--home-side-offset", `${Math.max(0, railTop - gridTop)}px`);
+  }
+
   function mountHomeDesktopLayout() {
     const app = document.getElementById("app");
-    if (!app || !isHome() || app.querySelector(".home-desktop-grid")) return false;
+    if (!app || !isHome()) return false;
+
+    const existing = app.querySelector(".home-desktop-grid");
+    if (existing) {
+      syncSidebarOffset();
+      return false;
+    }
 
     const direct = (selector) => Array.from(app.children).find((node) => node.matches(selector));
     const label = direct(".home-signal-label");
@@ -28,6 +56,7 @@
     grid.append(main, side);
     main.append(label, rails);
     side.append(medal, signal, resonance);
+    requestAnimationFrame(syncSidebarOffset);
     return true;
   }
 
@@ -43,6 +72,9 @@
 
   document.addEventListener("DOMContentLoaded", schedule, { once: true });
   window.addEventListener("hashchange", schedule);
+  window.addEventListener("resize", schedule, { passive: true });
+  window.addEventListener("orientationchange", schedule, { passive: true });
+
   new MutationObserver(schedule).observe(document.documentElement, {
     childList: true,
     subtree: true

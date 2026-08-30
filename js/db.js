@@ -77,22 +77,34 @@
   async function optimizeCoverFile(file) {
     if (!file || !/^image\//i.test(file.type || "")) throw new Error("Tệp bìa không hợp lệ.");
     const bitmap = await createImageBitmap(file);
-    const maxWidth = 1000;
-    const maxHeight = 1500;
-    const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d", { alpha: false });
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    context.drawImage(bitmap, 0, 0, width, height);
-    if (bitmap.close) bitmap.close();
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", 0.8));
-    if (!blob) throw new Error("Không thể tối ưu ảnh bìa.");
-    return blob;
+    const targetBytes = 900 * 1024;
+    let scale = Math.min(1, 1000 / bitmap.width, 1500 / bitmap.height);
+    let lastBlob = null;
+
+    try {
+      for (let resize = 0; resize < 5; resize += 1) {
+        const width = Math.max(1, Math.round(bitmap.width * scale));
+        const height = Math.max(1, Math.round(bitmap.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d", { alpha: false });
+        context.imageSmoothingEnabled = true;
+        context.imageSmoothingQuality = "high";
+        context.drawImage(bitmap, 0, 0, width, height);
+
+        for (const quality of [0.82, 0.72, 0.62, 0.52]) {
+          lastBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
+          if (lastBlob && lastBlob.size <= targetBytes) return lastBlob;
+        }
+        scale *= 0.82;
+      }
+    } finally {
+      if (bitmap.close) bitmap.close();
+    }
+
+    if (!lastBlob) throw new Error("Không thể tối ưu ảnh bìa.");
+    throw new Error("Ảnh bìa vẫn quá nặng sau khi tối ưu. Hãy chọn ảnh khác.");
   }
 
   async function optimizeAudioCoverFile(file) {
@@ -1639,7 +1651,13 @@
           cacheControl: "31536000",
           upsert: true,
         });
-        if (uploadError) throw publicError(uploadError, "Không tải được ảnh bìa.");
+        if (uploadError) {
+          const raw = String(uploadError.message || "");
+          if (/object exceeded|maximum allowed size|too large/i.test(raw)) {
+            throw new Error("Ảnh bìa vượt giới hạn tải lên. Website đã thử nén ảnh; hãy chọn ảnh khác nếu lỗi vẫn còn.");
+          }
+          throw publicError(uploadError, "Không tải được ảnh bìa.");
+        }
         story.cover = cfg().supabaseUrl.replace(/\/$/, "") + "/storage/v1/object/public/covers/" + path + "?v=" + t;
       }
       if (!data.cover_file && data.cover) story.cover = data.cover;

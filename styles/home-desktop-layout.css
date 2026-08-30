@@ -340,3 +340,81 @@
     white-space: normal !important;
   }
 }
+
+
+/* Final compact treatment for reader signals in the narrow column */
+@media (min-width: 900px) and (orientation: landscape) {
+  .home-desktop-side .sig-brand h2 {
+    font-size: clamp(18px, 1.5vw, 21px) !important;
+    letter-spacing: -.04em !important;
+  }
+
+  .home-desktop-side .sig-live-count {
+    width: 70px !important;
+    max-width: 70px !important;
+    font-size: 7.5px !important;
+    line-height: 1.25 !important;
+    gap: 3px !important;
+    justify-content: flex-end !important;
+  }
+
+  .home-desktop-side .sig-card {
+    grid-template-columns: 38px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    padding: 10px 2px !important;
+  }
+
+  .home-desktop-side .sig-ava {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .home-desktop-side .sig-main {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .home-desktop-side .sig-meta {
+    gap: 3px 6px !important;
+    margin-bottom: 3px !important;
+    font-size: 10px !important;
+  }
+
+  .home-desktop-side .sig-story-tag {
+    max-width: 100% !important;
+    margin-bottom: 5px !important;
+    font-size: 9px !important;
+    padding: 2px 7px !important;
+  }
+
+  .home-desktop-side .sig-text,
+  .home-desktop-side .sig-quote {
+    margin-bottom: 5px !important;
+    font-size: 10.5px !important;
+    line-height: 1.45 !important;
+  }
+
+  .home-desktop-side .sig-acts {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: 26px 45px 54px 44px !important;
+    justify-content: start !important;
+    align-items: center !important;
+    gap: 3px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .home-desktop-side .sig-chip,
+  .home-desktop-side .sig-act {
+    box-sizing: border-box !important;
+    width: auto !important;
+    min-width: 0 !important;
+    height: 24px !important;
+    padding: 0 !important;
+    font-size: 9px !important;
+    line-height: 24px !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+  }
+}

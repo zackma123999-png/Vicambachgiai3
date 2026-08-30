@@ -385,7 +385,6 @@
     }
     const latest = s.stats && s.stats.latest_chapter;
     const latestHref = latest ? `#/truyen/${esc(s.slug)}/chuong-${latest.number}` : `#/truyen/${esc(s.slug)}`;
-    const saved = VCBG.isFavorite(s.id);
     const rating = s.stats.rating_avg || 0;
     const kinds = []
       .concat([s.upcoming ? "Sắp ra mắt" : statusLabel(s.status)])
@@ -395,7 +394,6 @@
     const shown = kinds.slice(0, 2);
     const extra = kinds.length - shown.length;
     return `<article class="wide-card ${storyTitleFit(s.title)}" data-slug="${esc(s.slug)}" style="--tone:${esc(s.accent || "#7c5cbf")}">
-      <button type="button" class="wide-heart" data-fav="${esc(s.id)}" aria-label="${saved ? "Bỏ lưu" : "Lưu trữ"}" aria-pressed="${saved}">${saved ? "♥" : "♡"}</button>
       <a class="wide-cover" href="#/truyen/${esc(s.slug)}">${coverImg(s.cover, "Bìa " + s.title)}</a>
       <div class="wide-body">
         <a class="wide-title" href="#/truyen/${esc(s.slug)}"><h3>${esc(s.title)}</h3><em>›</em></a>

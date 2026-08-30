@@ -80,7 +80,7 @@
 /* In landscape, align the right-column medal panel with the first story rail. */
 @media (min-width: 900px) and (orientation: landscape) {
   .home-desktop-side {
-    padding-top: 3.65rem;
+    padding-top: 2.75rem;
   }
   .home-desktop-side .medal-pick-copy > b {
     font-size: clamp(.72rem, 1.08vw, .9rem) !important;

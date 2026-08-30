@@ -553,7 +553,7 @@
       Array.from(document.querySelectorAll(".medal-pick-copy > b")).forEach((title) => {
         title.style.fontSize = "";
         let size = parseFloat(getComputedStyle(title).fontSize) || 16;
-        while (title.scrollWidth > title.clientWidth + 1 && size > 8.5) {
+        while (title.scrollWidth > title.clientWidth && size > 8) {
           size -= 0.35;
           title.style.fontSize = size + "px";
         }

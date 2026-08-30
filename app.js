@@ -335,11 +335,12 @@
     youtube: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23 12.2s0-3.3-.4-4.8c-.2-.9-.9-1.6-1.8-1.8C19.1 5.2 12 5.2 12 5.2s-7.1 0-8.8.4c-.9.2-1.6.9-1.8 1.8C1 8.9 1 12.2 1 12.2s0 3.3.4 4.8c.2.9.9 1.6 1.8 1.8 1.7.4 8.8.4 8.8.4s7.1 0 8.8-.4c.9-.2 1.6-.9 1.8-1.8.4-1.5.4-4.8.4-4.8zM9.8 15.5V8.9l6.1 3.3-6.1 3.3z"/></svg>',
     tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.5 3c.3 2.4 1.6 4.1 4 4.5v2.3c-1.4 0-2.7-.4-4-1.2v6.6c0 3.3-2.6 5.8-5.9 5.8S2.7 18.5 2.7 15.2c0-3.2 2.5-5.7 5.7-5.8v2.5c-1.8.1-3.2 1.6-3.2 3.4 0 1.9 1.5 3.4 3.4 3.4s3.4-1.5 3.4-3.4V3h2.5z"/></svg>',
     facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.5 8.5V6.8c0-.7.5-1 1.2-1h1.8V3h-2.5C12.2 3 11 4.5 11 6.7v1.8H9v2.8h2V21h3.5v-9.7h2.4l.4-2.8h-2.8z"/></svg>',
+    instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.3 2h9.4A5.3 5.3 0 0 1 22 7.3v9.4a5.3 5.3 0 0 1-5.3 5.3H7.3A5.3 5.3 0 0 1 2 16.7V7.3A5.3 5.3 0 0 1 7.3 2Zm-.2 2A3.1 3.1 0 0 0 4 7.1v9.8A3.1 3.1 0 0 0 7.1 20h9.8a3.1 3.1 0 0 0 3.1-3.1V7.1A3.1 3.1 0 0 0 16.9 4H7.1Zm10.4 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>',
     wattpad: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.2 6.2c.8 0 1.4.3 1.8 1.1L8.4 12l2.3-4.7c.4-.8 1-1.1 1.8-1.1s1.4.3 1.8 1.1L16.6 12l2.4-4.7c.4-.8 1-1.1 1.8-1.1.9 0 1.5.7 1.5 1.6 0 .3 0 .5-.1.8l-3.2 8.1c-.4.9-1 1.3-1.9 1.3-.8 0-1.4-.4-1.8-1.2L13 12.4l-2.3 4.6c-.4.8-1 1.2-1.8 1.2-.9 0-1.5-.4-1.9-1.3L3.8 8.6c-.1-.3-.1-.5-.1-.8 0-.9.6-1.6 1.5-1.6z"/></svg>',
   };
   function socialStrip() {
     const so = (VCBG.settings() && VCBG.settings().social) || {};
-    const items = [["youtube", "YouTube"], ["tiktok", "TikTok"], ["facebook", "Facebook"], ["wattpad", "Wattpad"]];
+    const items = [["youtube", "YouTube"], ["tiktok", "TikTok"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["wattpad", "Wattpad"]];
     return `<nav class="social-strip" aria-label="Mạng xã hội">${items.map(([k, label]) => {
       const href = String(so[k] || "").trim();
       const active = /^https?:\/\//i.test(href);
@@ -547,32 +548,6 @@
         ${metric("published_stories", "Truyện đã đăng", "stories")}
       </div>
     </section>`;
-  }
-  function bindMedalTitleFit() {
-    const fitTitles = () => {
-      Array.from(document.querySelectorAll(".medal-pick-copy > b")).forEach((title) => {
-        title.style.fontSize = "";
-        let size = parseFloat(getComputedStyle(title).fontSize) || 16;
-        while (title.scrollWidth > title.clientWidth && size > 8) {
-          size -= 0.35;
-          title.style.fontSize = size + "px";
-        }
-      });
-    };
-    fitTitles();
-    setTimeout(fitTitles, 400);
-    if (window.__vcbgMedalResize) window.removeEventListener("resize", window.__vcbgMedalResize);
-    let frame = 0;
-    window.__vcbgMedalResize = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(fitTitles);
-    };
-    window.addEventListener("resize", window.__vcbgMedalResize, { passive: true });
-    if (window.__vcbgMedalObserver) window.__vcbgMedalObserver.disconnect();
-    if ("ResizeObserver" in window) {
-      window.__vcbgMedalObserver = new ResizeObserver(() => window.__vcbgMedalResize());
-      Array.from(document.querySelectorAll(".medal-pick-copy")).forEach((el) => window.__vcbgMedalObserver.observe(el));
-    }
   }
   function recommendationPanel() {
     const weekly = VCBG.weeklyRanking ? VCBG.weeklyRanking(5) : [];
@@ -1106,7 +1081,6 @@
       footer();
     bindChrome();
     bindResonance();
-    bindMedalTitleFit();
     const deck = banner;
     const n = deck.length;
     const heroEl = $("#hero");
@@ -2546,6 +2520,7 @@
         <div class="field"><label>Khẩu hiệu</label><input name="tagline" value="${esc(st.tagline)}"></div>
         <div class="field"><label>YouTube</label><input name="youtube" value="${esc(so.youtube || "")}"></div>
         <div class="field"><label>TikTok</label><input name="tiktok" value="${esc(so.tiktok || "")}"></div>
+        <div class="field"><label>Instagram</label><input name="instagram" value="${esc(so.instagram || "")}"></div>
         <div class="field"><label>Facebook</label><input name="facebook" value="${esc(so.facebook || "")}"></div>
         <div class="field"><label>Wattpad</label><input name="wattpad" value="${esc(so.wattpad || "")}"></div>
         <label><input type="checkbox" name="allow_registration" ${st.allow_registration ? "checked" : ""}> Cho phép đăng ký</label>
@@ -2695,6 +2670,7 @@
           social: {
             youtube: fd.get("youtube") || "",
             tiktok: fd.get("tiktok") || "",
+            instagram: fd.get("instagram") || "",
             facebook: fd.get("facebook") || "",
             wattpad: fd.get("wattpad") || "",
           },

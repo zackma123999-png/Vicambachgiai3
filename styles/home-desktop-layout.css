@@ -420,19 +420,17 @@
 }
 
 
-/* Landscape footer blends into the page instead of forming a colored block */
-@media (min-width: 900px) and (orientation: landscape) {
-  #app > .site-footer {
-    background: transparent !important;
-    background-image: none !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-  }
+/* Footer blends into the page at every viewport size */
+#app > .site-footer {
+  background: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
 
-  #app > .site-footer::before,
-  #app > .site-footer::after {
-    display: none !important;
-    content: none !important;
-    background: none !important;
-  }
+#app > .site-footer::before,
+#app > .site-footer::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
 }

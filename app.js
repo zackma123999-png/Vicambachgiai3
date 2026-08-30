@@ -2779,7 +2779,8 @@
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
           <div class="field"><label>Màu chủ đạo banner</label><input name="accent" value="${esc(s.accent || "#8a6a4a")}"></div>
           <div class="field"><label>Bìa</label><input type="file" id="coverFile" accept="image/*">
-            <div class="detail-cover" style="margin-top:.6rem">${s.cover ? coverImg(s.cover, "Bìa") : ""}</div>
+            <p class="editor-hint" id="coverStatus">Có thể chọn ảnh dung lượng lớn từ điện thoại. Website sẽ tự chuyển sang WebP và giảm xuống dung lượng an toàn.</p>
+            <div class="detail-cover" id="coverPreview" style="margin-top:.6rem">${s.cover ? coverImg(s.cover, "Bìa") : ""}</div>
           </div>
           <fieldset class="field"><legend>Bối cảnh</legend>
             ${VCBG.listGenres()
@@ -2798,11 +2799,21 @@
     bindChrome();
     let cover = s.cover || "";
     let coverFile = null;
+    let coverPreviewUrl = "";
     $("#coverFile").onchange = () => {
       const f = $("#coverFile").files[0];
       if (!f) return;
       coverFile = f;
-      toast("Đã chọn bìa; ảnh sẽ tự tối ưu khi lưu.");
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+      coverPreviewUrl = URL.createObjectURL(f);
+      const preview = $("#coverPreview");
+      if (preview) preview.innerHTML = coverImg(coverPreviewUrl, "Bìa đã chọn");
+      const status = $("#coverStatus");
+      if (status) {
+        const mb = Math.max(0.01, f.size / 1024 / 1024).toFixed(2);
+        status.textContent = "Đã chọn " + f.name + " · " + mb + " MB. Ảnh sẽ được tự xoay, chuyển WebP và nén khi lưu.";
+      }
+      toast("Đã chọn bìa; website sẽ tự tối ưu khi lưu.");
     };
     $("#stForm").onsubmit = async (e) => {
       e.preventDefault();
@@ -2810,7 +2821,7 @@
       const btn = e.target.querySelector('button[type="submit"]');
       if (btn) {
         btn.disabled = true;
-        btn.textContent = "Đang lưu…";
+        btn.textContent = coverFile ? "Đang tối ưu ảnh…" : "Đang lưu…";
       }
       try {
         const rec = await VCBG.upsertStory({

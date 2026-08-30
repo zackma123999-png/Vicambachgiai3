@@ -195,3 +195,148 @@
     grid-template-columns: minmax(0, 3.15fr) minmax(330px, 1fr);
   }
 }
+
+
+/* Responsive typography inside the fixed-width sidebar */
+@media (min-width: 900px) and (orientation: landscape) {
+  .home-desktop-side .sig-head {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+  }
+
+  .home-desktop-side .sig-brand {
+    min-width: 0 !important;
+    width: auto !important;
+    flex: 1 1 auto !important;
+    display: block !important;
+  }
+
+  .home-desktop-side .sig-brand h2 {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.75vw, 23px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -.025em !important;
+    white-space: nowrap !important;
+    writing-mode: horizontal-tb !important;
+  }
+
+  .home-desktop-side .sig-brand p {
+    margin-top: 5px !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+  }
+
+  .home-desktop-side .sig-live-count {
+    flex: 0 0 auto !important;
+    max-width: 94px !important;
+    font-size: 9px !important;
+    line-height: 1.3 !important;
+    white-space: normal !important;
+    text-align: right !important;
+  }
+
+  .home-desktop-side .sig-tools,
+  .home-desktop-side .sig-tabs,
+  .home-desktop-side .sig-filter {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .home-desktop-side .sig-tools {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .home-desktop-side .sig-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    overflow: visible !important;
+  }
+
+  .home-desktop-side .sig-tab {
+    min-width: 0 !important;
+    width: 100% !important;
+    height: 32px !important;
+    padding: 5px 3px !important;
+    font-size: clamp(8px, .78vw, 10px) !important;
+    line-height: 1 !important;
+    letter-spacing: -.02em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+  }
+
+  .home-desktop-side .sig-filter {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 3px !important;
+    font-size: 9px !important;
+  }
+
+  .home-desktop-side .sig-filter select {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 32px !important;
+    font-size: 10px !important;
+    padding-left: 8px !important;
+    padding-right: 24px !important;
+  }
+
+  .home-desktop-side .res-head {
+    min-width: 0 !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .home-desktop-side .res-head h2 {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    font-size: clamp(18px, 1.7vw, 23px) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -.035em !important;
+    white-space: nowrap !important;
+  }
+
+  .home-desktop-side .res-head time,
+  .home-desktop-side .res-head span {
+    flex: 0 0 auto !important;
+    max-width: 84px !important;
+    font-size: 8px !important;
+    line-height: 1.3 !important;
+    text-align: right !important;
+  }
+
+  .home-desktop-side .res-live,
+  .home-desktop-side .res-hero-visits {
+    min-width: 0 !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .home-desktop-side .res-live strong,
+  .home-desktop-side .res-hero-visits strong {
+    font-size: clamp(24px, 3vw, 38px) !important;
+    line-height: 1 !important;
+  }
+
+  .home-desktop-side .res-live p,
+  .home-desktop-side .res-hero-visits p,
+  .home-desktop-side .res-live small,
+  .home-desktop-side .res-hero-visits small {
+    font-size: 9px !important;
+    line-height: 1.35 !important;
+    white-space: normal !important;
+  }
+}

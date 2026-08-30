@@ -74,37 +74,79 @@
     return Date.now();
   }
 
+  async function decodeCoverImage(file) {
+    try {
+      const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+      return {
+        source: bitmap,
+        width: bitmap.width,
+        height: bitmap.height,
+        close() { if (bitmap.close) bitmap.close(); },
+      };
+    } catch (_) {
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.decoding = "async";
+      try {
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = () => reject(new Error("Không đọc được định dạng ảnh này."));
+          image.src = url;
+        });
+        return {
+          source: image,
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+          close() { URL.revokeObjectURL(url); },
+        };
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        throw error;
+      }
+    }
+  }
+
   async function optimizeCoverFile(file) {
     if (!file || !/^image\//i.test(file.type || "")) throw new Error("Tệp bìa không hợp lệ.");
-    const bitmap = await createImageBitmap(file);
-    const targetBytes = 900 * 1024;
-    let scale = Math.min(1, 1000 / bitmap.width, 1500 / bitmap.height);
+    const decoded = await decodeCoverImage(file);
+    if (!decoded.width || !decoded.height) {
+      decoded.close();
+      throw new Error("Ảnh bìa không có kích thước hợp lệ.");
+    }
+
+    const targetBytes = 850 * 1024;
+    let scale = Math.min(1, 1000 / decoded.width, 1500 / decoded.height);
     let lastBlob = null;
 
     try {
-      for (let resize = 0; resize < 5; resize += 1) {
-        const width = Math.max(1, Math.round(bitmap.width * scale));
-        const height = Math.max(1, Math.round(bitmap.height * scale));
+      for (let resize = 0; resize < 10; resize += 1) {
+        const width = Math.max(240, Math.round(decoded.width * scale));
+        const height = Math.max(360, Math.round(decoded.height * scale));
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;
         const context = canvas.getContext("2d", { alpha: false });
+        if (!context) throw new Error("Thiết bị không thể xử lý ảnh bìa.");
+        context.fillStyle = "#0b0e18";
+        context.fillRect(0, 0, width, height);
         context.imageSmoothingEnabled = true;
         context.imageSmoothingQuality = "high";
-        context.drawImage(bitmap, 0, 0, width, height);
+        context.drawImage(decoded.source, 0, 0, width, height);
 
-        for (const quality of [0.82, 0.72, 0.62, 0.52]) {
+        for (const quality of [0.84, 0.74, 0.64, 0.54, 0.44, 0.36]) {
           lastBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", quality));
           if (lastBlob && lastBlob.size <= targetBytes) return lastBlob;
         }
-        scale *= 0.82;
+
+        if (width <= 320 || height <= 480) break;
+        scale *= 0.78;
       }
     } finally {
-      if (bitmap.close) bitmap.close();
+      decoded.close();
     }
 
-    if (!lastBlob) throw new Error("Không thể tối ưu ảnh bìa.");
-    throw new Error("Ảnh bìa vẫn quá nặng sau khi tối ưu. Hãy chọn ảnh khác.");
+    if (!lastBlob) throw new Error("Thiết bị không thể chuyển ảnh bìa sang WebP.");
+    throw new Error("Không thể giảm ảnh bìa xuống dung lượng an toàn.");
   }
 
   async function optimizeAudioCoverFile(file) {
@@ -1622,9 +1664,9 @@
       requireAdmin();
       const t = now();
       let story = data.id ? cache.stories.find((s) => s.id === data.id) : null;
+      const isNewStory = !story;
       if (!story) {
         story = { id: uid(), created_at: t, views_seed: 0 };
-        cache.stories.push(story);
       }
       story.title = String(data.title || "").trim();
       if (!story.title) throw new Error("Cần tên truyện.");
@@ -1663,6 +1705,7 @@
       if (!data.cover_file && data.cover) story.cover = data.cover;
       if (!story.cover) story.cover = "";
       story.updated_at = t;
+      if (isNewStory) cache.stories.push(story);
       cache.story_genres = cache.story_genres.filter((x) => x.story_id !== story.id);
       cache.story_tags = cache.story_tags.filter((x) => x.story_id !== story.id);
       (data.genre_ids || []).forEach((gid) => cache.story_genres.push({ story_id: story.id, genre_id: gid }));
@@ -1701,7 +1744,7 @@
           }
         });
       } catch (err) {
-        if (!data.id) {
+        if (isNewStory) {
           cache.stories = cache.stories.filter((s) => s.id !== story.id);
           cache.story_genres = cache.story_genres.filter((x) => x.story_id !== story.id);
           cache.story_tags = cache.story_tags.filter((x) => x.story_id !== story.id);

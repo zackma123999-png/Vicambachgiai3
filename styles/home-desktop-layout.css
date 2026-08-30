@@ -483,221 +483,58 @@
   z-index: 3 !important;
 }
 
-/* Large-screen layered glass surfaces */
-@media (min-width: 900px) and (orientation: landscape) {
-  /* Quiet base layer: the large rail stays behind its story cards. */
-  .home-desktop-main .rail-panel {
-    background: linear-gradient(145deg, rgba(12, 17, 31, 0.72), rgba(7, 11, 22, 0.78)) !important;
-    border: 1px solid rgba(172, 187, 222, 0.13) !important;
-    box-shadow:
-      inset 0 1px 0 rgba(235, 241, 255, 0.045),
-      0 12px 28px rgba(0, 2, 10, 0.18) !important;
-  }
+/* Unified responsive surfaces: one source of truth for every viewport. */
+#app .rail-foot { display: none !important; }
 
-  /* Raised layer: each cover-and-information story card. */
-  .home-desktop-main .wide-card {
-    position: relative !important;
-    isolation: isolate;
-    overflow: visible !important;
-    background:
-      linear-gradient(145deg, rgba(23, 34, 54, 0.98), rgba(15, 23, 39, 0.99)) padding-box,
-      linear-gradient(135deg, rgba(178, 198, 235, 0.26), rgba(111, 154, 220, 0.16) 58%, rgba(137, 108, 204, 0.2)) border-box !important;
-    border: 1px solid transparent !important;
-    box-shadow:
-      inset 0 1px 0 rgba(245, 248, 255, 0.105),
-      inset 0 -1px 0 rgba(0, 3, 12, 0.24),
-      0 16px 32px rgba(0, 2, 12, 0.42),
-      0 4px 12px rgba(55, 88, 145, 0.16) !important;
-    transform: translateZ(0);
-    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-  }
-
-  .home-desktop-main .wide-card::before {
-    content: "";
-    position: absolute;
-    z-index: 3;
-    pointer-events: none;
-    top: 0;
-    left: 5%;
-    right: 5%;
-    height: 1px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, rgba(228, 239, 255, 0.28) 38%, rgba(165, 196, 239, 0.18) 68%, transparent);
-  }
-
-  .home-desktop-main .wide-card .cover-frame {
-    box-shadow:
-      0 0 0 1px rgba(204, 219, 245, 0.12),
-      0 14px 26px rgba(0, 2, 12, 0.48),
-      0 3px 10px rgba(68, 102, 160, 0.18) !important;
-    transform: translateY(-1px);
-  }
-
-  .home-desktop-main .wide-latest {
-    background: linear-gradient(145deg, rgba(9, 15, 27, 0.8), rgba(7, 11, 21, 0.7)) !important;
-    border-color: rgba(179, 195, 226, 0.16) !important;
-    box-shadow: inset 0 1px 0 rgba(237, 243, 255, 0.035) !important;
-  }
-
-  /* Supporting panels: glass depth, softer than the story cards. */
-  .home-desktop-side .medal-picks,
-  .home-desktop-side .sig-board,
-  .home-desktop-side .resonance,
-  #app > .site-footer > .foot-card {
-    background:
-      linear-gradient(145deg, rgba(15, 22, 38, 0.95), rgba(8, 13, 25, 0.97)) padding-box,
-      linear-gradient(135deg, rgba(186, 140, 255, 0.34), rgba(82, 194, 221, 0.24) 56%, rgba(234, 126, 105, 0.25)) border-box !important;
-    border: 1px solid transparent !important;
-    border-radius: 24px !important;
-    box-shadow:
-      inset 0 1px 0 rgba(238, 244, 255, 0.08),
-      inset 0 -1px 0 rgba(0, 3, 12, 0.2),
-      0 14px 30px rgba(0, 2, 12, 0.3),
-      0 3px 10px rgba(57, 89, 145, 0.1) !important;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .home-desktop-main .wide-card:hover,
-    .home-desktop-main .wide-card:focus-within {
-      transform: translateY(-3px);
-      box-shadow:
-        inset 0 1px 0 rgba(245, 248, 255, 0.14),
-        inset 0 -1px 0 rgba(0, 3, 12, 0.22),
-        0 20px 38px rgba(0, 2, 12, 0.48),
-        0 6px 15px rgba(67, 101, 164, 0.2) !important;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .home-desktop-main .wide-card {
-      transition: none !important;
-    }
-  }
+#app .rail-panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(10,15,28,.7), rgba(6,10,20,.79)) !important;
+  border-color: rgba(163,180,215,.12) !important;
+  box-shadow: inset 0 1px 0 rgba(235,241,255,.04), 0 10px 24px rgba(0,2,10,.16) !important;
+}
+#app .rail {
+  gap: clamp(.8rem,1.7vw,1.25rem);
+  padding: .7rem .7rem 1.65rem;
+  margin: -.7rem -.7rem -.65rem;
+  scroll-padding-inline: .7rem;
 }
 
-/* Refined depth system: keep shadows visible and separate every elevation layer */
-@media (min-width: 900px) and (orientation: landscape) {
-  /* The section is the quiet base plane. */
-  .home-desktop-main .rail-panel {
-    overflow: visible !important;
-    background: linear-gradient(145deg, rgba(10, 15, 28, 0.72), rgba(6, 10, 20, 0.8)) !important;
-    border-color: rgba(162, 178, 211, 0.12) !important;
-    box-shadow:
-      inset 0 1px 0 rgba(235, 241, 255, 0.04),
-      0 10px 24px rgba(0, 2, 10, 0.16) !important;
-  }
-
-  /* Extra scroll-port space prevents the carousel from clipping card shadows. */
-  .home-desktop-main .rail {
-    gap: 20px !important;
-    padding: 12px 12px 34px !important;
-    margin: -12px -12px -24px !important;
-    scroll-padding-inline: 12px;
-  }
-
-  /* Individual cards are the strongest raised surface. */
-  .home-desktop-main .wide-card {
-    background:
-      linear-gradient(145deg, rgba(18, 27, 44, 0.97), rgba(11, 18, 31, 0.985)) padding-box,
-      linear-gradient(135deg, rgba(203, 218, 244, 0.24), rgba(111, 151, 211, 0.14) 58%, rgba(143, 111, 205, 0.17)) border-box !important;
-    box-shadow:
-      inset 0 1px 0 rgba(245, 248, 255, 0.11),
-      inset 0 -1px 0 rgba(0, 3, 12, 0.24),
-      0 18px 34px rgba(0, 2, 12, 0.46),
-      0 5px 14px rgba(61, 91, 147, 0.16) !important;
-  }
-
-  .home-desktop-main .wide-card::after {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: 15px;
-    background:
-      linear-gradient(118deg, rgba(242, 247, 255, 0.065), transparent 33%, rgba(102, 139, 199, 0.035) 68%, transparent 90%);
-  }
-
-  .home-desktop-main .wide-card > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .home-desktop-main .wide-card .cover-frame {
-    box-shadow:
-      0 0 0 1px rgba(214, 226, 247, 0.14),
-      0 16px 28px rgba(0, 2, 12, 0.52),
-      0 4px 11px rgba(65, 96, 153, 0.18) !important;
-    transform: translateY(-2px);
-  }
-
-  /* Supporting panels sit between the page and story-card elevations. */
-  .home-desktop-side .medal-picks,
-  .home-desktop-side .sig-board,
-  .home-desktop-side .resonance,
-  #app > .site-footer > .foot-card {
-    background:
-      linear-gradient(145deg, rgba(13, 20, 35, 0.94), rgba(8, 13, 24, 0.97)) padding-box,
-      linear-gradient(135deg, rgba(178, 140, 236, 0.25), rgba(83, 177, 206, 0.19) 58%, rgba(215, 123, 111, 0.18)) border-box !important;
-    box-shadow:
-      inset 0 1px 0 rgba(238, 244, 255, 0.065),
-      inset 0 -1px 0 rgba(0, 3, 12, 0.18),
-      0 13px 28px rgba(0, 2, 12, 0.27),
-      0 3px 9px rgba(57, 87, 137, 0.08) !important;
-  }
-}
-
-
-/* 2026-08-30 — Universal glass-depth correction.
-   Keeps the large section quiet, raises each story card, and preserves the purple touch glow. */
 #app .wide-card {
   position: relative;
   isolation: isolate;
   overflow: visible !important;
   background:
-    linear-gradient(118deg, rgba(239, 245, 255, 0.075), transparent 28%, rgba(101, 139, 204, 0.045) 67%, transparent 88%),
-    linear-gradient(145deg, rgba(27, 38, 59, 0.965), rgba(12, 19, 33, 0.988)) padding-box,
-    linear-gradient(135deg, rgba(207, 222, 250, 0.34), rgba(102, 149, 219, 0.18) 55%, rgba(159, 115, 224, 0.25)) border-box !important;
+    linear-gradient(118deg, rgba(239,245,255,.075), transparent 28%, rgba(101,139,204,.045) 67%, transparent 88%),
+    linear-gradient(145deg, rgba(27,38,59,.965), rgba(12,19,33,.988)) padding-box,
+    linear-gradient(135deg, rgba(207,222,250,.34), rgba(102,149,219,.18) 55%, rgba(159,115,224,.25)) border-box !important;
   border: 1px solid transparent !important;
   box-shadow:
-    inset 0 1px 0 rgba(248, 250, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 3, 12, 0.32),
-    0 18px 34px rgba(0, 2, 12, 0.54),
-    0 5px 14px rgba(61, 98, 165, 0.22) !important;
+    inset 0 1px 0 rgba(248,250,255,.14),
+    inset 0 -1px 0 rgba(0,3,12,.32),
+    0 16px 30px rgba(0,2,12,.52),
+    0 5px 13px rgba(61,98,165,.21) !important;
   transform: translateZ(0);
-  transition: transform 180ms ease, box-shadow 220ms ease, border-color 180ms ease, filter 180ms ease;
+  transition: transform 180ms ease, box-shadow 220ms ease, border-color 180ms ease;
 }
-
-/* Give the shadow room inside every horizontal story rail. */
-#app .rail {
-  gap: clamp(0.8rem, 1.7vw, 1.25rem);
-  padding-top: 0.65rem;
-  padding-inline: 0.65rem;
-  padding-bottom: 2.2rem;
-  margin: -0.65rem -0.65rem -1.45rem;
-  scroll-padding-inline: 0.65rem;
-}
-
 #app .wide-card .cover-frame {
   box-shadow:
-    0 0 0 1px rgba(216, 228, 249, 0.17),
-    0 16px 27px rgba(0, 2, 12, 0.55),
-    0 4px 12px rgba(67, 103, 166, 0.24) !important;
+    0 0 0 1px rgba(216,228,249,.17),
+    0 15px 26px rgba(0,2,12,.54),
+    0 4px 11px rgba(67,103,166,.23) !important;
   transform: translateY(-2px);
 }
-
-/* “Chương mới” is its own inset glass surface instead of blending into the card. */
 #app .wide-card .wide-latest {
   background:
-    linear-gradient(145deg, rgba(34, 46, 68, 0.86), rgba(13, 21, 36, 0.94)) padding-box,
-    linear-gradient(125deg, rgba(218, 230, 251, 0.24), rgba(119, 154, 212, 0.13), rgba(153, 111, 213, 0.19)) border-box !important;
+    linear-gradient(145deg, rgba(34,46,68,.88), rgba(13,21,36,.95)) padding-box,
+    linear-gradient(125deg, rgba(218,230,251,.25), rgba(119,154,212,.14), rgba(153,111,213,.2)) border-box !important;
   border: 1px solid transparent !important;
-  box-shadow:
-    inset 0 1px 0 rgba(245, 249, 255, 0.11),
-    0 5px 12px rgba(0, 2, 12, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(245,249,255,.11), 0 5px 12px rgba(0,2,12,.3) !important;
 }
+#app .wide-heart { display: none !important; }
 
-/* Restore the two pseudo-elements exclusively for the short purple touch/focus glow. */
+/* Purple touch response owns the pseudo-elements; the static sheen is in the card background. */
 #app .wide-card::before,
 #app .wide-card::after {
   content: "";
@@ -710,7 +547,7 @@
   z-index: -1;
   inset: -13px;
   border-radius: 24px;
-  background: radial-gradient(72% 88% at 34% 48%, rgba(170, 119, 255, 0.4), rgba(126, 81, 232, 0.15) 47%, transparent 77%);
+  background: radial-gradient(72% 88% at 34% 48%, rgba(170,119,255,.4), rgba(126,81,232,.15) 47%, transparent 77%);
   filter: blur(11px);
 }
 #app .wide-card::after {
@@ -720,78 +557,88 @@
   bottom: -11px;
   height: 14px;
   border-radius: 50%;
-  background: rgba(164, 108, 255, 0.62);
+  background: rgba(164,108,255,.62);
   filter: blur(10px);
 }
-#app .wide-card:is(.is-selected, :active, :focus-within) {
-  border-color: rgba(186, 148, 255, 0.96) !important;
-  background:
-    linear-gradient(118deg, rgba(247, 240, 255, 0.1), transparent 30%),
-    linear-gradient(145deg, rgba(34, 37, 69, 0.98), rgba(15, 18, 39, 0.99)) !important;
+#app .wide-card:is(.is-selected,:active,:focus-within),
+#app .wide-card:is(.is-selected,:active,:focus-within):hover {
+  border-color: rgba(190,151,255,.98) !important;
   box-shadow:
-    inset 0 1px 0 rgba(249, 243, 255, 0.18),
-    0 0 0 1px rgba(161, 111, 255, 0.27),
-    0 0 29px rgba(146, 89, 255, 0.48),
-    0 19px 36px rgba(0, 2, 12, 0.56) !important;
+    inset 0 1px 0 rgba(251,244,255,.2),
+    0 0 0 1px rgba(168,116,255,.32),
+    0 0 31px rgba(151,91,255,.55),
+    0 20px 38px rgba(0,2,12,.57) !important;
   transform: translateY(-2px) translateZ(0);
 }
-#app .wide-card:is(.is-selected, :active, :focus-within)::before,
-#app .wide-card:is(.is-selected, :active, :focus-within)::after {
-  opacity: 1;
-}
+#app .wide-card:is(.is-selected,:active,:focus-within)::before,
+#app .wide-card:is(.is-selected,:active,:focus-within)::after { opacity: 1; }
 #app .rail-panel.is-glowing {
-  border-color: rgba(175, 151, 248, 0.38) !important;
-  box-shadow: inset 0 1px 0 rgba(239, 234, 255, 0.07), 0 0 26px rgba(118, 86, 225, 0.12) !important;
+  border-color: rgba(175,151,248,.38) !important;
+  box-shadow: inset 0 1px 0 rgba(239,234,255,.07), 0 0 26px rgba(118,86,225,.12) !important;
 }
 
-/* The favorite control was removed from the markup; this also hides stale cached markup. */
-#app .wide-heart {
-  display: none !important;
-}
-
-/* Keep cover and text on the same horizontal axis in Kim Bài Đề Cử. */
-#app .medal-pick {
-  align-items: center !important;
-}
-#app .medal-pick-cover,
-#app .medal-pick-copy,
-#app .medal-pick-status,
-#app .medal-pick-stats {
-  align-self: center !important;
-}
+/* Kim Bài: the cover owns an explicit aspect ratio, never a percentage height. */
+#app .medal-pick { align-items: center !important; }
 #app .medal-pick-cover {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  --medal-cover-w: 3.15rem;
+  display: block !important;
+  width: var(--medal-cover-w) !important;
+  height: auto !important;
+  aspect-ratio: 3 / 4;
+  align-self: center !important;
+  overflow: hidden;
+  border-radius: 6px;
 }
 #app .medal-pick-cover .cover-frame {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  aspect-ratio: auto !important;
   margin: 0 !important;
+  border-radius: inherit;
+}
+#app .medal-pick-cover img {
+  position: static !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 #app .medal-pick-copy {
-  display: flex;
   min-width: 0;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.14rem;
+  align-self: center !important;
 }
 #app .medal-pick-copy > b,
 #app .medal-pick-copy > small {
-  margin: 0 !important;
+  margin-block: 0 !important;
   line-height: 1.2;
 }
+#app .home-desktop-side .medal-pick-cover { --medal-cover-w: 42px; }
+#app .home-desktop-side .medal-pick-stats { margin-top: 0 !important; }
 
-/* Resonance: responsive type and transparent illustration pixels. */
+/* Resonance is vector-only. Every artwork holder remains genuinely transparent. */
 #app .res-live > strong {
-  font-size: clamp(0.92rem, 1.6vw, 1.22rem) !important;
+  font-size: clamp(.92rem,1.6vw,1.22rem) !important;
   line-height: 1.08 !important;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 #app .res-illustration,
 #app .res-visit-art,
 #app .res-metric,
-#app .res-stat-copy {
+#app .res-stat-copy,
+#app .res-illustration svg,
+#app .res-visit-art svg {
   background: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
+}
+#app .res-illustration svg,
+#app .res-visit-art svg {
+  display: block;
+  overflow: visible;
 }
 #app .res-illustration img,
 #app .res-visit-art img {
@@ -800,57 +647,64 @@
   box-shadow: none !important;
 }
 
-/* Matching glass depth for the other framed surfaces on every device. */
+/* Framed glass surfaces share one elevation language on every device. */
 #app .medal-picks,
 #app .sig-board,
 #app .resonance,
 #app > .site-footer > .foot-card {
   background:
-    linear-gradient(118deg, rgba(239, 245, 255, 0.045), transparent 31%),
-    linear-gradient(145deg, rgba(18, 27, 45, 0.94), rgba(8, 14, 26, 0.975)) padding-box,
-    linear-gradient(135deg, rgba(185, 137, 248, 0.3), rgba(77, 187, 216, 0.22) 57%, rgba(228, 119, 108, 0.21)) border-box !important;
+    linear-gradient(118deg, rgba(239,245,255,.045), transparent 31%),
+    linear-gradient(145deg, rgba(18,27,45,.94), rgba(8,14,26,.975)) padding-box,
+    linear-gradient(135deg, rgba(185,137,248,.3), rgba(77,187,216,.22) 57%, rgba(228,119,108,.21)) border-box !important;
   border: 1px solid transparent !important;
   box-shadow:
-    inset 0 1px 0 rgba(241, 246, 255, 0.08),
-    inset 0 -1px 0 rgba(0, 3, 12, 0.22),
-    0 14px 29px rgba(0, 2, 12, 0.34),
-    0 3px 10px rgba(55, 89, 151, 0.11) !important;
+    inset 0 1px 0 rgba(241,246,255,.08),
+    inset 0 -1px 0 rgba(0,3,12,.22),
+    0 14px 29px rgba(0,2,12,.34),
+    0 3px 10px rgba(55,89,151,.11) !important;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (max-width:760px) {
+  #app .medal-pick-cover { --medal-cover-w: 2.7rem; }
+}
+@media (max-width:420px) {
+  #app .medal-pick-cover { --medal-cover-w: 2.5rem; }
+  #app .wide-card {
+    box-shadow:
+      inset 0 1px 0 rgba(248,250,255,.13),
+      inset 0 -1px 0 rgba(0,3,12,.28),
+      0 13px 25px rgba(0,2,12,.5),
+      0 4px 11px rgba(61,98,165,.2) !important;
+  }
+}
+@media (min-width:900px) and (orientation:landscape) {
+  #app .home-desktop-main .rail-panel { overflow: visible; }
+  #app .home-desktop-main .rail {
+    padding: .75rem .75rem 2rem;
+    margin: -.75rem -.75rem -1rem;
+  }
+}
+@media (hover:hover) and (pointer:fine) {
   #app .wide-card:hover {
     transform: translateY(-3px);
     box-shadow:
-      inset 0 1px 0 rgba(250, 252, 255, 0.17),
-      inset 0 -1px 0 rgba(0, 3, 12, 0.27),
-      0 22px 40px rgba(0, 2, 12, 0.59),
-      0 7px 17px rgba(69, 107, 176, 0.26) !important;
+      inset 0 1px 0 rgba(250,252,255,.17),
+      inset 0 -1px 0 rgba(0,3,12,.27),
+      0 22px 40px rgba(0,2,12,.59),
+      0 7px 17px rgba(69,107,176,.26) !important;
   }
-}
-
-@media (max-width: 560px) {
-  #app .wide-card {
+  #app .wide-card:is(.is-selected,:active,:focus-within),
+  #app .wide-card:is(.is-selected,:active,:focus-within):hover {
     box-shadow:
-      inset 0 1px 0 rgba(248, 250, 255, 0.13),
-      inset 0 -1px 0 rgba(0, 3, 12, 0.28),
-      0 13px 25px rgba(0, 2, 12, 0.5),
-      0 4px 11px rgba(61, 98, 165, 0.2) !important;
-  }
-  #app .rail {
-    padding-bottom: 1.85rem;
-    margin-bottom: -1.15rem;
+      inset 0 1px 0 rgba(251,244,255,.2),
+      0 0 0 1px rgba(168,116,255,.32),
+      0 0 31px rgba(151,91,255,.55),
+      0 20px 38px rgba(0,2,12,.57) !important;
+    transform: translateY(-2px) translateZ(0);
   }
 }
-
-
-/* Keep the purple selected/touch state above the mouse-hover elevation rule. */
-#app .wide-card:is(.is-selected, :active, :focus-within),
-#app .wide-card:is(.is-selected, :active, :focus-within):hover {
-  border-color: rgba(190, 151, 255, 0.98) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(251, 244, 255, 0.2),
-    0 0 0 1px rgba(168, 116, 255, 0.32),
-    0 0 31px rgba(151, 91, 255, 0.55),
-    0 20px 38px rgba(0, 2, 12, 0.57) !important;
-  transform: translateY(-2px) translateZ(0);
+@media (prefers-reduced-motion:reduce) {
+  #app .wide-card,
+  #app .wide-card::before,
+  #app .wide-card::after { transition: none !important; }
 }

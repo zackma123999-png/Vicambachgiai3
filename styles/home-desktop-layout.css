@@ -434,3 +434,18 @@
   content: none !important;
   background: none !important;
 }
+
+/* The visible rounded footer card must share the page background */
+#app > .site-footer > .foot-card {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#app > .site-footer > .foot-card::before,
+#app > .site-footer > .foot-card::after {
+  display: none !important;
+  content: none !important;
+  background: none !important;
+}

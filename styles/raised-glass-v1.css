@@ -1,0 +1,137 @@
+/*
+ * ViCamBachGiai — raised glass surfaces
+ * Visual-only layer: no layout or interaction changes.
+ */
+:root {
+  --vc-glass-top: rgba(38, 57, 88, .92);
+  --vc-glass-bottom: rgba(12, 22, 42, .94);
+  --vc-glass-line: rgba(185, 211, 255, .34);
+  --vc-glass-shine: rgba(244, 249, 255, .46);
+  --vc-glass-shadow: rgba(0, 4, 17, .72);
+}
+
+body {
+  background:
+    radial-gradient(ellipse 75% 42% at 12% 2%, rgba(86, 116, 176, .20), transparent 72%),
+    radial-gradient(ellipse 65% 38% at 92% 18%, rgba(128, 89, 184, .15), transparent 72%),
+    linear-gradient(150deg, #101a30 0%, #080f20 48%, #070c19 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Main glass plates */
+.rail-panel,
+.medal-picks,
+.sig-board,
+.resonance,
+.site-footer,
+.footer-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--vc-glass-line) !important;
+  background:
+    linear-gradient(116deg, rgba(255,255,255,.11) 0%, rgba(255,255,255,.025) 27%, transparent 48%),
+    linear-gradient(155deg, var(--vc-glass-top) 0%, rgba(25,42,68,.91) 43%, var(--vc-glass-bottom) 100%) !important;
+  box-shadow:
+    inset 0 1px 0 var(--vc-glass-shine),
+    inset 1px 0 0 rgba(222,236,255,.12),
+    inset 0 -2px 0 rgba(0,5,16,.72),
+    0 3px 0 rgba(2,8,20,.90),
+    0 16px 32px var(--vc-glass-shadow),
+    0 34px 74px rgba(0,3,14,.40) !important;
+}
+
+.rail-panel::before,
+.medal-picks::before,
+.sig-board::before,
+.resonance::before,
+.site-footer::before,
+.footer-card::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(105deg, rgba(255,255,255,.14), transparent 25% 75%, rgba(139,112,255,.06)),
+    radial-gradient(ellipse 72% 20% at 50% 0%, rgba(195,225,255,.13), transparent 72%);
+}
+
+.rail-panel::after,
+.medal-picks::after,
+.sig-board::after,
+.resonance::after,
+.site-footer::after,
+.footer-card::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  left: 3%;
+  right: 3%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(247,251,255,.78) 28%, rgba(132,215,255,.56) 62%, transparent);
+  filter: drop-shadow(0 1px 3px rgba(164,221,255,.48));
+}
+
+/* Story and activity cards sit one level above their panel */
+.wide-card,
+.sig-card,
+.medal-pick,
+.res-card,
+.res-stat {
+  border-color: rgba(170,202,244,.30) !important;
+  background:
+    linear-gradient(125deg, rgba(255,255,255,.09), transparent 28%),
+    linear-gradient(150deg, rgba(35,55,84,.91), rgba(13,25,47,.94)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(246,250,255,.35),
+    inset 0 -1px 0 rgba(0,5,16,.72),
+    0 2px 0 rgba(3,9,20,.92),
+    0 10px 24px rgba(0,3,14,.55) !important;
+}
+
+.wide-card:hover,
+.medal-pick:hover,
+.sig-card:hover {
+  border-color: rgba(197,220,255,.48) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.48),
+    inset 0 -1px 0 rgba(0,5,16,.72),
+    0 3px 0 rgba(3,9,20,.92),
+    0 15px 30px rgba(0,3,14,.66),
+    0 0 24px rgba(126,105,255,.09) !important;
+}
+
+/* Header/search get a thinner, clearer glass treatment */
+.site-header,
+.search-panel {
+  background: linear-gradient(180deg, rgba(24,37,61,.92), rgba(7,14,29,.90)) !important;
+  border-color: rgba(177,205,244,.25) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.20), 0 12px 28px rgba(0,4,17,.52) !important;
+}
+
+/* Keep small screens light: same appearance, no expensive full-page blur */
+@media (max-width: 700px) {
+  body { background-attachment: scroll !important; }
+  .rail-panel,
+  .medal-picks,
+  .sig-board,
+  .resonance,
+  .site-footer,
+  .footer-card {
+    box-shadow:
+      inset 0 1px 0 rgba(245,250,255,.34),
+      inset 0 -2px 0 rgba(0,5,16,.66),
+      0 3px 0 rgba(2,8,20,.85),
+      0 13px 28px rgba(0,4,17,.58) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .rail-panel,.medal-picks,.sig-board,.resonance,.site-footer,.footer-card {
+    background: #13243d !important;
+  }
+}

@@ -75,13 +75,24 @@
   }
 }
 
-/* Landscape: visually lower only the right column. Transform does not resize
-   the shared grid row, so the story rails retain their original dimensions. */
+/* Landscape: restore the compact left column and move only the sidebar.
+   --home-side-offset is measured from the actual first rail, so neither rail
+   dimensions nor the shared grid track can be stretched by this alignment. */
 @media (min-width: 900px) and (orientation: landscape) {
+  .home-desktop-main {
+    gap: .7rem !important;
+  }
+  .home-desktop-main .home-signal-label {
+    box-sizing: border-box;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   .home-desktop-side {
-    padding-top: 0 !important;
+    padding: 0 !important;
     align-self: start !important;
-    transform: translateY(5.5rem);
+    height: max-content;
+    transform: translateY(var(--home-side-offset, 0px));
   }
   .home-desktop-side .medal-pick-copy > b {
     font-size: clamp(.72rem, 1.08vw, .9rem) !important;

@@ -6,17 +6,15 @@
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
-  background: linear-gradient(90deg, #70d7e7 0%, #8bb7f4 52%, #b493ef 100%) !important;
+  background: none !important;
   box-shadow: none !important;
-  color: transparent !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  font-family: "Saira ExtraCondensed", "Be Vietnam Pro", sans-serif !important;
-  font-size: clamp(1.35rem, 2.5vw, 1.72rem) !important;
+  color: #91b9dc !important;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif !important;
+  font-size: clamp(.88rem, 1.45vw, 1.02rem) !important;
   font-weight: 600 !important;
   font-style: normal !important;
-  line-height: 1.08 !important;
-  letter-spacing: .16em !important;
+  line-height: 1.25 !important;
+  letter-spacing: .12em !important;
   text-transform: uppercase;
   text-shadow: none !important;
 }
@@ -80,7 +78,7 @@
 /* In landscape, align the right-column medal panel with the first story rail. */
 @media (min-width: 900px) and (orientation: landscape) {
   .home-desktop-side {
-    padding-top: 2.75rem;
+    padding-top: 5.5rem;
   }
   .home-desktop-side .medal-pick-copy > b {
     font-size: clamp(.72rem, 1.08vw, .9rem) !important;

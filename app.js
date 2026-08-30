@@ -368,6 +368,14 @@
     if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
     return String(n);
   }
+  function storyTitleFit(title) {
+    const length = Array.from(String(title || "").trim()).length;
+    if (length > 64) return "title-fit-xlong";
+    if (length > 42) return "title-fit-long";
+    if (length > 26) return "title-fit-medium";
+    return "title-fit-short";
+  }
+
   function storyCard(s, compact) {
     if (compact) {
       return `<a class="story-card compact" href="#/truyen/${esc(s.slug)}">
@@ -386,7 +394,7 @@
       .filter(Boolean);
     const shown = kinds.slice(0, 2);
     const extra = kinds.length - shown.length;
-    return `<article class="wide-card" data-slug="${esc(s.slug)}" style="--tone:${esc(s.accent || "#7c5cbf")}">
+    return `<article class="wide-card ${storyTitleFit(s.title)}" data-slug="${esc(s.slug)}" style="--tone:${esc(s.accent || "#7c5cbf")}">
       <button type="button" class="wide-heart" data-fav="${esc(s.id)}" aria-label="${saved ? "Bỏ lưu" : "Lưu trữ"}" aria-pressed="${saved}">${saved ? "♥" : "♡"}</button>
       <a class="wide-cover" href="#/truyen/${esc(s.slug)}">${coverImg(s.cover, "Bìa " + s.title)}</a>
       <div class="wide-body">

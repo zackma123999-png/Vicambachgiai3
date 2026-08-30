@@ -1,5 +1,5 @@
 (() => {
-  const isHome = () => !location.hash || location.hash === "#" || location.hash === "#/";
+  const isHome = () => {\n    const route = location.hash.slice(1).split("?")[0];\n    return route === "" || route === "/";\n  };
 
   function mountHomeDesktopLayout() {
     const app = document.getElementById("app");

@@ -616,8 +616,32 @@
   margin-block: 0 !important;
   line-height: 1.2;
 }
-#app .home-desktop-side .medal-pick-cover { --medal-cover-w: 42px; }
-#app .home-desktop-side .medal-pick-stats { margin-top: 0 !important; }
+#app .home-desktop-side .medal-pick {
+  grid-template-rows: auto auto;
+  row-gap: 3px !important;
+}
+#app .home-desktop-side .medal-pick-rank {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+#app .home-desktop-side .medal-pick-cover {
+  --medal-cover-w: 42px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center !important;
+}
+#app .home-desktop-side .medal-pick-copy {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: end !important;
+}
+#app .home-desktop-side .medal-pick-stats {
+  grid-column: 3;
+  grid-row: 2;
+  align-self: start !important;
+  margin-top: 0 !important;
+}
 
 /* Resonance is vector-only. Every artwork holder remains genuinely transparent. */
 #app .res-live > strong {
@@ -662,10 +686,51 @@
     inset 0 -1px 0 rgba(0,3,12,.22),
     0 14px 29px rgba(0,2,12,.34),
     0 3px 10px rgba(55,89,151,.11) !important;
+  border-radius: clamp(18px,3vw,24px) !important;
+  overflow: hidden;
+}
+
+#app .resonance {
+  padding: clamp(.85rem,2.2vw,1.2rem) !important;
+  border-radius: clamp(20px,3.2vw,26px) !important;
+}
+#app .res-original-art,
+#app .res-original-art image {
+  background: transparent !important;
 }
 
 @media (max-width:760px) {
-  #app .medal-pick-cover { --medal-cover-w: 2.7rem; }
+  #app .medal-pick {
+    grid-template-rows: auto auto;
+    row-gap: .28rem !important;
+  }
+  #app .medal-pick-rank {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+  #app .medal-pick-cover {
+    --medal-cover-w: 2.7rem;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center !important;
+  }
+  #app .medal-pick-copy {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: end !important;
+  }
+  #app .medal-pick-status {
+    grid-column: 4;
+    grid-row: 1;
+    align-self: center !important;
+  }
+  #app .medal-pick-stats {
+    grid-column: 3 / 5;
+    grid-row: 2;
+    align-self: start !important;
+    margin-top: 0 !important;
+  }
 }
 @media (max-width:420px) {
   #app .medal-pick-cover { --medal-cover-w: 2.5rem; }

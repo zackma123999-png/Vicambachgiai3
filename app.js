@@ -794,7 +794,17 @@
         else p.delete(k);
       });
       const q = p.toString();
-      go("/" + (q ? "?" + q : ""));
+      const nextHash = "#/" + (q ? "?" + q : "");
+      if (location.hash !== nextHash) history.replaceState(null, "", nextHash);
+
+      const current = $("#tin-hieu");
+      if (!current) return;
+      const holder = document.createElement("div");
+      holder.innerHTML = homeLower();
+      const fresh = holder.firstElementChild;
+      if (!fresh) return;
+      current.replaceWith(fresh);
+      bindLowerHome(true);
     };
     $$("[data-sig]").forEach((b) => {
       b.onclick = () => setSig({ sig: b.dataset.sig });

@@ -550,7 +550,7 @@
   }
   function bindMedalTitleFit() {
     const fitTitles = () => {
-      Array.from($(".medal-pick-copy > b")).forEach((title) => {
+      Array.from(document.querySelectorAll(".medal-pick-copy > b")).forEach((title) => {
         title.style.fontSize = "";
         let size = parseFloat(getComputedStyle(title).fontSize) || 16;
         while (title.scrollWidth > title.clientWidth + 1 && size > 9.25) {
@@ -571,7 +571,7 @@
     if (window.__vcbgMedalObserver) window.__vcbgMedalObserver.disconnect();
     if ("ResizeObserver" in window) {
       window.__vcbgMedalObserver = new ResizeObserver(() => window.__vcbgMedalResize());
-      Array.from($(".medal-pick-copy")).forEach((el) => window.__vcbgMedalObserver.observe(el));
+      Array.from(document.querySelectorAll(".medal-pick-copy")).forEach((el) => window.__vcbgMedalObserver.observe(el));
     }
   }
   function recommendationPanel() {

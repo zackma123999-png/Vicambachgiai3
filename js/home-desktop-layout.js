@@ -3,14 +3,15 @@
 
   function mountHomeDesktopLayout() {
     const app = document.getElementById("app");
-    if (!app || !isHome() || app.querySelector(".home-desktop-grid")) return;
+    if (!app || !isHome() || app.querySelector(".home-desktop-grid")) return false;
 
-    const label = app.querySelector(":scope > .home-signal-label");
-    const rails = app.querySelector(":scope > .rails");
-    const medal = app.querySelector(":scope > .medal-picks");
-    const signal = app.querySelector(":scope > #tin-hieu");
-    const resonance = app.querySelector(":scope > #mat-do-cong-huong");
-    if (!label || !rails || !medal || !signal || !resonance) return;
+    const direct = (selector) => Array.from(app.children).find((node) => node.matches(selector));
+    const label = direct(".home-signal-label");
+    const rails = direct(".rails");
+    const medal = direct(".medal-picks");
+    const signal = direct("#tin-hieu");
+    const resonance = direct("#mat-do-cong-huong");
+    if (!label || !rails || !medal || !signal || !resonance) return false;
 
     const grid = document.createElement("div");
     grid.className = "home-desktop-grid";
@@ -24,6 +25,7 @@
     grid.append(main, side);
     main.append(label, rails);
     side.append(medal, signal, resonance);
+    return true;
   }
 
   let queued = false;
@@ -38,7 +40,16 @@
 
   document.addEventListener("DOMContentLoaded", schedule, { once: true });
   window.addEventListener("hashchange", schedule);
-  const app = document.getElementById("app");
-  if (app) new MutationObserver(schedule).observe(app, { childList: true });
+  new MutationObserver(schedule).observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
+  let attempts = 0;
+  const retry = setInterval(() => {
+    attempts += 1;
+    if (mountHomeDesktopLayout() || attempts >= 20) clearInterval(retry);
+  }, 250);
+
   schedule();
 })();

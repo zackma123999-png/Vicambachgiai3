@@ -841,3 +841,16 @@
     margin-bottom: -1.15rem;
   }
 }
+
+
+/* Keep the purple selected/touch state above the mouse-hover elevation rule. */
+#app .wide-card:is(.is-selected, :active, :focus-within),
+#app .wide-card:is(.is-selected, :active, :focus-within):hover {
+  border-color: rgba(190, 151, 255, 0.98) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(251, 244, 255, 0.2),
+    0 0 0 1px rgba(168, 116, 255, 0.32),
+    0 0 31px rgba(151, 91, 255, 0.55),
+    0 20px 38px rgba(0, 2, 12, 0.57) !important;
+  transform: translateY(-2px) translateZ(0);
+}

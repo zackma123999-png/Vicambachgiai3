@@ -1,0 +1,197 @@
+/*
+ * ViCamBachGiai — large landscape two-column homepage
+ * Banner and portrait/mobile layouts stay unchanged.
+ */
+.home-desktop-grid,
+.home-desktop-main,
+.home-desktop-side {
+  display: contents;
+}
+
+@media (min-width: 900px) and (orientation: landscape) {
+  .home-desktop-grid {
+    width: min(calc(100% - 40px), 1520px);
+    margin: 20px auto 64px;
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(290px, 1fr);
+    gap: clamp(18px, 2vw, 30px);
+    align-items: start;
+  }
+
+  .home-desktop-main,
+  .home-desktop-side {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .home-desktop-main { gap: 22px; }
+  .home-desktop-side { gap: 22px; }
+
+  .home-desktop-grid .wrap {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .home-desktop-main .home-signal-label {
+    margin-top: 0;
+    margin-bottom: -8px;
+  }
+
+  .home-desktop-main .rails {
+    margin-top: 0;
+  }
+
+  /* Main library column keeps the existing story-card language. */
+  .home-desktop-main .rail-panel {
+    width: 100%;
+  }
+
+  /* Compact right column: same content, reformatted vertically. */
+  .home-desktop-side .medal-picks,
+  .home-desktop-side .sig-wrap,
+  .home-desktop-side .resonance {
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+  }
+
+  .home-desktop-side .medal-picks {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .home-desktop-side .medal-picks-head {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .home-desktop-side .medal-pick {
+    grid-template-columns: 30px 42px minmax(0, 1fr) !important;
+    gap: 8px !important;
+    min-width: 0;
+    padding: 10px 6px !important;
+  }
+
+  .home-desktop-side .medal-pick-rank {
+    font-size: 20px;
+  }
+
+  .home-desktop-side .medal-pick-cover {
+    width: 42px;
+    height: 56px;
+  }
+
+  .home-desktop-side .medal-pick-copy {
+    min-width: 0;
+  }
+
+  .home-desktop-side .medal-pick-copy > * {
+    max-width: 100%;
+  }
+
+  .home-desktop-side .medal-pick-status {
+    display: none;
+  }
+
+  .home-desktop-side .medal-pick-stats {
+    grid-column: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: -19px;
+    font-size: 11px;
+  }
+
+  .home-desktop-side .sig-board {
+    padding: 16px 14px;
+  }
+
+  .home-desktop-side .sig-head {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .home-desktop-side .sig-tools {
+    display: grid;
+    gap: 9px;
+  }
+
+  .home-desktop-side .sig-tabs {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .home-desktop-side .sig-tabs::-webkit-scrollbar { display: none; }
+
+  .home-desktop-side .sig-list {
+    max-height: 450px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+  }
+
+  .home-desktop-side .sig-card {
+    padding: 13px 4px;
+    gap: 9px;
+  }
+
+  .home-desktop-side .sig-ava {
+    width: 36px;
+    height: 36px;
+  }
+
+  .home-desktop-side .sig-text,
+  .home-desktop-side .sig-quote {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .home-desktop-side .resonance {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .home-desktop-side .res-head {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .home-desktop-side .res-showcase {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .home-desktop-side .res-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .home-desktop-side .res-metric {
+    min-width: 0;
+  }
+
+  .home-desktop-side .res-radar,
+  .home-desktop-side .res-visit-art {
+    transform: scale(.82);
+    transform-origin: center;
+  }
+
+  .home-desktop-side .res-illustration {
+    max-width: 52px;
+    max-height: 52px;
+  }
+
+  .home-desktop-side .res-stat-copy {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 1280px) and (orientation: landscape) {
+  .home-desktop-grid {
+    grid-template-columns: minmax(0, 3.15fr) minmax(330px, 1fr);
+  }
+}

@@ -120,8 +120,8 @@
 
     try {
       for (let resize = 0; resize < 10; resize += 1) {
-        const width = Math.max(240, Math.round(decoded.width * scale));
-        const height = Math.max(360, Math.round(decoded.height * scale));
+        const width = Math.max(1, Math.round(decoded.width * scale));
+        const height = Math.max(1, Math.round(decoded.height * scale));
         const canvas = document.createElement("canvas");
         canvas.width = width;
         canvas.height = height;

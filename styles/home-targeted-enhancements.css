@@ -88,6 +88,20 @@
     margin: 0 !important;
     padding: 0 !important;
   }
+
+  /* Restore the original rail flow: heading first, cards immediately below.
+     Remove the later negative-margin/deep-padding treatment that pinned cards
+     against the bottom edge of every large section shell. */
+  .home-desktop-main .rail-panel {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  .home-desktop-main .rail {
+    align-self: auto !important;
+    margin: 0 !important;
+    padding: 0 0 .4rem !important;
+  }
   .home-desktop-side {
     padding: 0 !important;
     align-self: start !important;

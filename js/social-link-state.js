@@ -1,6 +1,6 @@
 /* ViCamBachGiai — social icon availability state */
 (function () {
-  const keys = ['youtube','tiktok','facebook','wattpad'];
+  const keys = ['youtube','tiktok','instagram','facebook','wattpad'];
 
   function socialSettings() {
     try {

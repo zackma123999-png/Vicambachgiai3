@@ -75,10 +75,13 @@
   }
 }
 
-/* In landscape, align the right-column medal panel with the first story rail. */
+/* Landscape: visually lower only the right column. Transform does not resize
+   the shared grid row, so the story rails retain their original dimensions. */
 @media (min-width: 900px) and (orientation: landscape) {
   .home-desktop-side {
-    padding-top: 5.5rem;
+    padding-top: 0 !important;
+    align-self: start !important;
+    transform: translateY(5.5rem);
   }
   .home-desktop-side .medal-pick-copy > b {
     font-size: clamp(.72rem, 1.08vw, .9rem) !important;

@@ -9,7 +9,7 @@
     tagline: "Thư viện Bách Hợp — đọc chậm, ở lại lâu.",
     allow_comments: true,
     allow_registration: true,
-    social: { youtube: "", tiktok: "", facebook: "", wattpad: "" },
+    social: { youtube: "", tiktok: "", instagram: "", facebook: "", wattpad: "" },
     featured_quote: null,
     poll: { id: "poll_home", title: "Bạn muốn ViCam ưu tiên truyện nào?", story_ids: [] },
   });

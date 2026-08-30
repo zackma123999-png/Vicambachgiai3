@@ -339,19 +339,15 @@
   };
   function socialStrip() {
     const so = (VCBG.settings() && VCBG.settings().social) || {};
-    const items = [
-      ["youtube", "YouTube"],
-      ["tiktok", "TikTok"],
-      ["facebook", "Facebook"],
-      ["wattpad", "Wattpad"],
-    ];
-    return `<nav class="social-strip" aria-label="Mạng xã hội">${items
-      .map(([k, label]) => {
-        const href = String(so[k] || SOCIAL_DEFAULTS[k] || "").trim();
-        if (!href) return "";
-        return `<a class="social-ico" href="${esc(href)}" target="_blank" rel="noopener noreferrer" aria-label="${label}">${SOCIAL_ICONS[k]}</a>`;
-      })
-      .join("")}</nav>`;
+    const items = [["youtube", "YouTube"], ["tiktok", "TikTok"], ["facebook", "Facebook"], ["wattpad", "Wattpad"]];
+    return `<nav class="social-strip" aria-label="Mạng xã hội">${items.map(([k, label]) => {
+      const href = String(so[k] || "").trim();
+      const active = /^https?:\/\//i.test(href);
+      const inner = SOCIAL_ICONS[k];
+      return active
+        ? `<a class="social-ico is-active social-${k}" data-social="${k}" href="${esc(href)}" target="_blank" rel="noopener noreferrer" aria-label="${label}">${inner}</a>`
+        : `<span class="social-ico is-disabled social-${k}" data-social="${k}" role="img" aria-label="${label} — chưa có liên kết" aria-disabled="true">${inner}</span>`;
+    }).join("")}</nav>`;
   }
   function storyPills(s) {
     const bits = [storyStatusLabel(s)].concat((s.genres || []).slice(0, 1).map((g) => g.name));
@@ -552,40 +548,86 @@
       </div>
     </section>`;
   }
-  function recommendationPanel() {
+  function autoChapterQuote(body, seed) {
+    const holder = document.createElement("div");
+    holder.innerHTML = String(body || "").replace(/<br\s*\/?>/gi, ". ").replace(/<\/p>|<\/div>|<\/blockquote>|<\/li>|<\/h[1-6]>/gi, ". ");
+    const text = String(holder.textContent || "").replace(/\s+/g, " ").replace(/\.{2,}/g, "…").trim();
+    if (!text) return "";
+    const pieces = text.match(/[^.!?…。！？]{38,150}[.!?…。！？]/gu) || [];
+    const candidates = pieces.map((part) => part.trim().replace(/^[“”"'—–\-\s]+|[“”"'\s]+$/g, "")).filter((part) => {
+      const n = Array.from(part).length;
+      return n >= 42 && n <= 145 && !/^(chương|phần|ngoại truyện|mục lục)\b/i.test(part);
+    });
+    if (!candidates.length) {
+      const fallback = Array.from(text).slice(0, 118).join("").trim();
+      return fallback ? fallback + (Array.from(text).length > 118 ? "…" : "") : "";
+    }
+    let hash = 0;
+    Array.from(String(seed || "")).forEach((char) => { hash = ((hash << 5) - hash + char.charCodeAt(0)) | 0; });
+    return candidates[Math.abs(hash) % candidates.length];
+  }
+    async function bindMedalEnhancements() {
+    const titles = $(".medal-pick-copy > b");
+    const fitTitles = () => {
+      titles.forEach((title) => {
+        title.style.fontSize = "";
+        let size = parseFloat(getComputedStyle(title).fontSize) || 16;
+        while (title.scrollWidth > title.clientWidth + 1 && size > 9.5) {
+          size -= 0.35;
+          title.style.fontSize = size + "px";
+        }
+      });
+    };
+    fitTitles();
+    if (window.__vcbgMedalResize) window.removeEventListener("resize", window.__vcbgMedalResize);
+    let resizeFrame = 0;
+    window.__vcbgMedalResize = () => {
+      cancelAnimationFrame(resizeFrame);
+      resizeFrame = requestAnimationFrame(fitTitles);
+    };
+    window.addEventListener("resize", window.__vcbgMedalResize, { passive: true });
+    await Promise.all($("[data-medal-quote]").map(async (node) => {
+      const storyId = node.dataset.medalQuote;
+      const chapters = VCBG.listChapters(storyId, { sort: "desc" });
+      let selected = null;
+      let quote = "";
+      for (const chapter of chapters.slice(0, 3)) {
+        try {
+          await VCBG.ensureChapterBody(chapter);
+          quote = autoChapterQuote(chapter.body, storyId + ":" + chapter.number);
+          if (quote) { selected = chapter; break; }
+        } catch (_) {}
+      }
+      if (!node.isConnected) return;
+      if (quote) {
+        node.innerHTML = `<q>${esc(quote)}</q><small>Trích chương ${esc(selected.number)}</small>`;
+        node.classList.add("is-ready");
+      } else {
+        node.innerHTML = `<q>Chưa có nội dung chương để trích dẫn.</q>`;
+        node.classList.add("is-empty");
+      }
+    }));
+    fitTitles();
+  }
+    function recommendationPanel() {
     const weekly = VCBG.weeklyRanking ? VCBG.weeklyRanking(5) : [];
-    const ranked = weekly.length
-      ? weekly
-      : VCBG.listStories({ sort: "views" }).slice(0, 5).map((story, i) => ({ rank: i + 1, story, week: 0 }));
+    const ranked = weekly.length ? weekly : VCBG.listStories({ sort: "views" }).slice(0, 5).map((story, i) => ({ rank: i + 1, story, week: 0 }));
     if (!ranked.length) return "";
     const tones = ["gold", "lavender", "sapphire", "jade", "coral"];
     return `<section class="wrap medal-picks" aria-labelledby="medalPicksTitle">
-      <header class="medal-picks-head">
-        <span class="medal-picks-emblem" aria-hidden="true">✦</span>
-        <div>
-          <small>BẢNG VINH DANH</small>
-          <h2 id="medalPicksTitle">Kim Bài Đề Cử</h2>
-        </div>
-      </header>
-      <div class="medal-picks-list">
-        ${ranked.map((row, i) => {
-          const s = row.story;
-          const visits = Number(row.week) || 0;
-          return `<a class="medal-pick medal-pick-${tones[i]}" href="#/truyen/${esc(s.slug)}" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
-            <strong class="medal-pick-rank">${String(i + 1).padStart(2, "0")}</strong>
-            <span class="medal-pick-cover">${coverImg(s.cover, "Bìa " + s.title)}</span>
-            <span class="medal-pick-copy">
-              <b>${esc(s.title)}</b>
-              <small>${esc(s.author || "—")}</small>
-            </span>
-            <span class="medal-pick-status">${esc(storyStatusLabel(s))}</span>
-            <span class="medal-pick-stats">
-              <span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span>
-              <span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span>
-            </span>
-          </a>`;
-        }).join("")}
-      </div>
+      <header class="medal-picks-head"><span class="medal-picks-emblem" aria-hidden="true">✦</span><div><small>BẢNG VINH DANH</small><h2 id="medalPicksTitle">Kim Bài Đề Cử</h2></div></header>
+      <div class="medal-picks-list">${ranked.map((row, i) => {
+        const s = row.story;
+        const visits = Number(row.week) || 0;
+        return `<a class="medal-pick medal-pick-${tones[i]}" href="#/truyen/${esc(s.slug)}" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
+          <strong class="medal-pick-rank">${String(i + 1).padStart(2, "0")}</strong>
+          <span class="medal-pick-cover">${coverImg(s.cover, "Bìa " + s.title)}</span>
+          <span class="medal-pick-copy"><b title="${esc(s.title)}">${esc(s.title)}</b><small>${esc(s.author || "—")}</small></span>
+          <span class="medal-pick-status">${esc(storyStatusLabel(s))}</span>
+          <span class="medal-pick-quote" data-medal-quote="${esc(s.id)}" aria-live="polite"><q>Đang chọn trích dẫn…</q></span>
+          <span class="medal-pick-stats"><span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span><span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span></span>
+        </a>`;
+      }).join("")}</div>
     </section>`;
   }
   function bindResonance() {
@@ -1092,6 +1134,7 @@
       footer();
     bindChrome();
     bindResonance();
+    bindMedalEnhancements().catch((err) => console.warn("[VCBG medal quotes]", err));
     const deck = banner;
     const n = deck.length;
     const heroEl = $("#hero");

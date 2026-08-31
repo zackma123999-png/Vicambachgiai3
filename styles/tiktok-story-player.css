@@ -114,16 +114,16 @@
 .tiktok-story-live { color: #ffc6ef; font-size: .52rem; white-space: nowrap; }
 .tiktok-story-live i { display: inline-block; width: .35rem; height: .35rem; margin-right: .18rem; border-radius: 50%; background: #ff3d98; box-shadow: 0 0 8px #ff3d98; animation: tiktokLive 1.3s ease-in-out infinite; }
 .tiktok-story-player.is-minimized .tiktok-story-preview {
-  position: absolute !important;
+  position: fixed !important;
   right: 0;
   bottom: 0;
-  width: 1px !important;
-  height: 1px !important;
+  width: 180px !important;
+  height: 320px !important;
   max-height: none !important;
-  aspect-ratio: auto !important;
+  aspect-ratio: 9 / 16 !important;
   margin: 0 !important;
   opacity: 0 !important;
-  clip-path: inset(50%);
+  clip-path: inset(100%);
   transform: none !important;
   pointer-events: none;
 }

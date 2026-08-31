@@ -79,7 +79,7 @@
 }
 .tiktok-story-tag {
   display: grid;
-  grid-template-columns: auto auto minmax(0,1fr) auto auto auto;
+  grid-template-columns: auto minmax(0,1fr) auto auto auto;
   align-items: center;
   gap: .5rem;
   min-height: 3.05rem;
@@ -92,13 +92,11 @@
   backdrop-filter: blur(18px);
 }
 .tiktok-story-tag img { width: 2.15rem; height: 2.15rem; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,.24); }
-.tiktok-story-toggle,
 .tiktok-story-video-toggle,
 .tiktok-story-close { border: 0; color: #fff; background: transparent; cursor: pointer; }
-.tiktok-story-toggle { width: 2.15rem; height: 2.15rem; border-radius: 50%; background: linear-gradient(145deg, #ff2c85, #8b4fff); box-shadow: 0 0 14px rgba(255,44,133,.52); }
-.tiktok-story-toggle span { font-size: .7rem; margin-left: .1rem; }
-.tiktok-story-video-toggle { width: 1.85rem; height: 1.85rem; border-radius: 50%; color: #d9bfff; background: rgba(151,92,235,.16); }
+.tiktok-story-video-toggle { display: inline-flex; align-items: center; gap: .22rem; min-width: 4.5rem; height: 1.85rem; padding: 0 .52rem; border-radius: 999px; color: #e7d8ff; background: rgba(151,92,235,.18); }
 .tiktok-story-video-toggle span { font-size: .8rem; }
+.tiktok-story-video-toggle small { font-size: .5rem; font-weight: 700; white-space: nowrap; }
 .tiktok-story-close { width: 1.85rem; height: 1.85rem; font-size: 1.45rem; color: #d9d0e8; }
 .tiktok-story-copy { min-width: 0; }
 .tiktok-story-copy b,
@@ -132,7 +130,7 @@
   .tiktok-story-player.is-ready { transform: translateX(-50%); }
   .tiktok-story-preview { width: min(10rem, 43vw); }
   .tiktok-story-live { display: none; }
-  .tiktok-story-tag { grid-template-columns: auto auto minmax(0,1fr) auto auto; gap: .38rem; }
+  .tiktok-story-tag { grid-template-columns: auto minmax(0,1fr) auto auto; gap: .38rem; }
 }
 @media (min-width: 900px) and (orientation: landscape) {
   .home-desktop-side .medal-tiktok-button { position: static; grid-column: 3; grid-row: 3; justify-self: stretch; justify-content: center; width: 100%; margin-top: .2rem; }

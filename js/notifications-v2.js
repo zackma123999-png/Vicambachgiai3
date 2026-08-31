@@ -60,7 +60,7 @@
   }
 
   function bellSvg() {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6v3.45c0 1.88-.72 3.68-2.02 5.04l-.69.72A1.05 1.05 0 0 0 4.05 19h15.9a1.05 1.05 0 0 0 .76-1.79l-.69-.72A7.33 7.33 0 0 1 18 11.45V8a6 6 0 0 0-6-6Zm-2.38 18a2.5 2.5 0 0 0 4.76 0H9.62Z"/></svg>';
   }
 
   function renderBell() {

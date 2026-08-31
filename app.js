@@ -10,6 +10,10 @@
       .replace(/>/g, "&" + "gt;")
       .replace(/"/g, "&" + "quot;");
   };
+  function tiktokPostId(value) {
+    const match = String(value || "").trim().match(/(?:tiktok\.com\/[^?#]*\/video\/|^)(\d{10,})(?:[/?#]|$)/i);
+    return match ? match[1] : "";
+  }
   const ALLOWED = new Set(["P", "BR", "STRONG", "B", "EM", "I", "U", "S", "STRIKE", "H2", "H3", "H4", "BLOCKQUOTE", "UL", "OL", "LI", "A", "IMG", "DIV", "SPAN", "HR"]);
   function cleanStyle(value) {
     const kept = [];
@@ -563,16 +567,19 @@
         ${ranked.map((row, i) => {
           const s = row.story;
           const visits = Number(row.week) || 0;
-          return `<a class="medal-pick medal-pick-${tones[i]}" href="#/truyen/${esc(s.slug)}" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
+          const postId = tiktokPostId(s.tiktok_intro_url);
+          const storyHref = `#/truyen/${esc(s.slug)}`;
+          return `<article class="medal-pick medal-pick-${tones[i]}" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
             <strong class="medal-pick-rank">${String(i + 1).padStart(2, "0")}</strong>
-            <span class="medal-pick-cover">${coverImg(s.cover, "Bìa " + s.title)}</span>
-            <span class="medal-pick-copy"><b title="${esc(s.title)}">${esc(s.title)}</b><small>${esc(s.author || "—")}</small></span>
+            <a class="medal-pick-cover" href="${storyHref}" aria-label="Mở truyện ${esc(s.title)}">${coverImg(s.cover, "Bìa " + s.title)}</a>
+            <a class="medal-pick-copy" href="${storyHref}"><b title="${esc(s.title)}">${esc(s.title)}</b><small>${esc(s.author || "—")}</small></a>
             <span class="medal-pick-status">${esc(storyStatusLabel(s))}</span>
             <span class="medal-pick-stats">
               <span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span>
               <span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span>
             </span>
-          </a>`;
+            ${postId ? `<button class="medal-tiktok-button" type="button" data-tiktok-post="${postId}" data-story-title="${esc(s.title)}" data-story-author="${esc(s.author || "")}" data-story-cover="${esc(s.cover || "")}" aria-label="Nghe giới thiệu ${esc(s.title)} từ TikTok"><span aria-hidden="true">▶</span><small>Nghe giới thiệu</small></button>` : ""}
+          </article>`;
         }).join("")}
       </div>
     </section>`;
@@ -2705,7 +2712,7 @@
       };
   }
   function adminStoryForm(id) {
-    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, accent: "#8a6a4a", cover: "", genres: [], tags: [] };
+    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, accent: "#8a6a4a", cover: "", tiktok_intro_url: "", genres: [], tags: [] };
     const selectedStatus = s.upcoming ? "upcoming" : s.status;
     const gids = (s.genres || []).map((g) => g.id);
     const tids = (s.tags || []).map((t) => t.id);
@@ -2731,6 +2738,10 @@
             </select>
           </div>
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
+          <div class="field"><label>Video TikTok giới thiệu truyện</label>
+            <input name="tiktok_intro_url" type="url" inputmode="url" value="${esc(s.tiktok_intro_url || "")}" placeholder="https://www.tiktok.com/@ten/video/1234567890123456789">
+            <p class="editor-hint">Dán liên kết đầy đủ của video TikTok công khai có đoạn <b>/video/…</b>. Để trống nếu truyện chưa có audio giới thiệu.</p>
+          </div>
           <div class="field"><label>Màu chủ đạo banner</label><input name="accent" value="${esc(s.accent || "#8a6a4a")}"></div>
           <div class="field"><label>Bìa</label><input type="file" id="coverFile" accept="image/*">
             <p class="editor-hint" id="coverStatus">Có thể chọn ảnh dung lượng lớn từ điện thoại. Website sẽ tự chuyển sang WebP và giảm xuống dung lượng an toàn.</p>
@@ -2788,6 +2799,7 @@
           description: fd.get("description"),
           status: fd.get("status"),
           featured: e.target.featured.checked,
+          tiktok_intro_url: fd.get("tiktok_intro_url"),
           upcoming: fd.get("status") === "upcoming",
           accent: fd.get("accent"),
           cover,

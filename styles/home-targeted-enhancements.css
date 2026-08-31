@@ -41,8 +41,9 @@
 .social-strip .social-facebook { background: #1877f2 !important; }
 .social-strip .social-wattpad { background: #ff5a1f !important; }
 .social-strip .social-ico.is-disabled {
-  opacity: .72 !important;
-  filter: saturate(.72) brightness(.9) !important;
+  /* Missing links affect interaction only, never the visual treatment. */
+  opacity: 1 !important;
+  filter: none !important;
   cursor: default !important;
   pointer-events: none !important;
 }

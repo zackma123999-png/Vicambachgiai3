@@ -4,6 +4,16 @@
   let frame = null;
   let playing = true;
 
+  function sendPlayerCommand(type, value) {
+    try { frame?.contentWindow.postMessage({ type, value }, "https://www.tiktok.com"); } catch (_) {}
+  }
+
+  function playWithSound() {
+    sendPlayerCommand("unMute", null);
+    sendPlayerCommand("changeVolume", 1);
+    sendPlayerCommand("play", null);
+  }
+
   function esc(value) {
     const node = document.createElement("span");
     node.textContent = String(value || "");
@@ -45,7 +55,9 @@
     frame = dock.querySelector("iframe");
     playing = true;
     frame.addEventListener("load", function () {
-      try { frame.contentWindow.postMessage({ type: "play", value: null }, "https://www.tiktok.com"); } catch (_) {}
+      playWithSound();
+      window.setTimeout(playWithSound, 180);
+      window.setTimeout(playWithSound, 520);
     }, { once: true });
     requestAnimationFrame(() => dock && dock.classList.add("is-ready"));
   }
@@ -65,7 +77,8 @@
     }
     if (event.target.closest(".tiktok-story-toggle")) {
       playing = !playing;
-      try { frame?.contentWindow.postMessage({ type: playing ? "play" : "pause", value: null }, "https://www.tiktok.com"); } catch (_) {}
+      if (playing) playWithSound();
+      else sendPlayerCommand("pause", null);
       const icon = dock.querySelector(".tiktok-story-toggle span");
       const control = dock.querySelector(".tiktok-story-toggle");
       const live = dock.querySelector(".tiktok-story-live");

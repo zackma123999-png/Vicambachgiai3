@@ -24,14 +24,14 @@
     const author = button.dataset.storyAuthor || "TikTok";
     const cover = button.dataset.storyCover || "";
     dock = document.createElement("aside");
-    dock.className = "tiktok-story-player is-open";
+    dock.className = "tiktok-story-player is-open is-minimized";
     dock.setAttribute("aria-label", "Trình phát giới thiệu truyện từ TikTok");
     dock.innerHTML = `<div class="tiktok-story-preview">
       <button class="tiktok-story-minimize" type="button" aria-label="Thu nhỏ video">⌄</button>
       <iframe title="TikTok giới thiệu ${esc(title)}" src="https://www.tiktok.com/player/v1/${post}?autoplay=1&loop=0&controls=1&progress_bar=1&play_button=1&volume_control=1&fullscreen_button=0&description=0&music_info=0&rel=0&native_context_menu=0" allow="autoplay; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
     </div>
     <div class="tiktok-story-tag">
-      <button class="tiktok-story-toggle" type="button" aria-label="Hiện hoặc ẩn video"><span aria-hidden="true">▶</span></button>
+      <button class="tiktok-story-toggle" type="button" aria-label="Mở video TikTok"><span aria-hidden="true">▶</span></button>
       ${cover ? `<img src="${esc(cover)}" alt="">` : ""}
       <span class="tiktok-story-copy"><b>${esc(title)}</b><small>Giới thiệu từ TikTok · ${esc(author)}</small></span>
       <span class="tiktok-story-live"><i></i> Đang phát</span>
@@ -66,4 +66,3 @@
 
   window.addEventListener("hashchange", closePlayer);
 })();
-

@@ -1685,9 +1685,17 @@
       story.featured = !!data.featured;
       story.upcoming = upcoming;
       story.accent = data.accent || "#8a6a4a";
-      const tiktokIntroUrl = String(data.tiktok_intro_url || "").trim();
-      if (tiktokIntroUrl && (!/^https:\/\/(?:www\.)?tiktok\.com\//i.test(tiktokIntroUrl) || !/\/video\/\d{10,}(?:[/?#]|$)/i.test(tiktokIntroUrl))) {
-        throw new Error("Liên kết TikTok cần là link đầy đủ, công khai và có đoạn /video/…");
+      let tiktokIntroUrl = String(data.tiktok_intro_url || "").trim();
+      if (tiktokIntroUrl) {
+        let tiktokHost = "";
+        try { tiktokHost = new URL(tiktokIntroUrl).hostname.toLowerCase(); } catch (_) {}
+        const allowedTikTokHosts = ["tiktok.com", "www.tiktok.com", "m.tiktok.com", "vt.tiktok.com", "vm.tiktok.com"];
+        if (!allowedTikTokHosts.includes(tiktokHost)) throw new Error("Liên kết này không thuộc TikTok.");
+        if (!/\/video\/\d{10,}(?:[/?#]|$)/i.test(tiktokIntroUrl)) {
+          const { data: resolved, error: resolveError } = await sb.functions.invoke("resolve-tiktok-link", { body: { url: tiktokIntroUrl } });
+          if (resolveError || !resolved?.url || !resolved?.post_id) throw new Error("Không mở được link TikTok rút gọn. Hãy thử sao chép lại link chia sẻ.");
+          tiktokIntroUrl = String(resolved.url);
+        }
       }
       story.tiktok_intro_url = tiktokIntroUrl;
       if (data.cover_file) {

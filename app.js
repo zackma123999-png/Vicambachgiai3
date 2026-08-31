@@ -578,7 +578,7 @@
               <span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span>
               <span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span>
             </span>
-            <button class="medal-tiktok-button${postId ? "" : " is-unavailable"}" type="button" ${postId ? `data-tiktok-post="${postId}" data-story-title="${esc(s.title)}" data-story-author="${esc(s.author || "")}" data-story-cover="${esc(s.cover || "")}" aria-label="Nghe giới thiệu ${esc(s.title)} từ TikTok"` : `disabled aria-disabled="true" aria-label="Truyện ${esc(s.title)} chưa có audio giới thiệu"`}><span aria-hidden="true">▶</span><small>${postId ? "Nghe giới thiệu" : "Chưa có audio"}</small></button>
+            <button class="medal-tiktok-button${postId ? "" : " is-unavailable"}" type="button" ${postId ? `data-tiktok-post="${postId}" data-story-title="${esc(s.title)}" data-story-author="${esc(s.author || "")}" data-story-cover="${esc(s.cover || "")}" aria-label="Xem và nghe giới thiệu ${esc(s.title)} trên TikTok"` : `disabled aria-disabled="true" aria-label="Truyện ${esc(s.title)} chưa có video giới thiệu"`}><span aria-hidden="true">♪</span><small>${postId ? "Xem & nghe giới thiệu" : "Chưa có giới thiệu"}</small></button>
           </article>`;
         }).join("")}
       </div>

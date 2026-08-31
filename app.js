@@ -344,7 +344,7 @@
   };
   function socialStrip() {
     const so = (VCBG.settings() && VCBG.settings().social) || {};
-    const items = [["youtube", "YouTube"], ["tiktok", "TikTok"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["wattpad", "Wattpad"]];
+    const items = [["tiktok", "TikTok"], ["instagram", "Instagram"], ["wattpad", "Wattpad"]];
     return `<nav class="social-strip" aria-label="Mạng xã hội">${items.map(([k, label]) => {
       const href = String(so[k] || "").trim();
       const active = /^https?:\/\//i.test(href);

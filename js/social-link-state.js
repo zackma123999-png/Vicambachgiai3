@@ -1,6 +1,5 @@
 /* ViCamBachGiai — social icon availability state */
 (function () {
-  const keys = ['youtube','tiktok','instagram','facebook','wattpad'];
 
   function socialSettings() {
     try {
@@ -17,8 +16,8 @@
     const so = socialSettings();
     const icons = Array.from(strip.querySelectorAll('.social-ico'));
 
-    icons.forEach((el, i) => {
-      const key = keys[i];
+    icons.forEach((el) => {
+      const key = el.dataset.social;
       if (!key) return;
       const href = String(so[key] || '').trim();
       const active = /^https?:\/\//i.test(href);

@@ -1685,6 +1685,11 @@
       story.featured = !!data.featured;
       story.upcoming = upcoming;
       story.accent = data.accent || "#8a6a4a";
+      const tiktokIntroUrl = String(data.tiktok_intro_url || "").trim();
+      if (tiktokIntroUrl && (!/^https:\/\/(?:www\.)?tiktok\.com\//i.test(tiktokIntroUrl) || !/\/video\/\d{10,}(?:[/?#]|$)/i.test(tiktokIntroUrl))) {
+        throw new Error("Liên kết TikTok cần là link đầy đủ, công khai và có đoạn /video/…");
+      }
+      story.tiktok_intro_url = tiktokIntroUrl;
       if (data.cover_file) {
         const optimized = await optimizeCoverFile(data.cover_file);
         const path = story.id + ".webp";
@@ -1723,6 +1728,7 @@
         upcoming: story.upcoming,
         accent: story.accent,
         cover_url: story.cover,
+        tiktok_intro_url: story.tiktok_intro_url || null,
         published: story.status !== "draft",
         updated_at: iso(story.updated_at),
       };

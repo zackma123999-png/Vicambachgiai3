@@ -2740,7 +2740,7 @@
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
           <div class="field"><label>Video TikTok giới thiệu truyện</label>
             <input name="tiktok_intro_url" type="url" inputmode="url" value="${esc(s.tiktok_intro_url || "")}" placeholder="https://www.tiktok.com/@ten/video/1234567890123456789">
-            <p class="editor-hint">Dán liên kết đầy đủ của video TikTok công khai có đoạn <b>/video/…</b>. Để trống nếu truyện chưa có audio giới thiệu.</p>
+            <p class="editor-hint">Dán link video TikTok công khai; chấp nhận cả link chia sẻ rút gọn <b>vt.tiktok.com/…</b>. Để trống nếu truyện chưa có audio giới thiệu.</p>
           </div>
           <div class="field"><label>Màu chủ đạo banner</label><input name="accent" value="${esc(s.accent || "#8a6a4a")}"></div>
           <div class="field"><label>Bìa</label><input type="file" id="coverFile" accept="image/*">

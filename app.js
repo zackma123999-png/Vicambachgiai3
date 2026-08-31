@@ -1012,6 +1012,7 @@
       <div class="rail-head">
         <h2><i class="live-dot"></i> ${esc(title)}</h2>
         <span class="count">${list.length} truyện</span>
+        <span class="rail-swipe-cue" aria-hidden="true"><i></i><i></i><i></i></span>
       </div>
       <div class="rail" data-rail>${list.map((s) => storyCard(s)).join("")}</div>
     </section>`;

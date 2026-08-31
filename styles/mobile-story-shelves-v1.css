@@ -91,8 +91,10 @@
   #app .rail-swipe-cue i:nth-child(3) { animation-delay: .28s; }
 
   #app .rail {
+    display: flex !important;
+    flex-flow: row nowrap !important;
+    align-items: stretch !important;
     width: 100% !important;
-    grid-auto-columns: minmax(0, 84vw) !important;
     gap: .72rem !important;
     margin: 0 !important;
     padding: .15rem 1.15rem .85rem !important;
@@ -102,8 +104,10 @@
   }
 
   #app .wide-card {
-    width: 100% !important;
-    min-width: 0 !important;
+    flex: 0 0 84vw !important;
+    width: 84vw !important;
+    min-width: 84vw !important;
+    max-width: 84vw !important;
     align-items: stretch !important;
   }
 

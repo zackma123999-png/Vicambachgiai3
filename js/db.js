@@ -697,6 +697,28 @@
     }));
   }
 
+  function normalizeYouTubeLink(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw);
+      const host = url.hostname.toLowerCase().replace(/^www\./, "");
+      let id = "";
+      if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
+      else if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+        id = url.searchParams.get("v") || "";
+        if (!id) {
+          const parts = url.pathname.split("/").filter(Boolean);
+          if (["shorts", "embed", "live"].includes(parts[0])) id = parts[1] || "";
+        }
+      }
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id)) throw new Error("invalid");
+      return `https://www.youtube.com/watch?v=${id}`;
+    } catch (_) {
+      throw new Error("Liên kết YouTube không hợp lệ. Hãy dùng link video đầy đủ, youtu.be hoặc YouTube Shorts.");
+    }
+  }
+
   async function refreshCatalog() {
     const stories = await loadTable("stories");
     cache.stories = mapStories(stories);
@@ -716,7 +738,7 @@
       settle(
         sb
           .from("chapters")
-          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds,notify_edit_at"),
+          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds,youtube_audio_url,notify_edit_at"),
         7000,
         "chapters"
       )
@@ -1799,15 +1821,8 @@
       ch.title = String(data.title || "").trim();
       ch.body = String(data.body || "");
       ch.audio_title = String(data.audio_title || "").trim();
-      if (data.remove_audio) ch.audio_url = "";
-      if (data.remove_audio_cover) ch.audio_cover_url = "";
-      try {
-        if (data.audio_file) ch.audio_url = await uploadChapterMedia(ch.id, data.audio_file, "audio");
-        if (data.audio_cover_file) {
-          const cover = await optimizeAudioCoverFile(data.audio_cover_file);
-          ch.audio_cover_url = await uploadChapterMedia(ch.id, cover, "cover");
-        }
-      } catch (error) {
+      try { ch.youtube_audio_url = normalizeYouTubeLink(data.youtube_audio_url); }
+      catch (error) {
         if (isNew) cache.chapters = cache.chapters.filter((item) => item !== ch);
         throw error;
       }
@@ -1830,6 +1845,7 @@
         audio_cover_url: ch.audio_cover_url || null,
         audio_title: ch.audio_title || null,
         audio_duration_seconds: ch.audio_duration_seconds || null,
+        youtube_audio_url: ch.youtube_audio_url || null,
         notify_edit_at: ch.notify_edit_at ? iso(ch.notify_edit_at) : null,
         status: ch.status,
         publish_at: iso(ch.publish_at),

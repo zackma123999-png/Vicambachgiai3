@@ -64,6 +64,7 @@ create table if not exists public.chapters (
   number integer not null,
   title text not null default '',
   body text not null default '',
+  youtube_audio_url text,
   status text not null default 'draft',
   publish_at bigint,
   published_at bigint,

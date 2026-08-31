@@ -2363,11 +2363,19 @@
       </main>` +
       footer();
     bindChrome();
-    $("#pForm").onsubmit = (e) => {
+    $("#pForm").onsubmit = async (e) => {
       e.preventDefault();
-      VCBG.updateProfile(Object.fromEntries(new FormData(e.target)));
-      toast("Đã lưu hồ sơ.");
-      render();
+      const button = e.target.querySelector('button[type="submit"],button:not([type])');
+      try {
+        if (button) button.disabled = true;
+        await VCBG.updateProfile(Object.fromEntries(new FormData(e.target)));
+        toast("Đã lưu hồ sơ.");
+        render();
+      } catch (err) {
+        toast(err.message || "Không lưu được hồ sơ.");
+      } finally {
+        if (button) button.disabled = false;
+      }
     };
     $("#out").onclick = () => {
       VCBG.logout();

@@ -462,6 +462,8 @@
     const email = (p && p.email) || sessionUser.email || "";
     const role = normalizeRole(p && p.role);
     const display = (p && p.display_name) || email.split("@")[0] || "Độc giả";
+    const googleMeta = (sessionUser && sessionUser.user_metadata) || {};
+    const googleAvatar = String(googleMeta.avatar_url || googleMeta.picture || "");
     return {
       id,
       email,
@@ -473,6 +475,7 @@
         user_id: id,
         display_name: display,
         avatar: (p && p.avatar) || display.slice(0, 1).toUpperCase(),
+        google_avatar: /^https:\/\//i.test(googleAvatar) ? googleAvatar : "",
         bio: (p && p.bio) || "",
       },
     };
@@ -1188,23 +1191,24 @@
       return currentUser();
     },
 
-    updateProfile(patch) {
+    async updateProfile(patch) {
       const u = requireUser();
       if (patch.avatar === "vca:16" && u.role !== "admin") {
         throw new Error("Avatar này chỉ dành cho quản trị viên.");
       }
       const p = cache.profiles.find((x) => x.id === u.id);
       if (!p) throw new Error("Không tìm thấy hồ sơ.");
-      if (patch.display_name) p.display_name = String(patch.display_name).trim();
-      if (patch.bio !== undefined) p.bio = String(patch.bio).slice(0, 400);
-      if (patch.avatar !== undefined) p.avatar = patch.avatar;
-      persist(async () => {
-        const { error } = await sb
-          .from("profiles")
-          .update({ display_name: p.display_name, bio: p.bio, avatar: p.avatar })
-          .eq("user_id", u.id);
-        if (error) throw error;
-      });
+      const next = {
+        display_name: patch.display_name ? String(patch.display_name).trim() : p.display_name,
+        bio: patch.bio !== undefined ? String(patch.bio).slice(0, 400) : p.bio,
+        avatar: patch.avatar !== undefined ? String(patch.avatar) : p.avatar,
+      };
+      const { error } = await sb.from("profiles").update(next).eq("user_id", u.id);
+      if (error) throw publicError(error, "Không lưu được hồ sơ.");
+      p.display_name = next.display_name;
+      p.bio = next.bio;
+      p.avatar = next.avatar;
+      writeSnap();
       return currentUser();
     },
 

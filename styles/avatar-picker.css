@@ -29,3 +29,25 @@
 /* Single-ring rule: artwork owns the only visible purple circle. */
 .vc-avatar-account-preview,.vc-avatar-option img{border:0!important;box-shadow:none!important;background:transparent!important}
 .vc-avatar-option.is-selected img{box-shadow:none!important}
+
+/* Three-source avatar picker. */
+.vc-avatar-sources{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.vc-avatar-sources button{min-width:0;display:flex;align-items:center;justify-content:center;gap:.42rem;padding:.68rem .5rem;border:1px solid rgba(165,137,255,.18);border-radius:14px;background:rgba(255,255,255,.025);color:#aab3cf;font:600 .76rem/1.2 "Be Vietnam Pro",sans-serif}
+.vc-avatar-sources button b{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;background:rgba(142,103,255,.14);color:#c3acff;font-size:.82rem}
+.vc-avatar-sources button.is-active{border-color:rgba(166,126,255,.68);background:rgba(126,82,224,.17);color:#fff;box-shadow:0 0 18px rgba(132,80,242,.13)}
+.vc-avatar-sources button.is-active b{background:linear-gradient(145deg,#9a66ff,#df45cb);color:#fff}
+.vc-avatar-panels{min-height:250px;overflow:auto}
+.vc-avatar-panel[hidden]{display:none!important}
+.vc-avatar-panel{padding:1rem}
+.vc-avatar-panel .vc-avatar-grid{padding:0;overflow:visible}
+.vc-avatar-google-card,.vc-avatar-upload-card{width:100%;min-height:92px;display:grid;grid-template-columns:66px minmax(0,1fr) auto;gap:.85rem;align-items:center;padding:.75rem;border:1px solid rgba(164,133,255,.22);border-radius:20px;background:linear-gradient(115deg,rgba(116,80,210,.12),rgba(255,255,255,.025));color:#eef0ff;text-align:left;font:inherit}
+.vc-avatar-google-card img,.vc-avatar-upload-preview,.vc-avatar-google-fallback{width:66px;height:66px;display:grid;place-items:center;border-radius:50%;object-fit:cover;background:#171d31;border:1px solid rgba(178,147,255,.35);background-size:cover;background-position:center}
+.vc-avatar-google-fallback{font:700 1.45rem/1 "Be Vietnam Pro",sans-serif;color:#d3c2ff}
+.vc-avatar-google-card span:not(.vc-avatar-google-fallback),.vc-avatar-upload-card>span:nth-child(2){min-width:0;display:flex;flex-direction:column;gap:.28rem}
+.vc-avatar-google-card b,.vc-avatar-upload-card b{font-size:.9rem}.vc-avatar-google-card small,.vc-avatar-upload-card small{color:#939dbb;font-size:.72rem;line-height:1.45}
+.vc-avatar-google-card i,.vc-avatar-upload-card i{padding:.45rem .65rem;border-radius:999px;background:rgba(139,93,234,.16);color:#c8b2ff;font-size:.69rem;font-style:normal;font-weight:650;white-space:nowrap}
+.vc-avatar-google-card.is-disabled{opacity:.55}.vc-avatar-google-card.is-selected,.vc-avatar-upload-card.is-selected{border-color:#a77dff;background:rgba(134,86,230,.18);box-shadow:0 0 0 1px rgba(167,125,255,.16) inset,0 0 22px rgba(118,69,220,.14)}
+.vc-avatar-upload-preview{font:400 1.55rem/1 system-ui,sans-serif;color:#c6afff}
+.vc-avatar-upload-card.is-busy{opacity:.68;pointer-events:none}
+.vc-avatar-upload-note{margin:.85rem .15rem 0;color:#808aa7;font-size:.7rem;line-height:1.55}
+@media(max-width:460px){.vc-avatar-sources{padding:.7rem;gap:.38rem}.vc-avatar-sources button{flex-direction:column;gap:.3rem;padding:.58rem .25rem;font-size:.65rem}.vc-avatar-panel{padding:.75rem}.vc-avatar-panels{min-height:230px}.vc-avatar-google-card,.vc-avatar-upload-card{grid-template-columns:56px minmax(0,1fr);min-height:84px;padding:.65rem;gap:.7rem}.vc-avatar-google-card img,.vc-avatar-upload-preview,.vc-avatar-google-fallback{width:56px;height:56px}.vc-avatar-google-card i,.vc-avatar-upload-card i{grid-column:2;justify-self:start;margin-top:-.2rem}.vc-avatar-google-card b,.vc-avatar-upload-card b{font-size:.8rem}.vc-avatar-google-card small,.vc-avatar-upload-card small{font-size:.66rem}}

@@ -126,3 +126,74 @@
 @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
   #app .rail-swipe-cue i { animation: none !important; opacity: .85; }
 }
+
+
+/* Larger screens inherit the chosen visual language without changing card,
+   cover, track or carousel dimensions in portrait or landscape. */
+@media (min-width: 641px) {
+  #app .rail-panel,
+  #app .rail-panel.is-glowing,
+  #app .rail-panel:has(.wide-card:active),
+  #app .rail-panel:has(.wide-card:focus-within) {
+    --heading-color: #bd72ff;
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  #app .rail-panel::before,
+  #app .rail-panel::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  #app .rail-panel.tone-cyan { --heading-color: #bd72ff; }
+  #app .rail-panel.tone-violet { --heading-color: #52caff; }
+  #app .rail-panel.tone-blue { --heading-color: #ffad35; }
+
+  #app .rail-head h2,
+  #app .rail-head .count {
+    color: var(--heading-color) !important;
+    text-shadow: 0 0 7px color-mix(in srgb, var(--heading-color) 64%, transparent),
+                 0 0 16px color-mix(in srgb, var(--heading-color) 28%, transparent);
+  }
+
+  #app .rail-head .live-dot {
+    background: var(--heading-color) !important;
+    box-shadow: 0 0 6px var(--heading-color),
+                0 0 14px color-mix(in srgb, var(--heading-color) 58%, transparent) !important;
+  }
+
+  #app .rail-head .count {
+    border-color: transparent !important;
+    background: transparent !important;
+  }
+
+  #app .rail-swipe-cue {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    width: 2.25rem;
+    color: var(--heading-color);
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--heading-color) 68%, transparent));
+  }
+
+  #app .rail-swipe-cue i {
+    width: .62rem;
+    height: .62rem;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: rotate(45deg);
+    animation: vc-swipe-right 1.15s ease-in-out infinite;
+  }
+
+  #app .rail-swipe-cue i:nth-child(2) { animation-delay: .14s; }
+  #app .rail-swipe-cue i:nth-child(3) { animation-delay: .28s; }
+}
+
+@media (min-width: 641px) and (prefers-reduced-motion: reduce) {
+  #app .rail-swipe-cue i { animation: none !important; opacity: .85; }
+}

@@ -50,6 +50,13 @@
     document.body.appendChild(dock);
     document.body.classList.add("has-tiktok-story-player");
     frame = dock.querySelector("iframe");
+    frame.addEventListener("load", function () {
+      window.setTimeout(function () {
+        if (!dock || frame !== dock.querySelector("iframe") || ready) return;
+        ready = true;
+        syncControls();
+      }, 900);
+    }, { once: true });
     syncControls();
     requestAnimationFrame(() => dock && dock.classList.add("is-ready"));
   }

@@ -29,6 +29,14 @@
   box-shadow: 0 0 9px rgba(255,44,133,.48);
 }
 .medal-tiktok-button small { font-size: .56rem; font-weight: 700; white-space: nowrap; }
+.medal-tiktok-button.is-unavailable {
+  color: #918aa1;
+  border-color: rgba(151,140,171,.28);
+  background: rgba(110,102,130,.08);
+  box-shadow: none;
+  cursor: default;
+}
+.medal-tiktok-button.is-unavailable > span { background: #514b5f; box-shadow: none; color: #aaa2b6; }
 .medal-tiktok-button:hover,
 .medal-tiktok-button:focus-visible { outline: 0; transform: translateY(-1px); box-shadow: 0 0 18px rgba(220,91,255,.45); }
 
@@ -100,10 +108,10 @@
 @keyframes tiktokLive { 50% { opacity: .35; transform: scale(.72); } }
 
 @media (max-width: 760px) {
-  .medal-tiktok-button { position: static; grid-column: 4; grid-row: 2; justify-self: end; align-self: start; min-height: 1.45rem; padding: .14rem .18rem; margin-top: -.06rem; }
-  .medal-tiktok-button small { display: none; }
-  .medal-tiktok-button > span { width: 1.08rem; height: 1.08rem; }
-  #app .medal-pick-stats { grid-column: 3 !important; }
+  .medal-tiktok-button { position: static; grid-column: 3 / 5; grid-row: 3; justify-self: stretch; justify-content: center; align-self: start; width: 100%; min-height: 1.72rem; padding: .2rem .5rem; margin-top: .1rem; }
+  .medal-tiktok-button small { display: inline; font-size: .58rem; }
+  .medal-tiktok-button > span { width: 1.12rem; height: 1.12rem; }
+  #app .medal-pick-stats { grid-column: 3 / 5 !important; }
   .tiktok-story-player { left: 50%; right: auto; bottom: max(12px, env(safe-area-inset-bottom)); transform: translate(-50%,18px) scale(.98); }
   .tiktok-story-player.is-ready { transform: translateX(-50%); }
   .tiktok-story-preview { width: min(10rem, 43vw); }
@@ -111,10 +119,9 @@
   .tiktok-story-tag { grid-template-columns: auto auto minmax(0,1fr) auto; gap: .38rem; }
 }
 @media (min-width: 900px) and (orientation: landscape) {
-  .home-desktop-side .medal-tiktok-button { right: .25rem; bottom: .3rem; padding-right: .25rem; }
-  .home-desktop-side .medal-tiktok-button small { display: none; }
+  .home-desktop-side .medal-tiktok-button { position: static; grid-column: 3; grid-row: 3; justify-self: stretch; justify-content: center; width: 100%; margin-top: .2rem; }
+  .home-desktop-side .medal-tiktok-button small { display: inline; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tiktok-story-player, .tiktok-story-preview, .tiktok-story-live i { transition: none; animation: none; }
 }
-

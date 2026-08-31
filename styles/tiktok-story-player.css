@@ -79,7 +79,7 @@
 }
 .tiktok-story-tag {
   display: grid;
-  grid-template-columns: auto minmax(0,1fr) auto auto auto;
+  grid-template-columns: auto minmax(0,1fr) auto auto auto auto;
   align-items: center;
   gap: .5rem;
   min-height: 3.05rem;
@@ -92,8 +92,16 @@
   backdrop-filter: blur(18px);
 }
 .tiktok-story-tag img { width: 2.15rem; height: 2.15rem; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,.24); }
+.tiktok-story-play,
+.tiktok-story-sound,
 .tiktok-story-video-toggle,
 .tiktok-story-close { border: 0; color: #fff; background: transparent; cursor: pointer; }
+.tiktok-story-play { display: inline-flex; align-items: center; justify-content: center; gap: .28rem; min-width: 5.6rem; height: 2.05rem; padding: 0 .65rem; border-radius: 999px; background: linear-gradient(135deg, #d526c9, #7e45e9); box-shadow: 0 0 14px rgba(218,44,205,.34); }
+.tiktok-story-play span { font-size: .62rem; }
+.tiktok-story-play small { font-size: .53rem; font-weight: 800; white-space: nowrap; }
+.tiktok-story-play:disabled { opacity: .48; box-shadow: none; cursor: wait; }
+.tiktok-story-sound { width: 2.05rem; height: 2.05rem; border-radius: 50%; font-size: .82rem; background: rgba(255,255,255,.08); }
+.tiktok-story-sound:disabled { opacity: .4; }
 .tiktok-story-video-toggle { display: inline-flex; align-items: center; gap: .22rem; min-width: 4.5rem; height: 1.85rem; padding: 0 .52rem; border-radius: 999px; color: #e7d8ff; background: rgba(151,92,235,.18); }
 .tiktok-story-video-toggle span { font-size: .8rem; }
 .tiktok-story-video-toggle small { font-size: .5rem; font-weight: 700; white-space: nowrap; }
@@ -130,7 +138,10 @@
   .tiktok-story-player.is-ready { transform: translateX(-50%); }
   .tiktok-story-preview { width: min(10rem, 43vw); }
   .tiktok-story-live { display: none; }
-  .tiktok-story-tag { grid-template-columns: auto minmax(0,1fr) auto auto; gap: .38rem; }
+  .tiktok-story-tag { grid-template-columns: auto minmax(0,1fr) auto auto auto auto; gap: .32rem; }
+  .tiktok-story-video-toggle { min-width: 2.05rem; width: 2.05rem; padding: 0; justify-content: center; }
+  .tiktok-story-video-toggle small { display: none; }
+  .tiktok-story-play { min-width: 4.8rem; padding: 0 .48rem; }
 }
 @media (min-width: 900px) and (orientation: landscape) {
   .home-desktop-side .medal-tiktok-button { position: static; grid-column: 3; grid-row: 3; justify-self: stretch; justify-content: center; width: 100%; margin-top: .2rem; }

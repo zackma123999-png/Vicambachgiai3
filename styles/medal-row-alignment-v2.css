@@ -50,3 +50,12 @@
     align-self: start !important;
   }
 }
+
+/* Audio tag starts on the same vertical edge as the small cover. */
+@media (max-width: 760px) {
+  #app .medal-tiktok-button {
+    grid-column: 2 / 5 !important;
+    width: 100% !important;
+    justify-self: stretch !important;
+  }
+}

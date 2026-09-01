@@ -28,7 +28,7 @@
   }
 
   #app .rail-head {
-    --heading-color: #d8c49a;
+    --heading-color: #eef1f7;
     display: flex !important;
     align-items: center !important;
     gap: .42rem !important;
@@ -37,20 +37,20 @@
 
   #app .tone-cyan .rail-head,
   #app .tone-violet .rail-head,
-  #app .tone-blue .rail-head { --heading-color: #d8c49a; }
+  #app .tone-blue .rail-head { --heading-color: #eef1f7; }
 
   #app .rail-head h2 {
     min-width: 0;
     color: var(--heading-color) !important;
     font-size: clamp(1.16rem, 5.1vw, 1.42rem) !important;
     font-weight: 700 !important;
-    text-shadow: 0 0 9px rgba(216, 196, 154, .14);
+    text-shadow: 0 0 8px rgba(238, 241, 247, .1);
   }
 
   #app .rail-head .live-dot {
     flex: 0 0 auto;
     background: var(--heading-color) !important;
-    box-shadow: 0 0 7px rgba(216, 196, 154, .28) !important;
+    box-shadow: 0 0 6px rgba(238, 241, 247, .22) !important;
   }
 
   #app .rail-head .count {
@@ -73,7 +73,7 @@
     gap: 1px;
     width: 2.25rem;
     color: var(--heading-color);
-    filter: drop-shadow(0 0 3px rgba(216, 196, 154, .18));
+    filter: drop-shadow(0 0 3px rgba(238, 241, 247, .14));
   }
 
   #app .rail-swipe-cue i {
@@ -133,7 +133,7 @@
   #app .rail-panel.is-glowing,
   #app .rail-panel:has(.wide-card:active),
   #app .rail-panel:has(.wide-card:focus-within) {
-    --heading-color: #d8c49a;
+    --heading-color: #eef1f7;
     border-color: transparent !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -149,17 +149,17 @@
 
   #app .rail-panel.tone-cyan,
   #app .rail-panel.tone-violet,
-  #app .rail-panel.tone-blue { --heading-color: #d8c49a; }
+  #app .rail-panel.tone-blue { --heading-color: #eef1f7; }
 
   #app .rail-head h2,
   #app .rail-head .count {
     color: var(--heading-color) !important;
-    text-shadow: 0 0 9px rgba(216, 196, 154, .14);
+    text-shadow: 0 0 8px rgba(238, 241, 247, .1);
   }
 
   #app .rail-head .live-dot {
     background: var(--heading-color) !important;
-    box-shadow: 0 0 7px rgba(216, 196, 154, .28) !important;
+    box-shadow: 0 0 6px rgba(238, 241, 247, .22) !important;
   }
 
   #app .rail-head .count {
@@ -174,7 +174,7 @@
     gap: 1px;
     width: 2.25rem;
     color: var(--heading-color);
-    filter: drop-shadow(0 0 3px rgba(216, 196, 154, .18));
+    filter: drop-shadow(0 0 3px rgba(238, 241, 247, .14));
   }
 
   #app .rail-swipe-cue i {

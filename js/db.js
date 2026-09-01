@@ -50,6 +50,7 @@
   let publicMetricChannel = null;
   let publicMetricTimer = null;
   let publicMetricStarting = false;
+  let publicVisitRecorded = false;
   let communityChannel = null;
   let communityStarting = false;
   let communityRefreshTimer = null;
@@ -298,13 +299,24 @@
     if (publicMetricChannel || publicMetricStarting) return;
     publicMetricStarting = true;
     const visitorId = publicVisitorId();
-    try {
-      await sb.rpc("record_site_visit", { p_visitor_key: visitorId });
-    } catch (err) {
-      console.warn("[VCBG visit]", err && err.message);
-    }
-    refreshPublicMetrics();
-    publicMetricTimer = global.setInterval(refreshPublicMetrics, 60 * 1000);
+    const recordVisit = async () => {
+      if (publicVisitRecorded) return true;
+      try {
+        const { error } = await sb.rpc("record_site_visit", { p_visitor_key: visitorId });
+        if (error) throw error;
+        publicVisitRecorded = true;
+        return true;
+      } catch (err) {
+        console.warn("[VCBG visit]", err && err.message);
+        return false;
+      }
+    };
+    await recordVisit();
+    await refreshPublicMetrics();
+    publicMetricTimer = global.setInterval(async () => {
+      if (!publicVisitRecorded) await recordVisit();
+      await refreshPublicMetrics();
+    }, 60 * 1000);
 
     const me = currentUser();
     const presenceKey = me ? "member:" + me.id : "guest:" + visitorId;

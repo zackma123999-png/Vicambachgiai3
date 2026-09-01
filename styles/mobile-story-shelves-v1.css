@@ -28,31 +28,29 @@
   }
 
   #app .rail-head {
-    --heading-color: #bd72ff;
+    --heading-color: #d8c49a;
     display: flex !important;
     align-items: center !important;
     gap: .42rem !important;
     padding: 0 1.15rem .72rem !important;
   }
 
-  #app .tone-cyan .rail-head { --heading-color: #bd72ff; }
-  #app .tone-violet .rail-head { --heading-color: #52caff; }
-  #app .tone-blue .rail-head { --heading-color: #ffad35; }
+  #app .tone-cyan .rail-head,
+  #app .tone-violet .rail-head,
+  #app .tone-blue .rail-head { --heading-color: #d8c49a; }
 
   #app .rail-head h2 {
     min-width: 0;
     color: var(--heading-color) !important;
     font-size: clamp(1.16rem, 5.1vw, 1.42rem) !important;
     font-weight: 700 !important;
-    text-shadow: 0 0 7px color-mix(in srgb, var(--heading-color) 72%, transparent),
-                 0 0 16px color-mix(in srgb, var(--heading-color) 34%, transparent);
+    text-shadow: 0 0 9px rgba(216, 196, 154, .14);
   }
 
   #app .rail-head .live-dot {
     flex: 0 0 auto;
     background: var(--heading-color) !important;
-    box-shadow: 0 0 6px var(--heading-color),
-                0 0 14px color-mix(in srgb, var(--heading-color) 58%, transparent) !important;
+    box-shadow: 0 0 7px rgba(216, 196, 154, .28) !important;
   }
 
   #app .rail-head .count {
@@ -65,7 +63,7 @@
     color: var(--heading-color) !important;
     font-size: clamp(.76rem, 3.25vw, .92rem) !important;
     font-weight: 600;
-    text-shadow: 0 0 8px color-mix(in srgb, var(--heading-color) 48%, transparent);
+    text-shadow: none;
   }
 
   #app .rail-swipe-cue {
@@ -75,7 +73,7 @@
     gap: 1px;
     width: 2.25rem;
     color: var(--heading-color);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--heading-color) 68%, transparent));
+    filter: drop-shadow(0 0 3px rgba(216, 196, 154, .18));
   }
 
   #app .rail-swipe-cue i {
@@ -135,7 +133,7 @@
   #app .rail-panel.is-glowing,
   #app .rail-panel:has(.wide-card:active),
   #app .rail-panel:has(.wide-card:focus-within) {
-    --heading-color: #bd72ff;
+    --heading-color: #d8c49a;
     border-color: transparent !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -149,21 +147,19 @@
     display: none !important;
   }
 
-  #app .rail-panel.tone-cyan { --heading-color: #bd72ff; }
-  #app .rail-panel.tone-violet { --heading-color: #52caff; }
-  #app .rail-panel.tone-blue { --heading-color: #ffad35; }
+  #app .rail-panel.tone-cyan,
+  #app .rail-panel.tone-violet,
+  #app .rail-panel.tone-blue { --heading-color: #d8c49a; }
 
   #app .rail-head h2,
   #app .rail-head .count {
     color: var(--heading-color) !important;
-    text-shadow: 0 0 7px color-mix(in srgb, var(--heading-color) 64%, transparent),
-                 0 0 16px color-mix(in srgb, var(--heading-color) 28%, transparent);
+    text-shadow: 0 0 9px rgba(216, 196, 154, .14);
   }
 
   #app .rail-head .live-dot {
     background: var(--heading-color) !important;
-    box-shadow: 0 0 6px var(--heading-color),
-                0 0 14px color-mix(in srgb, var(--heading-color) 58%, transparent) !important;
+    box-shadow: 0 0 7px rgba(216, 196, 154, .28) !important;
   }
 
   #app .rail-head .count {
@@ -178,7 +174,7 @@
     gap: 1px;
     width: 2.25rem;
     color: var(--heading-color);
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--heading-color) 68%, transparent));
+    filter: drop-shadow(0 0 3px rgba(216, 196, 154, .18));
   }
 
   #app .rail-swipe-cue i {

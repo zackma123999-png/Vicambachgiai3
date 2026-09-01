@@ -15,7 +15,7 @@
     if (back.dataset.previewUrl) URL.revokeObjectURL(back.dataset.previewUrl);
     back.remove();
   }
-  function customPath(userId) { return String(userId) + "/avatar.webp"; }
+  function customPath(userId) { return String(userId) + "/avatar"; }
   function isCustomAvatar(value) { return /\/storage\/v1\/object\/public\/user-avatars\//i.test(String(value || "")); }
   function isGoogleAvatar(value) { return /^https:\/\/[^/]*googleusercontent\.com\//i.test(String(value || "")); }
   function currentSource(profile) {
@@ -85,7 +85,10 @@
     back.querySelector(".vc-avatar-save").disabled = false;
   }
   async function deleteUploadedAvatar(sb, userId) {
-    const { error } = await sb.storage.from(BUCKET).remove([customPath(userId)]);
+    const { error } = await sb.storage.from(BUCKET).remove([
+      customPath(userId),
+      String(userId) + "/avatar.webp"
+    ]);
     if (error && !/not found/i.test(error.message || "")) throw error;
   }
   async function saveChoice(back) {
@@ -98,7 +101,11 @@
     let nextAvatar = "";
     if (choice.type === "upload") {
       const path = customPath(me.id);
-      const { error } = await sb.storage.from(BUCKET).upload(path, choice.blob, { contentType: "image/webp", cacheControl: "3600", upsert: true });
+      const { error } = await sb.storage.from(BUCKET).upload(path, choice.blob, {
+        contentType: choice.blob.type || "image/webp",
+        cacheControl: "3600",
+        upsert: true
+      });
       if (error) throw new Error("Không tải được avatar. " + (error.message || ""));
       const result = sb.storage.from(BUCKET).getPublicUrl(path);
       nextAvatar = result.data.publicUrl + "?v=" + Date.now();

@@ -1,6 +1,6 @@
 -- Public avatar images; only the authenticated owner may write their folder.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('user-avatars', 'user-avatars', true, 153600, array['image/webp'])
+values ('user-avatars', 'user-avatars', true, 153600, array['image/webp', 'image/png', 'image/jpeg'])
 on conflict (id) do update set
   public = excluded.public,
   file_size_limit = excluded.file_size_limit,

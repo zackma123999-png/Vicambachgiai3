@@ -72,8 +72,9 @@
     align-items: center;
     gap: 1px;
     width: 2.25rem;
-    color: var(--heading-color);
-    filter: drop-shadow(0 0 3px rgba(238, 241, 247, .14));
+    color: #c46cff;
+    filter: drop-shadow(0 0 4px rgba(196, 108, 255, .9))
+            drop-shadow(0 0 10px rgba(151, 74, 255, .52));
   }
 
   #app .rail-swipe-cue i {
@@ -173,8 +174,9 @@
     align-items: center;
     gap: 1px;
     width: 2.25rem;
-    color: var(--heading-color);
-    filter: drop-shadow(0 0 3px rgba(238, 241, 247, .14));
+    color: #c46cff;
+    filter: drop-shadow(0 0 4px rgba(196, 108, 255, .9))
+            drop-shadow(0 0 10px rgba(151, 74, 255, .52));
   }
 
   #app .rail-swipe-cue i {

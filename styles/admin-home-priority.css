@@ -1,0 +1,63 @@
+/* Admin: homepage story priority */
+.admin-home-priority-intro {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(181,154,255,.42);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(137,102,233,.15), rgba(13,20,37,.78));
+  box-shadow: 0 14px 34px rgba(0,0,0,.22);
+}
+.admin-home-priority-intro > div {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+.admin-home-priority-intro h2 {
+  margin: 0;
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+}
+.admin-home-priority-intro p {
+  margin: .55rem 0 0;
+  color: var(--muted, #aab3c7);
+  line-height: 1.55;
+}
+.admin-home-priority-star {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  color: #d9c9ff;
+  background: rgba(137,102,233,.25);
+  box-shadow: 0 0 18px rgba(181,154,255,.32);
+}
+.admin-priority-select,
+.admin-story-priority-field select {
+  min-width: 9.6rem;
+  color: #f4f6fb;
+  background: #12192b;
+  border: 1px solid rgba(181,154,255,.52);
+  border-radius: 12px;
+  padding: .58rem .72rem;
+}
+.admin-priority-select:focus,
+.admin-story-priority-field select:focus {
+  outline: 2px solid rgba(181,154,255,.35);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  .admin-story-table th:nth-child(2),
+  .admin-story-table td:nth-child(2),
+  .admin-story-table th:nth-child(4),
+  .admin-story-table td:nth-child(4) {
+    display: none;
+  }
+  .admin-priority-select {
+    min-width: 8.1rem;
+    max-width: 42vw;
+    font-size: .86rem;
+  }
+  .admin-story-table td {
+    padding: .72rem .35rem;
+  }
+}

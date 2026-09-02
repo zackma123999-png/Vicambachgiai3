@@ -31,7 +31,11 @@ function maintenancePage(settings, unavailable) {
 }
 function isPublicBypass(pathname) { return pathname === "/admin-access.html" || pathname === "/api/site-mode" || pathname === "/js/config.js" || pathname === "/styles/admin-site-mode.css" || pathname.startsWith("/brand/"); }
 export async function onRequest(context) {
-  const url = new URL(context.request.url); if (isPublicBypass(url.pathname)) return context.next();
+  const url = new URL(context.request.url);
+  if (isPublicBypass(url.pathname)) return context.next();
+  const destination = context.request.headers.get("sec-fetch-dest") || "";
+  const looksLikeAsset = /\.[a-z0-9]{2,8}$/i.test(url.pathname) && !/\.html?$/i.test(url.pathname);
+  if ((destination && destination !== "document") || looksLikeAsset) return context.next();
   let settings;
   try { settings = await currentMode(context.env); }
   catch (_) { return new Response(maintenancePage({ site_mode: "maintenance" }, true), { status: 503, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "retry-after": "120" } }); }

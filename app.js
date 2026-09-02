@@ -2468,7 +2468,7 @@
               `<tr>
                 <td><a href="#/admin/truyen/${s.id}">${esc(s.title)}</a></td>
                 <td>${esc(storyStatusLabel(s))}</td>
-                <td><select class="admin-priority-select" data-home-priority="${s.id}" aria-label="Ưu tiên hiển thị của ${esc(s.title)}">
+                <td><select class="admin-priority-select" data-home-priority="${s.id}" data-initial-priority="${s.home_priority || ""}" aria-label="Ưu tiên hiển thị của ${esc(s.title)}">
                   <option value="" ${s.home_priority ? "" : "selected"}>Không ưu tiên</option>
                   ${Array.from({ length: 20 }, (_, i) => i + 1)
                     .map((n) => `<option value="${n}" ${Number(s.home_priority) === n ? "selected" : ""}>Ưu tiên ${n}</option>`)
@@ -2478,7 +2478,11 @@
                 <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button data-delst="${s.id}">Xóa</button></td>
               </tr>`
           )
-          .join("")}</tbody></table></div>`;
+          .join("")}</tbody></table></div>
+        <div class="admin-priority-actions">
+          <p id="prioritySaveState" aria-live="polite">Chọn thứ tự rồi bấm lưu để áp dụng trên trang chủ.</p>
+          <button class="btn btn-primary" type="button" id="saveHomePriorities" disabled>Lưu thứ tự ưu tiên</button>
+        </div>`;
     } else if (sub === "chuong") {
       const stories = VCBG.adminListStories();
       const sid = route.q.story || (stories[0] && stories[0].id);
@@ -2597,19 +2601,53 @@
   function bindAdmin(route) {
     const pick = $("#stPick");
     if (pick) pick.onchange = () => go("/admin/chuong?story=" + pick.value);
-    $$("[data-home-priority]").forEach((select) => {
-      select.onchange = async () => {
-        select.disabled = true;
+    const prioritySelects = $$("[data-home-priority]");
+    const prioritySaveButton = $("#saveHomePriorities");
+    const prioritySaveState = $("#prioritySaveState");
+    const markPriorityDirty = () => {
+      const changed = prioritySelects.some((select) => String(select.value || "") !== String(select.dataset.initialPriority || ""));
+      if (prioritySaveButton) prioritySaveButton.disabled = !changed;
+      if (prioritySaveState) prioritySaveState.textContent = changed
+        ? "Có thay đổi chưa lưu."
+        : "Thứ tự hiện tại đã được lưu.";
+    };
+    prioritySelects.forEach((select) => {
+      select.onchange = markPriorityDirty;
+    });
+    if (prioritySaveButton) {
+      prioritySaveButton.onclick = async () => {
+        const chosen = prioritySelects.map((select) => String(select.value || "")).filter(Boolean);
+        const duplicated = chosen.find((value, index) => chosen.indexOf(value) !== index);
+        if (duplicated) {
+          toast("Ưu tiên " + duplicated + " đang được chọn cho nhiều truyện. Hãy chọn số khác nhau.");
+          if (prioritySaveState) prioritySaveState.textContent = "Chưa lưu: có số ưu tiên bị trùng.";
+          return;
+        }
+        const changed = prioritySelects.filter((select) => String(select.value || "") !== String(select.dataset.initialPriority || ""));
+        if (!changed.length) {
+          markPriorityDirty();
+          return;
+        }
+        prioritySaveButton.disabled = true;
+        prioritySaveButton.textContent = "Đang lưu…";
+        prioritySelects.forEach((select) => { select.disabled = true; });
         try {
-          await VCBG.setStoryHomePriority(select.dataset.homePriority, select.value);
-          toast(select.value ? "Đã đặt truyện ở ưu tiên " + select.value + "." : "Đã bỏ ưu tiên hiển thị.");
-          render();
+          for (const select of changed) {
+            await VCBG.setStoryHomePriority(select.dataset.homePriority, select.value);
+            select.dataset.initialPriority = String(select.value || "");
+          }
+          if (prioritySaveState) prioritySaveState.textContent = "Đã lưu và áp dụng trên trang chủ.";
+          toast("Đã lưu thứ tự ưu tiên.");
+          await render();
         } catch (error) {
-          select.disabled = false;
+          prioritySelects.forEach((select) => { select.disabled = false; });
+          prioritySaveButton.disabled = false;
+          prioritySaveButton.textContent = "Lưu thứ tự ưu tiên";
+          if (prioritySaveState) prioritySaveState.textContent = "Lưu chưa thành công. Vui lòng thử lại.";
           toast(error.message || "Không lưu được thứ tự ưu tiên.");
         }
       };
-    });
+    }
     $$("[data-delst]").forEach(
       (b) =>
         (b.onclick = () => {

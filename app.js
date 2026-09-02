@@ -2431,6 +2431,7 @@
       ["/phan-loai", "Phân loại"],
       ["/trang-chu", "Trang chủ"],
       ["/hop-thu", "Hộp thư"],
+      ["/van-hanh", "Vận hành"],
       ["/cai-dat", "Cài đặt"],
     ];
     return `<nav class="admin-nav">${links
@@ -2572,6 +2573,54 @@
             )
             .join("")
         : `<div class="empty">Hộp thư trống.</div>`;
+    } else if (sub === "van-hanh") {
+      const st = VCBG.settings();
+      const activeMode = st.site_mode || "normal";
+      const untilDate = st.maintenance_until ? new Date(st.maintenance_until) : null;
+      const untilValue = untilDate && !Number.isNaN(untilDate.getTime())
+        ? new Date(untilDate.getTime() - untilDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+        : "";
+      const modeOptions = [
+        ["normal", "Mở website", "Mọi người truy cập và sử dụng bình thường.", "✓"],
+        ["read_only", "Chỉ cho phép đọc", "Đọc truyện bình thường, nhưng thành viên không thể bình luận, thả tim hoặc thay đổi dữ liệu.", "◉"],
+        ["maintenance", "Bảo trì", "Người đọc thấy trang thông báo bảo trì; quản trị viên vẫn có thể vào bằng đường quản trị riêng.", "◇"],
+        ["locked", "Khóa khẩn cấp", "Dùng khi nghi ngờ bị tấn công. Toàn bộ người đọc bị chặn ngay.", "⚠"],
+      ];
+      body = `<section class="site-mode-panel">
+        <header class="site-mode-heading">
+          <span class="site-mode-orb" aria-hidden="true">⌁</span>
+          <div><p class="eyebrow">CẦU DAO WEBSITE</p><h1>Trạng thái vận hành</h1>
+          <p>Chọn một chế độ rồi bấm <b>Lưu và áp dụng</b>. Chế độ hiện tại: <strong class="site-mode-current site-mode-current--${esc(activeMode)}">${esc({
+            normal: "Mở website", read_only: "Chỉ đọc", maintenance: "Bảo trì", locked: "Khóa khẩn cấp"
+          }[activeMode] || activeMode)}</strong></p></div>
+        </header>
+        <form id="siteModeForm">
+          <fieldset class="site-mode-options">
+            <legend>Chọn chế độ</legend>
+            ${modeOptions.map(([value, title, description, icon]) => `<label class="site-mode-option site-mode-option--${value}">
+              <input type="radio" name="site_mode" value="${value}" ${activeMode === value ? "checked" : ""}>
+              <span class="site-mode-option-icon">${icon}</span>
+              <span><b>${title}</b><small>${description}</small></span>
+            </label>`).join("")}
+          </fieldset>
+          <div class="field"><label for="maintenanceMessage">Thông báo cho người đọc</label>
+            <textarea id="maintenanceMessage" name="maintenance_message" rows="4" maxlength="500">${esc(st.maintenance_message || "")}</textarea>
+          </div>
+          <div class="field"><label for="maintenanceUntil">Thời gian dự kiến mở lại</label>
+            <input id="maintenanceUntil" name="maintenance_until" type="datetime-local" value="${esc(untilValue)}">
+            <p class="editor-hint">Đây là thời gian hiển thị cho người đọc, không tự mở website để tránh mở nhầm khi việc sửa chữa chưa xong.</p>
+          </div>
+          <div class="site-mode-warning" id="siteModeWarning">⚠ Khóa khẩn cấp chỉ nên dùng khi nghi ngờ website bị tấn công hoặc dữ liệu có nguy cơ bị sửa trái phép.</div>
+          <div class="site-mode-actions">
+            <button class="btn btn-primary" type="submit" id="saveSiteMode">Lưu và áp dụng</button>
+            <span id="siteModeSaveState" aria-live="polite">Chưa có thay đổi.</span>
+          </div>
+        </form>
+        <aside class="site-mode-recovery">
+          <b>Đường vào dự phòng</b>
+          <p>Nếu đang bảo trì mà bị đăng xuất, mở <a href="/admin-access.html">trang đăng nhập quản trị dự phòng</a> để quay lại bảng điều khiển.</p>
+        </aside>
+      </section>
     } else if (sub === "cai-dat") {
       const st = VCBG.settings();
       const so = st.social || {};
@@ -2764,6 +2813,54 @@
           render();
         })
     );
+    const siteModeForm = $("#siteModeForm");
+    if (siteModeForm) {
+      const saveButton = $("#saveSiteMode");
+      const saveState = $("#siteModeSaveState");
+      siteModeForm.onchange = () => {
+        if (saveState) saveState.textContent = "Có thay đổi chưa lưu.";
+      };
+      siteModeForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const fd = new FormData(siteModeForm);
+        const mode = String(fd.get("site_mode") || "normal");
+        if (mode === "locked" && !confirm("Khóa khẩn cấp sẽ chặn toàn bộ người đọc và mọi thao tác thành viên. Bạn chắc chắn muốn tiếp tục?")) return;
+        if (saveButton) {
+          saveButton.disabled = true;
+          saveButton.textContent = "Đang áp dụng…";
+        }
+        if (saveState) saveState.textContent = "Đang xác minh quyền quản trị…";
+        try {
+          const token = await VCBG.accessToken();
+          if (!token) throw new Error("Phiên quản trị đã hết. Hãy đăng nhập lại.");
+          const untilRaw = String(fd.get("maintenance_until") || "").trim();
+          const response = await fetch("/api/site-mode", {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + token },
+            body: JSON.stringify({
+              mode,
+              message: String(fd.get("maintenance_message") || "").trim(),
+              until: untilRaw ? new Date(untilRaw).toISOString() : null,
+            }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || "Không áp dụng được trạng thái website.");
+          Object.assign(VCBG.settings(), result.settings || {});
+          if (saveState) saveState.textContent = "Đã lưu và áp dụng thành công.";
+          toast("Đã cập nhật trạng thái website.");
+          await render();
+        } catch (error) {
+          if (saveState) saveState.textContent = error.message || "Lưu chưa thành công.";
+          toast(error.message || "Không cập nhật được trạng thái website.");
+        } finally {
+          if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = "Lưu và áp dụng";
+          }
+        }
+      };
+    }
+
     const setF = $("#setF");
     if (setF)
       setF.onsubmit = (e) => {

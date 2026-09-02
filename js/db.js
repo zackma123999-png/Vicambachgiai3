@@ -9,6 +9,10 @@
     tagline: "Thư viện Bách Hợp — đọc chậm, ở lại lâu.",
     allow_comments: true,
     allow_registration: true,
+    site_mode: "normal",
+    maintenance_message: "Thư viện đang được chăm sóc và sẽ sớm hoạt động trở lại.",
+    maintenance_until: null,
+    mode_updated_at: null,
     social: { youtube: "", tiktok: "", instagram: "", facebook: "", wattpad: "" },
     featured_quote: null,
     poll: { id: "poll_home", title: "Bạn muốn ViCam ưu tiên truyện nào?", story_ids: [] },
@@ -781,6 +785,10 @@
       tagline: settings.tagline,
       allow_comments: settings.allow_comments,
       allow_registration: settings.allow_registration,
+      site_mode: settings.site_mode || "normal",
+      maintenance_message: settings.maintenance_message || emptySettings().maintenance_message,
+      maintenance_until: settings.maintenance_until || null,
+      mode_updated_at: settings.mode_updated_at || null,
       social: settings.social || emptySettings().social,
       featured_quote: settings.featured_quote || null,
       poll: settings.poll || emptySettings().poll,
@@ -1096,6 +1104,13 @@
     },
     listTags() {
       return cache.tags.slice();
+    },
+
+    async accessToken() {
+      if (!sb) return "";
+      const { data, error } = await sb.auth.getSession();
+      if (error) throwHttp(error, "Không đọc được phiên quản trị.");
+      return (data && data.session && data.session.access_token) || "";
     },
 
     async register({ email, password, display_name }) {

@@ -41,6 +41,7 @@ create table if not exists public.stories (
   upcoming boolean not null default false,
   accent text not null default '#8a6a4a',
   cover text not null default '',
+  home_priority smallint check (home_priority is null or home_priority between 1 and 99),
   tiktok_intro_url text,
   created_at bigint not null default public.now_ms(),
   updated_at bigint not null default public.now_ms()

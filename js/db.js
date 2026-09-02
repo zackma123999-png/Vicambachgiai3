@@ -696,6 +696,7 @@
       ...s,
       cover: s.cover || s.cover_url || "",
       description: s.description || "",
+      home_priority: Number(s.home_priority) > 0 ? Number(s.home_priority) : null,
       created_at: toMs(s.created_at),
       updated_at: toMs(s.updated_at),
     }));
@@ -1694,8 +1695,28 @@
       requireAdmin();
       return cache.stories
         .slice()
-        .sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0))
+        .sort((a, b) => {
+          const pa = Number(a.home_priority);
+          const pb = Number(b.home_priority);
+          const aPrioritized = Number.isFinite(pa) && pa > 0;
+          const bPrioritized = Number.isFinite(pb) && pb > 0;
+          if (aPrioritized !== bPrioritized) return aPrioritized ? -1 : 1;
+          if (aPrioritized && pa !== pb) return pa - pb;
+          return (b.updated_at || 0) - (a.updated_at || 0);
+        })
         .map(hydrateStory);
+    },
+
+    async setStoryHomePriority(id, value) {
+      requireAdmin();
+      const story = cache.stories.find((item) => item.id === id);
+      if (!story) throw new Error("Không tìm thấy truyện.");
+      const parsed = Number(value);
+      story.home_priority = Number.isInteger(parsed) && parsed >= 1 && parsed <= 99 ? parsed : null;
+      const { error } = await sb.from("stories").update({ home_priority: story.home_priority }).eq("id", story.id);
+      if (error) throw publicError(error, "Không lưu được thứ tự ưu tiên.");
+      writeSnap();
+      return hydrateStory(story);
     },
 
     async upsertStory(data) {
@@ -1722,6 +1743,8 @@
       story.status = status;
       story.featured = !!data.featured;
       story.upcoming = upcoming;
+      const priority = Number(data.home_priority);
+      story.home_priority = Number.isInteger(priority) && priority >= 1 && priority <= 99 ? priority : null;
       story.accent = data.accent || "#8a6a4a";
       let tiktokIntroUrl = String(data.tiktok_intro_url || "").trim();
       if (tiktokIntroUrl) {
@@ -1774,6 +1797,7 @@
         upcoming: story.upcoming,
         accent: story.accent,
         cover_url: story.cover,
+        home_priority: story.home_priority,
         tiktok_intro_url: story.tiktok_intro_url || null,
         published: story.status !== "draft",
         updated_at: iso(story.updated_at),

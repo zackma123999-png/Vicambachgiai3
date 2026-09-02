@@ -2620,7 +2620,7 @@
           <b>Đường vào dự phòng</b>
           <p>Nếu đang bảo trì mà bị đăng xuất, mở <a href="/admin-access.html">trang đăng nhập quản trị dự phòng</a> để quay lại bảng điều khiển.</p>
         </aside>
-      </section>
+      </section>`;
     } else if (sub === "cai-dat") {
       const st = VCBG.settings();
       const so = st.social || {};

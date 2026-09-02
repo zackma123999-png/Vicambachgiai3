@@ -415,13 +415,15 @@
   }
   function header(active) {
     const u = VCBG.currentUser();
+    const mode = effectiveSiteMode(VCBG.settings());
+    const modeBanner = mode === "readonly" ? `<div class="site-readonly-banner" role="status">Website đang ở chế độ chỉ đọc — bạn vẫn có thể đọc truyện, nhưng các thao tác gửi dữ liệu đang tạm dừng.</div>` : "";
     const unread = u ? VCBG.unreadCount() : 0;
     const admin = u && VCBG.isAdmin() ? `<a href="#/admin">Quản trị</a>` : "";
     const acc = u
       ? `<a class="icon-btn" href="#/thong-bao" aria-label="Thông báo">${unread ? "●" : "○"}</a>
          <a class="avatar-chip" href="#/tai-khoan" title="${esc(u.profile.display_name)}">${esc(u.profile.avatar)}</a>`
       : `<a class="btn btn-login" href="#/dang-nhap">Đăng nhập</a>`;
-    return `<header class="site-header">
+    return `${modeBanner}<header class="site-header">
       <div class="header-inner">
         ${logoHTML()}
         <nav class="nav-links">
@@ -2431,6 +2433,7 @@
       ["/phan-loai", "Phân loại"],
       ["/trang-chu", "Trang chủ"],
       ["/hop-thu", "Hộp thư"],
+      ["/van-hanh", "Vận hành"],
       ["/cai-dat", "Cài đặt"],
     ];
     return `<nav class="admin-nav">${links
@@ -2572,6 +2575,33 @@
             )
             .join("")
         : `<div class="empty">Hộp thư trống.</div>`;
+    } else if (sub === "van-hanh") {
+      const st = VCBG.settings();
+      const effective = effectiveSiteMode(st);
+      const until = st.maintenance_until ? new Date(st.maintenance_until) : null;
+      body = `<section class="site-ops" data-current-mode="${esc(effective)}">
+        <div class="site-ops-head">
+          <div><small>TRẠNG THÁI WEBSITE</small><h2>${effective === "normal" ? "Đang hoạt động bình thường" : effective === "readonly" ? "Đang ở chế độ chỉ đọc" : "Đang bảo trì"}</h2></div>
+          <span class="site-mode-pill is-${esc(effective)}">${effective === "normal" ? "ĐANG MỞ" : effective === "readonly" ? "CHỈ ĐỌC" : "BẢO TRÌ"}</span>
+        </div>
+        <p class="site-ops-note">Website không bao giờ tự chuyển trạng thái vì lỗi hoặc quá tải. Nếu cấu hình không đọc được, website mặc định vẫn mở.</p>
+        <div class="site-mode-choices" role="radiogroup" aria-label="Chọn trạng thái website">
+          <label><input type="radio" name="site_mode_pick" value="normal" ${effective === "normal" ? "checked" : ""}><b>Hoạt động bình thường</b><span>Mọi chức năng hoạt động.</span></label>
+          <label><input type="radio" name="site_mode_pick" value="readonly" ${effective === "readonly" ? "checked" : ""}><b>Chỉ đọc</b><span>Độc giả vẫn đọc truyện nhưng không thể gửi dữ liệu mới.</span></label>
+          <label><input type="radio" name="site_mode_pick" value="maintenance" ${effective === "maintenance" ? "checked" : ""}><b>Bảo trì</b><span>Độc giả chỉ thấy thông báo; Admin vẫn vào được.</span></label>
+        </div>
+        <div id="maintenanceOptions" ${effective === "maintenance" ? "" : "hidden"}>
+          <div class="field"><label>Thông báo cho độc giả</label><textarea id="maintenanceMessage" maxlength="240">${esc(st.maintenance_message || "Website đang được bảo trì. Vui lòng quay lại sau.")}</textarea></div>
+          <div class="field"><label>Tự mở lại</label><select id="maintenanceDuration"><option value="15">Sau 15 phút</option><option value="30">Sau 30 phút</option><option value="60" selected>Sau 1 giờ</option><option value="180">Sau 3 giờ</option><option value="manual">Tự mở thủ công</option></select></div>
+        </div>
+        <div class="field"><label>Lý do thay đổi</label><input id="siteModeReason" maxlength="160" placeholder="Ví dụ: cập nhật chương và kiểm tra dữ liệu"></div>
+        <div id="maintenanceConfirm" hidden class="maintenance-confirm">
+          <label>Để xác nhận khóa, nhập chính xác <b>BAO TRI</b></label>
+          <input id="maintenanceConfirmText" autocomplete="off" autocapitalize="characters" placeholder="BAO TRI">
+        </div>
+        <button class="btn btn-primary" id="saveSiteMode" type="button">Áp dụng trạng thái</button>
+        ${st.mode_updated_at ? `<p class="site-ops-last">Thay đổi gần nhất: ${fmtDate(st.mode_updated_at)}${st.mode_reason ? ` · ${esc(st.mode_reason)}` : ""}</p>` : ""}
+      </section>`;
     } else if (sub === "cai-dat") {
       const st = VCBG.settings();
       const so = st.social || {};
@@ -2784,6 +2814,47 @@
         });
         toast("Đã lưu cài đặt.");
       };
+    const modePicks = $$("[name=site_mode_pick]");
+    if (modePicks.length) {
+      const syncModeControls = () => {
+        const selected = modePicks.find((radio) => radio.checked)?.value || "normal";
+        const options = $("#maintenanceOptions");
+        const confirmBox = $("#maintenanceConfirm");
+        if (options) options.hidden = selected !== "maintenance";
+        if (confirmBox) confirmBox.hidden = selected !== "maintenance";
+      };
+      modePicks.forEach((radio) => { radio.onchange = syncModeControls; });
+      syncModeControls();
+      const saveMode = $("#saveSiteMode");
+      if (saveMode) saveMode.onclick = async () => {
+        const selected = modePicks.find((radio) => radio.checked)?.value || "normal";
+        const reason = String($("#siteModeReason")?.value || "").trim();
+        if (!reason) return toast("Hãy nhập lý do thay đổi trạng thái.");
+        if (selected === "maintenance" && String($("#maintenanceConfirmText")?.value || "").trim() !== "BAO TRI") {
+          return toast("Chưa xác nhận đúng chữ BAO TRI.");
+        }
+        const duration = $("#maintenanceDuration")?.value || "60";
+        const until = selected === "maintenance" && duration !== "manual"
+          ? new Date(Date.now() + Number(duration) * 60000).toISOString()
+          : null;
+        saveMode.disabled = true;
+        saveMode.textContent = "Đang áp dụng…";
+        try {
+          await VCBG.updateSiteMode({
+            site_mode: selected,
+            maintenance_message: selected === "maintenance" ? String($("#maintenanceMessage")?.value || "").trim() : "",
+            maintenance_until: until,
+            mode_reason: reason,
+          });
+          toast(selected === "normal" ? "Website đang hoạt động bình thường." : selected === "readonly" ? "Đã bật chế độ chỉ đọc." : "Đã bật chế độ bảo trì.");
+          await render();
+        } catch (error) {
+          saveMode.disabled = false;
+          saveMode.textContent = "Áp dụng trạng thái";
+          toast(error.message || "Không thay đổi được trạng thái.");
+        }
+      };
+    }
     const qForm = $("#qForm");
     if (qForm)
       qForm.onsubmit = (e) => {
@@ -3228,6 +3299,12 @@
     }
     window.scrollTo(0, 0);
     try {
+      const mode = effectiveSiteMode(VCBG.settings());
+      const authRoute = route.name === "login" || route.name === "forgot";
+      if (mode === "maintenance" && !VCBG.isAdmin() && !authRoute) {
+        pageMaintenance();
+        return;
+      }
       if (route.name === "home") pageHome();
       else if (route.name === "explore") pageExplore(route);
       else if (route.name === "story") pageStory(route);
@@ -3248,6 +3325,35 @@
         footer();
       bindChrome();
     }
+  }
+
+  function effectiveSiteMode(settings) {
+    const st = settings || {};
+    const mode = ["normal", "readonly", "maintenance"].includes(st.site_mode) ? st.site_mode : "normal";
+    if (mode === "maintenance" && st.maintenance_until) {
+      const expiry = Date.parse(st.maintenance_until);
+      if (Number.isFinite(expiry) && expiry <= Date.now()) return "normal";
+    }
+    return mode;
+  }
+
+  function pageMaintenance() {
+    const st = VCBG.settings() || {};
+    const until = st.maintenance_until && Date.parse(st.maintenance_until) > Date.now()
+      ? `<p class="maintenance-until">Dự kiến mở lại: <b>${fmtDate(st.maintenance_until)}</b></p>` : "";
+    setMeta("Đang bảo trì — ViCamBachGiai", "Website đang được bảo trì.");
+    app().innerHTML = `<main class="maintenance-page">
+      <section class="maintenance-card">
+        <div class="maintenance-mark" aria-hidden="true">V</div>
+        <small>VICAMBACHGIAI</small>
+        <h1>Thư viện đang tạm nghỉ</h1>
+        <p>${esc(st.maintenance_message || "Website đang được bảo trì. Vui lòng quay lại sau.")}</p>
+        ${until}
+        <div class="maintenance-actions"><button class="btn btn-primary" id="maintenanceRetry" type="button">Kiểm tra lại</button><a href="#/dang-nhap?next=%2Fadmin%2Fvan-hanh">Đăng nhập Admin</a></div>
+      </section>
+    </main>`;
+    const retry = $("#maintenanceRetry");
+    if (retry) retry.onclick = () => location.reload();
   }
 
   document.addEventListener("click", (e) => {

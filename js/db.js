@@ -9,7 +9,12 @@
     tagline: "Thư viện Bách Hợp — đọc chậm, ở lại lâu.",
     allow_comments: true,
     allow_registration: true,
+    site_mode: "normal",
+    maintenance_message: "",
+    maintenance_until: null,
+    mode_reason: "",
     mode_updated_at: null,
+    mode_updated_by: null,
     social: { youtube: "", tiktok: "", instagram: "", facebook: "", wattpad: "" },
     featured_quote: null,
     poll: { id: "poll_home", title: "Bạn muốn ViCam ưu tiên truyện nào?", story_ids: [] },
@@ -782,7 +787,12 @@
       tagline: settings.tagline,
       allow_comments: settings.allow_comments,
       allow_registration: settings.allow_registration,
+      site_mode: ["normal", "readonly", "maintenance"].includes(settings.site_mode) ? settings.site_mode : "normal",
+      maintenance_message: settings.maintenance_message || "",
+      maintenance_until: settings.maintenance_until || null,
+      mode_reason: settings.mode_reason || "",
       mode_updated_at: settings.mode_updated_at || null,
+      mode_updated_by: settings.mode_updated_by || null,
       social: settings.social || emptySettings().social,
       featured_quote: settings.featured_quote || null,
       poll: settings.poll || emptySettings().poll,
@@ -1082,6 +1092,12 @@
         tagline: cache.site_settings.tagline,
         allow_comments: cache.site_settings.allow_comments,
         allow_registration: cache.site_settings.allow_registration,
+        site_mode: cache.site_settings.site_mode,
+        maintenance_message: cache.site_settings.maintenance_message,
+        maintenance_until: cache.site_settings.maintenance_until,
+        mode_reason: cache.site_settings.mode_reason,
+        mode_updated_at: cache.site_settings.mode_updated_at,
+        mode_updated_by: cache.site_settings.mode_updated_by,
         social: cache.site_settings.social,
         featured_quote: cache.site_settings.featured_quote,
         poll: cache.site_settings.poll,
@@ -1090,6 +1106,31 @@
         const { error } = await sb.from("site_settings").update(row).eq("id", 1);
         if (error) throw error;
       });
+      return cache.site_settings;
+    },
+
+    async updateSiteMode(patch) {
+      const admin = requireAdmin();
+      const allowed = ["normal", "readonly", "maintenance"];
+      const nextMode = allowed.includes(patch && patch.site_mode) ? patch.site_mode : "normal";
+      const previous = { ...cache.site_settings };
+      const row = {
+        site_mode: nextMode,
+        maintenance_message: nextMode === "maintenance" ? String(patch.maintenance_message || "").slice(0, 240) : "",
+        maintenance_until: nextMode === "maintenance" ? (patch.maintenance_until || null) : null,
+        mode_reason: String(patch.mode_reason || "").trim().slice(0, 160),
+        mode_updated_at: new Date().toISOString(),
+        mode_updated_by: admin.id,
+      };
+      if (!row.mode_reason) throw new Error("Hãy nhập lý do thay đổi trạng thái.");
+      Object.assign(cache.site_settings, row);
+      const { data, error } = await sb.from("site_settings").update(row).eq("id", 1).select("site_mode,maintenance_message,maintenance_until,mode_reason,mode_updated_at,mode_updated_by").single();
+      if (error) {
+        cache.site_settings = previous;
+        throwHttp(error, "Không thay đổi được trạng thái website.");
+      }
+      Object.assign(cache.site_settings, data || row);
+      writeSnap();
       return cache.site_settings;
     },
 

@@ -2597,7 +2597,7 @@
   function bindAdmin(route) {
     const pick = $("#stPick");
     if (pick) pick.onchange = () => go("/admin/chuong?story=" + pick.value);
-    $("[data-home-priority]").forEach((select) => {
+    $$("[data-home-priority]").forEach((select) => {
       select.onchange = async () => {
         select.disabled = true;
         try {
@@ -2610,7 +2610,7 @@
         }
       };
     });
-    $("[data-delst]").forEach(
+    $$("[data-delst]").forEach(
       (b) =>
         (b.onclick = () => {
           if (confirm("Xóa truyện và toàn bộ chương?")) {

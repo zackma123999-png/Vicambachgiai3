@@ -1024,12 +1024,23 @@
       <div class="rail" data-rail>${list.map((s) => storyCard(s)).join("")}</div>
     </section>`;
   }
+  function homePrioritySort(list) {
+    return (list || []).slice().sort((a, b) => {
+      const pa = Number(a.home_priority);
+      const pb = Number(b.home_priority);
+      const aPrioritized = Number.isFinite(pa) && pa > 0;
+      const bPrioritized = Number.isFinite(pb) && pb > 0;
+      if (aPrioritized !== bPrioritized) return aPrioritized ? -1 : 1;
+      if (aPrioritized && pa !== pb) return pa - pb;
+      return (b.updated_at || 0) - (a.updated_at || 0);
+    });
+  }
   function pageHome() {
     const featured = VCBG.listStories({ featured: true });
-    const ongoing = VCBG.listStories({ status: "ongoing", sort: "updated" }).filter((s) => !s.upcoming);
+    const ongoing = homePrioritySort(VCBG.listStories({ status: "ongoing" }).filter((s) => !s.upcoming));
     const updated = VCBG.listStories({ sort: "updated" }).filter((s) => !s.upcoming);
-    const done = VCBG.listStories({ status: "completed" }).filter((s) => !s.upcoming);
-    const soon = VCBG.listStories({ upcoming: true });
+    const done = homePrioritySort(VCBG.listStories({ status: "completed" }).filter((s) => !s.upcoming));
+    const soon = homePrioritySort(VCBG.listStories({ upcoming: true }));
     const slideMap = new Map();
     featured.concat(ongoing, updated, done, soon).forEach((s) => {
       if (s && s.id && !slideMap.has(s.id)) slideMap.set(s.id, s);
@@ -2444,14 +2455,28 @@
       <ul class="chapter-list">${st.recent.map((s) => `<li><a href="#/admin/truyen/${s.id}"><span></span><span>${esc(s.title)}</span><span>${fmtDate(s.updated_at)}</span></a></li>`).join("")}</ul>`;
     } else if (sub === "truyen") {
       const list = VCBG.adminListStories();
-      body = `<p><a class="btn btn-primary" href="#/admin/truyen/moi">Thêm truyện</a></p>
-        <div class="table-wrapper"><table style="width:100%;border-collapse:collapse">
-        <thead><tr><th>Tên</th><th>Trạng thái</th><th>Chương</th><th></th></tr></thead>
+      body = `<section class="admin-home-priority-intro">
+          <div><span class="admin-home-priority-star">★</span><h2>Ưu tiên hiển thị trên trang chủ</h2></div>
+          <p>Chọn số nhỏ để truyện đứng trước trong dãy thẻ của đúng nhóm trạng thái. Để “Không ưu tiên” nếu muốn trở về thứ tự cập nhật bình thường.</p>
+        </section>
+        <p><a class="btn btn-primary" href="#/admin/truyen/moi">Thêm truyện</a></p>
+        <div class="table-wrapper"><table class="admin-story-table" style="width:100%;border-collapse:collapse">
+        <thead><tr><th>Tên</th><th>Trạng thái</th><th>Ưu tiên</th><th>Chương</th><th></th></tr></thead>
         <tbody>${list
           .map(
             (s) =>
-              `<tr><td><a href="#/admin/truyen/${s.id}">${esc(s.title)}</a></td><td>${esc(storyStatusLabel(s))}</td><td>${s.stats.chapter_count}</td>
-              <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button data-delst="${s.id}">Xóa</button></td></tr>`
+              `<tr>
+                <td><a href="#/admin/truyen/${s.id}">${esc(s.title)}</a></td>
+                <td>${esc(storyStatusLabel(s))}</td>
+                <td><select class="admin-priority-select" data-home-priority="${s.id}" aria-label="Ưu tiên hiển thị của ${esc(s.title)}">
+                  <option value="" ${s.home_priority ? "" : "selected"}>Không ưu tiên</option>
+                  ${Array.from({ length: 20 }, (_, i) => i + 1)
+                    .map((n) => `<option value="${n}" ${Number(s.home_priority) === n ? "selected" : ""}>Ưu tiên ${n}</option>`)
+                    .join("")}
+                </select></td>
+                <td>${s.stats.chapter_count}</td>
+                <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button data-delst="${s.id}">Xóa</button></td>
+              </tr>`
           )
           .join("")}</tbody></table></div>`;
     } else if (sub === "chuong") {
@@ -2572,7 +2597,20 @@
   function bindAdmin(route) {
     const pick = $("#stPick");
     if (pick) pick.onchange = () => go("/admin/chuong?story=" + pick.value);
-    $$("[data-delst]").forEach(
+    $("[data-home-priority]").forEach((select) => {
+      select.onchange = async () => {
+        select.disabled = true;
+        try {
+          await VCBG.setStoryHomePriority(select.dataset.homePriority, select.value);
+          toast(select.value ? "Đã đặt truyện ở ưu tiên " + select.value + "." : "Đã bỏ ưu tiên hiển thị.");
+          render();
+        } catch (error) {
+          select.disabled = false;
+          toast(error.message || "Không lưu được thứ tự ưu tiên.");
+        }
+      };
+    });
+    $("[data-delst]").forEach(
       (b) =>
         (b.onclick = () => {
           if (confirm("Xóa truyện và toàn bộ chương?")) {
@@ -2735,7 +2773,7 @@
       };
   }
   function adminStoryForm(id) {
-    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, accent: "#8a6a4a", cover: "", tiktok_intro_url: "", genres: [], tags: [] };
+    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, home_priority: null, accent: "#8a6a4a", cover: "", tiktok_intro_url: "", genres: [], tags: [] };
     const selectedStatus = s.upcoming ? "upcoming" : s.status;
     const gids = (s.genres || []).map((g) => g.id);
     const tids = (s.tags || []).map((t) => t.id);
@@ -2759,6 +2797,15 @@
               <option value="completed" ${selectedStatus === "completed" ? "selected" : ""}>Đã hoàn thành</option>
               <option value="upcoming" ${selectedStatus === "upcoming" ? "selected" : ""}>Sắp ra mắt</option>
             </select>
+          </div>
+          <div class="field admin-story-priority-field"><label>Ưu tiên trên trang chủ</label>
+            <select name="home_priority">
+              <option value="" ${s.home_priority ? "" : "selected"}>Không ưu tiên</option>
+              ${Array.from({ length: 20 }, (_, i) => i + 1)
+                .map((n) => `<option value="${n}" ${Number(s.home_priority) === n ? "selected" : ""}>Ưu tiên ${n}</option>`)
+                .join("")}
+            </select>
+            <p class="editor-hint">Số càng nhỏ càng đứng trước trong dãy thẻ của đúng trạng thái. Không ảnh hưởng banner hoặc Kim Bài Đề Cử.</p>
           </div>
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
           <div class="field"><label>Video TikTok giới thiệu truyện</label>
@@ -2822,6 +2869,7 @@
           description: fd.get("description"),
           status: fd.get("status"),
           featured: e.target.featured.checked,
+          home_priority: fd.get("home_priority"),
           tiktok_intro_url: fd.get("tiktok_intro_url"),
           upcoming: fd.get("status") === "upcoming",
           accent: fd.get("accent"),

@@ -2460,6 +2460,10 @@
           <p>Chọn số nhỏ để truyện đứng trước trong dãy thẻ của đúng nhóm trạng thái. Để “Không ưu tiên” nếu muốn trở về thứ tự cập nhật bình thường.</p>
         </section>
         <p><a class="btn btn-primary" href="#/admin/truyen/moi">Thêm truyện</a></p>
+        <div class="admin-priority-actions">
+          <p id="prioritySaveState" aria-live="polite">Chọn thứ tự rồi bấm lưu để áp dụng trên trang chủ.</p>
+          <button class="btn btn-primary" type="button" id="saveHomePriorities" disabled>Lưu thứ tự ưu tiên</button>
+        </div>
         <div class="table-wrapper"><table class="admin-story-table" style="width:100%;border-collapse:collapse">
         <thead><tr><th>Tên</th><th>Trạng thái</th><th>Ưu tiên</th><th>Chương</th><th></th></tr></thead>
         <tbody>${list
@@ -2478,11 +2482,7 @@
                 <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button data-delst="${s.id}">Xóa</button></td>
               </tr>`
           )
-          .join("")}</tbody></table></div>
-        <div class="admin-priority-actions">
-          <p id="prioritySaveState" aria-live="polite">Chọn thứ tự rồi bấm lưu để áp dụng trên trang chủ.</p>
-          <button class="btn btn-primary" type="button" id="saveHomePriorities" disabled>Lưu thứ tự ưu tiên</button>
-        </div>`;
+          .join("")}</tbody></table></div>`;
     } else if (sub === "chuong") {
       const stories = VCBG.adminListStories();
       const sid = route.q.story || (stories[0] && stories[0].id);

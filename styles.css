@@ -29,12 +29,14 @@ body {
 .maintenance-emblem{border-color:rgba(208,177,255,.5);background:linear-gradient(145deg,rgba(139,92,246,.2),rgba(25,211,255,.08));box-shadow:0 0 36px rgba(181,89,255,.32),inset 0 0 22px rgba(115,211,255,.1)}
 .maintenance-emblem img{filter:drop-shadow(0 0 10px rgba(168,112,255,.72)) drop-shadow(0 0 18px rgba(74,205,255,.25))}
 .maintenance-brand{background:linear-gradient(90deg,#a7b9ff,#f1a0ff,#72e9ff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 22px rgba(177,105,255,.22)}
+.maintenance-wordmark{display:block;width:min(230px,72%);height:auto;margin:0 auto;object-fit:contain;filter:drop-shadow(0 0 12px rgba(176,108,255,.28))}
 .maintenance-status{border-color:rgba(229,144,255,.42);background:linear-gradient(90deg,rgba(124,92,255,.22),rgba(232,86,255,.16));color:#f3d7ff;box-shadow:0 0 26px rgba(190,80,255,.15),inset 0 1px 0 rgba(255,255,255,.08)}
 .maintenance-status span{background:#ff7cf2;box-shadow:0 0 7px #ff7cf2,0 0 17px #bb69ff}
 .maintenance-card h1{background:linear-gradient(105deg,#fff 8%,#dfc7ff 42%,#91eaff 78%,#fff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 8px 34px rgba(137,99,255,.22)}
 .maintenance-divider{width:76px;height:2px;background:linear-gradient(90deg,transparent,#a874ff 25%,#ff75df 52%,#63ddff 78%,transparent);box-shadow:0 0 12px rgba(198,103,255,.7)}
 .maintenance-card p{color:#e0e7f8;text-shadow:0 2px 18px rgba(79,172,255,.08)}
 .maintenance-note{color:#9faac5;background:linear-gradient(90deg,#938bba,#a9bddd);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media(max-width:640px){.maintenance-wordmark{width:min(210px,74%)}}
 img, video, svg { max-width: 100%; height: auto; }
 button, input, textarea, select { font: inherit; }
 a { color: inherit; text-decoration: none; }

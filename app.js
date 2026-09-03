@@ -3319,7 +3319,7 @@
         <div class="maintenance-emblem" aria-hidden="true">
           <img src="brand/mark.png" alt="">
         </div>
-        <div class="maintenance-brand">VICAMBACHGIAI</div>
+        <img class="maintenance-wordmark" src="brand/word.png" alt="ViCamBachGiai">
         <div class="maintenance-status"><span></span> ĐANG BẢO TRÌ</div>
         <h1>Thư viện tạm nghỉ</h1>
         <div class="maintenance-divider" aria-hidden="true"></div>

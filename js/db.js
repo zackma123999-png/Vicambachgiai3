@@ -1111,6 +1111,12 @@
 
     async updateSiteMode(patch) {
       const admin = requireAdmin();
+      const verified = await sb.auth.getUser();
+      if (verified.error || !verified.data || !verified.data.user || verified.data.user.id !== admin.id) {
+        const err = new Error("Phiên Admin đã hết hạn. Hãy đăng nhập lại.");
+        err.code = "AUTH_REQUIRED";
+        throw err;
+      }
       const allowed = ["normal", "readonly", "maintenance"];
       const nextMode = allowed.includes(patch && patch.site_mode) ? patch.site_mode : "normal";
       const previous = { ...cache.site_settings };
@@ -1122,7 +1128,6 @@
         mode_updated_at: new Date().toISOString(),
         mode_updated_by: admin.id,
       };
-      if (!row.mode_reason) throw new Error("Hãy nhập lý do thay đổi trạng thái.");
       Object.assign(cache.site_settings, row);
       const { data, error } = await sb.from("site_settings").update(row).eq("id", 1).select("site_mode,maintenance_message,maintenance_until,mode_reason,mode_updated_at,mode_updated_by").single();
       if (error) {

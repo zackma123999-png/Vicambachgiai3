@@ -59,8 +59,6 @@
   };
 
   window.VCBG.isAdmin = function persistedIsAdmin() {
-    var u = window.VCBG.currentUser();
-    if (u) return u.role === "admin";
     try { return originalIsAdmin(); } catch (_) { return false; }
   };
 

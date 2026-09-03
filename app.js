@@ -2578,29 +2578,16 @@
     } else if (sub === "van-hanh") {
       const st = VCBG.settings();
       const effective = effectiveSiteMode(st);
-      const until = st.maintenance_until ? new Date(st.maintenance_until) : null;
       body = `<section class="site-ops" data-current-mode="${esc(effective)}">
         <div class="site-ops-head">
           <div><small>TRẠNG THÁI WEBSITE</small><h2>${effective === "normal" ? "Đang hoạt động bình thường" : effective === "readonly" ? "Đang ở chế độ chỉ đọc" : "Đang bảo trì"}</h2></div>
           <span class="site-mode-pill is-${esc(effective)}">${effective === "normal" ? "ĐANG MỞ" : effective === "readonly" ? "CHỈ ĐỌC" : "BẢO TRÌ"}</span>
         </div>
-        <p class="site-ops-note">Website không bao giờ tự chuyển trạng thái vì lỗi hoặc quá tải. Nếu cấu hình không đọc được, website mặc định vẫn mở.</p>
-        <div class="site-mode-choices" role="radiogroup" aria-label="Chọn trạng thái website">
-          <label><input type="radio" name="site_mode_pick" value="normal" ${effective === "normal" ? "checked" : ""}><b>Hoạt động bình thường</b><span>Mọi chức năng hoạt động.</span></label>
-          <label><input type="radio" name="site_mode_pick" value="readonly" ${effective === "readonly" ? "checked" : ""}><b>Chỉ đọc</b><span>Độc giả vẫn đọc truyện nhưng không thể gửi dữ liệu mới.</span></label>
-          <label><input type="radio" name="site_mode_pick" value="maintenance" ${effective === "maintenance" ? "checked" : ""}><b>Bảo trì</b><span>Độc giả chỉ thấy thông báo; Admin vẫn vào được.</span></label>
+        <div class="site-mode-actions" aria-label="Đổi trạng thái website">
+          <button type="button" data-site-mode="normal" class="site-mode-action is-normal ${effective === "normal" ? "is-current" : ""}" ${effective === "normal" ? "disabled" : ""}>Mở website</button>
+          <button type="button" data-site-mode="readonly" class="site-mode-action is-readonly ${effective === "readonly" ? "is-current" : ""}" ${effective === "readonly" ? "disabled" : ""}>Chỉ đọc</button>
+          <button type="button" data-site-mode="maintenance" class="site-mode-action is-maintenance ${effective === "maintenance" ? "is-current" : ""}" ${effective === "maintenance" ? "disabled" : ""}>Bảo trì</button>
         </div>
-        <div id="maintenanceOptions" ${effective === "maintenance" ? "" : "hidden"}>
-          <div class="field"><label>Thông báo cho độc giả</label><textarea id="maintenanceMessage" maxlength="240">${esc(st.maintenance_message || "Website đang được bảo trì. Vui lòng quay lại sau.")}</textarea></div>
-          <div class="field"><label>Tự mở lại</label><select id="maintenanceDuration"><option value="15">Sau 15 phút</option><option value="30">Sau 30 phút</option><option value="60" selected>Sau 1 giờ</option><option value="180">Sau 3 giờ</option><option value="manual">Tự mở thủ công</option></select></div>
-        </div>
-        <div class="field"><label>Lý do thay đổi</label><input id="siteModeReason" maxlength="160" placeholder="Ví dụ: cập nhật chương và kiểm tra dữ liệu"></div>
-        <div id="maintenanceConfirm" hidden class="maintenance-confirm">
-          <label>Để xác nhận khóa, nhập chính xác <b>BAO TRI</b></label>
-          <input id="maintenanceConfirmText" autocomplete="off" autocapitalize="characters" placeholder="BAO TRI">
-        </div>
-        <button class="btn btn-primary" id="saveSiteMode" type="button">Áp dụng trạng thái</button>
-        ${st.mode_updated_at ? `<p class="site-ops-last">Thay đổi gần nhất: ${fmtDate(st.mode_updated_at)}${st.mode_reason ? ` · ${esc(st.mode_reason)}` : ""}</p>` : ""}
       </section>`;
     } else if (sub === "cai-dat") {
       const st = VCBG.settings();
@@ -2814,46 +2801,31 @@
         });
         toast("Đã lưu cài đặt.");
       };
-    const modePicks = $$("[name=site_mode_pick]");
-    if (modePicks.length) {
-      const syncModeControls = () => {
-        const selected = modePicks.find((radio) => radio.checked)?.value || "normal";
-        const options = $("#maintenanceOptions");
-        const confirmBox = $("#maintenanceConfirm");
-        if (options) options.hidden = selected !== "maintenance";
-        if (confirmBox) confirmBox.hidden = selected !== "maintenance";
-      };
-      modePicks.forEach((radio) => { radio.onchange = syncModeControls; });
-      syncModeControls();
-      const saveMode = $("#saveSiteMode");
-      if (saveMode) saveMode.onclick = async () => {
-        const selected = modePicks.find((radio) => radio.checked)?.value || "normal";
-        const reason = String($("#siteModeReason")?.value || "").trim();
-        if (!reason) return toast("Hãy nhập lý do thay đổi trạng thái.");
-        if (selected === "maintenance" && String($("#maintenanceConfirmText")?.value || "").trim() !== "BAO TRI") {
-          return toast("Chưa xác nhận đúng chữ BAO TRI.");
-        }
-        const duration = $("#maintenanceDuration")?.value || "60";
-        const until = selected === "maintenance" && duration !== "manual"
-          ? new Date(Date.now() + Number(duration) * 60000).toISOString()
-          : null;
-        saveMode.disabled = true;
-        saveMode.textContent = "Đang áp dụng…";
+    const modeButtons = $$('[data-site-mode]');
+    if (modeButtons.length) {
+      modeButtons.forEach((button) => { button.onclick = async () => {
+        const selected = button.dataset.siteMode;
+        modeButtons.forEach((item) => { item.disabled = true; });
+        const oldText = button.textContent;
+        button.textContent = "Đang đổi…";
         try {
           await VCBG.updateSiteMode({
             site_mode: selected,
-            maintenance_message: selected === "maintenance" ? String($("#maintenanceMessage")?.value || "").trim() : "",
-            maintenance_until: until,
-            mode_reason: reason,
+            maintenance_message: selected === "maintenance" ? "Website đang được bảo trì. Vui lòng quay lại sau." : "",
+            maintenance_until: null,
+            mode_reason: selected === "normal" ? "Mở website thủ công" : selected === "readonly" ? "Bật chỉ đọc thủ công" : "Bật bảo trì thủ công",
           });
           toast(selected === "normal" ? "Website đang hoạt động bình thường." : selected === "readonly" ? "Đã bật chế độ chỉ đọc." : "Đã bật chế độ bảo trì.");
           await render();
         } catch (error) {
-          saveMode.disabled = false;
-          saveMode.textContent = "Áp dụng trạng thái";
-          toast(error.message || "Không thay đổi được trạng thái.");
+          button.textContent = oldText;
+          modeButtons.forEach((item) => { item.disabled = item.classList.contains("is-current"); });
+          if (error && error.code === "AUTH_REQUIRED") {
+            toast("Phiên Admin đã hết hạn. Hãy đăng nhập lại.");
+            goToLogin("/admin/van-hanh");
+          } else toast(error.message || "Không thay đổi được trạng thái.");
         }
-      };
+      }; });
     }
     const qForm = $("#qForm");
     if (qForm)

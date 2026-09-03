@@ -8,7 +8,6 @@
   var originalLogin = typeof window.VCBG.login === "function" ? window.VCBG.login.bind(window.VCBG) : null;
   var originalLogout = typeof window.VCBG.logout === "function" ? window.VCBG.logout.bind(window.VCBG) : null;
   var AUTH_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
-  var checking = null;
 
   function readCached() {
     try {
@@ -81,110 +80,7 @@
     };
   }
 
-  function showChecking() {
-    var old = document.getElementById("vcbg-auth-checking");
-    if (old) return;
-    var el = document.createElement("div");
-    el.id = "vcbg-auth-checking";
-    el.innerHTML = '<div class="vcbg-auth-spinner"></div><div>Đang xác thực quyền quản trị…</div>';
-    el.style.cssText = "position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#070b14;color:#8b9bb3;font:500 16px 'Be Vietnam Pro',system-ui,sans-serif";
-    var sp = el.firstElementChild;
-    if (sp) sp.style.cssText = "width:34px;height:34px;border-radius:50%;border:3px solid rgba(149,137,230,.2);border-top-color:#9589e6;animation:vcbgSpin .75s linear infinite";
-    if (!document.getElementById("vcbg-auth-spin-style")) {
-      var st = document.createElement("style");
-      st.id = "vcbg-auth-spin-style";
-      st.textContent = "@keyframes vcbgSpin{to{transform:rotate(360deg)}}";
-      document.head.appendChild(st);
-    }
-    document.body.appendChild(el);
-  }
-
-  function hideChecking() {
-    var el = document.getElementById("vcbg-auth-checking");
-    if (el) el.remove();
-  }
-
-  /* This is the authoritative readiness test: adminStats() itself calls db.js requireAdmin().
-     If this succeeds, every admin route/API sees the same role and the panel can render safely. */
-  function internalAdminReady() {
-    try {
-      if (typeof window.VCBG.adminStats !== "function") return false;
-      window.VCBG.adminStats();
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  function waitForInternalAdmin(maxMs) {
-    if (internalAdminReady()) return Promise.resolve(true);
-    if (checking) return checking;
-    maxMs = maxMs || 15000;
-    checking = (async function () {
-      try {
-        if (typeof window.VCBG.backgroundReady === "function") {
-          Promise.resolve(window.VCBG.backgroundReady()).catch(function () {});
-        }
-      } catch (_) {}
-
-      var started = Date.now();
-      while (Date.now() - started < maxMs) {
-        if (internalAdminReady()) return true;
-        await new Promise(function (resolve) { setTimeout(resolve, 80); });
-      }
-      return internalAdminReady();
-    })().finally(function () { checking = null; });
-    return checking;
-  }
-
-  function navigate(target) {
-    target = String(target || "#/admin");
-    if (!target.startsWith("#")) target = "#" + target.replace(/^#?/, "");
-    if (location.hash === target) {
-      try { window.dispatchEvent(new HashChangeEvent("hashchange")); }
-      catch (_) { location.reload(); }
-    } else {
-      location.hash = target;
-    }
-  }
-
-  /* Intercept EVERY admin navigation for a cached admin. Do not let app.js needAdmin() run
-     until the exact db.js requireAdmin() path is ready. */
-  document.addEventListener("click", function (e) {
-    var a = e.target && e.target.closest ? e.target.closest('a[href^="#/admin"]') : null;
-    if (!a) return;
-    var cached = readCached();
-    if (!cached || cached.role !== "admin") return;
-
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    var href = a.getAttribute("href") || "#/admin";
-    showChecking();
-    waitForInternalAdmin(15000).then(function (ok) {
-      hideChecking();
-      if (ok) navigate(href);
-      else console.error("[VCBG admin] Internal admin guard did not become ready.");
-    }).catch(function (err) {
-      hideChecking();
-      console.error("[VCBG admin]", err);
-    });
-  }, true);
-
-  /* Same protection on refresh while already inside an admin route. */
-  var initialHash = String(location.hash || "");
-  var cached = readCached();
-  if (/^#\/admin(?:\/|$)/.test(initialHash) && cached && cached.role === "admin" && !internalAdminReady()) {
-    var target = initialHash;
-    try { history.replaceState(null, "", location.pathname + location.search + "#/"); } catch (_) {}
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", showChecking, { once: true });
-    else showChecking();
-    waitForInternalAdmin(15000).then(function (ok) {
-      hideChecking();
-      if (ok) navigate(target);
-      else console.error("[VCBG admin] Reload guard never became ready.");
-    }).catch(function (err) {
-      hideChecking();
-      console.error("[VCBG admin reload]", err);
-    });
-  }
+  /* app.js waits for the authenticated data layer before rendering an admin route.
+     Do not intercept admin links with a second full-screen readiness loop: on a slow
+     or stale mobile session that loop can cover the valid admin page indefinitely. */
 })();

@@ -1767,9 +1767,15 @@
       const story = cache.stories.find((item) => item.id === id);
       if (!story) throw new Error("Không tìm thấy truyện.");
       const parsed = Number(value);
-      story.home_priority = Number.isInteger(parsed) && parsed >= 1 && parsed <= 99 ? parsed : null;
-      const { error } = await sb.from("stories").update({ home_priority: story.home_priority }).eq("id", story.id);
+      const nextPriority = Number.isInteger(parsed) && parsed >= 1 && parsed <= 99 ? parsed : null;
+      const { data, error } = await sb
+        .from("stories")
+        .update({ home_priority: nextPriority })
+        .eq("id", story.id)
+        .select("id,home_priority")
+        .single();
       if (error) throw publicError(error, "Không lưu được thứ tự ưu tiên.");
+      story.home_priority = Number(data && data.home_priority) > 0 ? Number(data.home_priority) : null;
       writeSnap();
       return hydrateStory(story);
     },

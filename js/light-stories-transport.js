@@ -61,7 +61,7 @@
       builder.select = function (columns, options) {
         var cols = columns;
         if (!cols || String(cols).trim() === "*") {
-          cols = "id,slug,title,author,synopsis,status,featured,upcoming,created_at,updated_at,editor,accent,published,description,cover_url,tiktok_intro_url";
+          cols = "id,slug,title,author,synopsis,status,featured,upcoming,home_priority,created_at,updated_at,editor,accent,published,description,cover_url,tiktok_intro_url";
         }
         return wrapStoriesQuery(originalSelect(cols, options));
       };

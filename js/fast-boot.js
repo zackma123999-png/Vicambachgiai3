@@ -83,6 +83,7 @@
           status: s.status,
           featured: !!s.featured,
           upcoming: !!s.upcoming,
+          home_priority: Number(s.home_priority) > 0 ? Number(s.home_priority) : null,
           accent: s.accent || "#8a6a4a",
           updated_at: Number(s.updated_at || 0),
           cover: proxyCover(s),

@@ -3030,6 +3030,7 @@
           <div class="editor-shell">
             <div class="editor-area" id="ed" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Dán hoặc viết nội dung chương…"></div>
           </div>
+          <input id="chapterImageFile" class="chapter-image-file" type="file" accept="image/*" aria-label="Chọn ảnh chèn vào chương">
           <p class="editor-hint">Dán từ Word/web được giữ đoạn văn, bỏ màu chữ rác. Ảnh nên dưới 2MB.</p>
           <div class="field"><label>Trạng thái</label>
             <select name="status">
@@ -3046,6 +3047,8 @@
       footer();
     bindChrome();
     const ed = $("#ed");
+    const chapterImageFile = $("#chapterImageFile");
+    let savedEditorRange = null;
     let edGap = 0.9;
     if (ch && ch.body) {
       ed.innerHTML = sanitize(ch.body);
@@ -3091,16 +3094,40 @@
         sel.addRange(range);
       } catch (_) {}
     };
+    const rememberEditorRange = () => {
+      const sel = window.getSelection && window.getSelection();
+      if (!sel || !sel.rangeCount || !sel.anchorNode || !ed.contains(sel.anchorNode)) return;
+      try { savedEditorRange = sel.getRangeAt(0).cloneRange(); } catch (_) {}
+    };
+    const restoreEditorRange = () => {
+      const sel = window.getSelection && window.getSelection();
+      if (!sel || !savedEditorRange) {
+        focusEditor();
+        return;
+      }
+      try {
+        sel.removeAllRanges();
+        sel.addRange(savedEditorRange);
+      } catch (_) {
+        focusEditor();
+      }
+    };
+    ed.addEventListener("keyup", rememberEditorRange);
+    ed.addEventListener("mouseup", rememberEditorRange);
+    ed.addEventListener("touchend", rememberEditorRange);
+    ed.addEventListener("input", rememberEditorRange);
     ed.addEventListener("click", (e) => {
       if (e.target === ed) requestAnimationFrame(focusEditor);
     });
     const insertHtml = (html) => {
+      restoreEditorRange();
       ed.focus();
       try {
         document.execCommand("insertHTML", false, html);
       } catch (_) {
         ed.insertAdjacentHTML("beforeend", html);
       }
+      rememberEditorRange();
     };
     const shrinkImage = (file, cb) => {
       if (!file) return;
@@ -3130,6 +3157,16 @@
         toast("Không đọc được ảnh.");
       };
       img.src = url;
+    };
+    chapterImageFile.onchange = () => {
+      const file = chapterImageFile.files && chapterImageFile.files[0];
+      if (!file) return;
+      toast("Đang xử lý ảnh…");
+      shrinkImage(file, (src) => {
+        insertHtml('<p><img src="' + src + '" alt=""></p><p><br></p>');
+        chapterImageFile.value = "";
+        toast("Đã chèn ảnh vào chương.");
+      });
     };
     ed.addEventListener("paste", (e) => {
       e.preventDefault();
@@ -3180,11 +3217,9 @@
           const u = prompt("URL liên kết");
           if (u) run("createLink", u);
         } else if (c === "img") {
-          const inp = document.createElement("input");
-          inp.type = "file";
-          inp.accept = "image/*";
-          inp.onchange = () => shrinkImage(inp.files[0], (src) => insertHtml('<p><img src="' + src + '" alt=""></p>'));
-          inp.click();
+          rememberEditorRange();
+          chapterImageFile.value = "";
+          chapterImageFile.click();
         }
       };
     });

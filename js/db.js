@@ -1070,7 +1070,12 @@
           }
         );
       }
-      if (cache.stories && cache.stories.length) return;
+      /* Admin authorization must come from the live Supabase session/profile.
+         Public pages may paint from the local story snapshot immediately, but an
+         admin route must wait for syncSession() + loadOwnProfile() so a forged
+         localStorage catalog can never unlock the admin UI. */
+      const adminRoute = /^#\/admin(?:\/|\?|$)/.test(global.location.hash || "");
+      if (cache.stories && cache.stories.length && !adminRoute) return;
       try {
         await settle(bootPromise || Promise.resolve(), 8000, "thư viện");
       } catch (err) {

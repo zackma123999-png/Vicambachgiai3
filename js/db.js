@@ -1944,15 +1944,17 @@
       story.tiktok_intro_url = tiktokIntroUrl;
       if (data.cover_file) {
         const optimized = await optimizeCoverFile(data.cover_file);
-        const path = story.id + ".webp";
+        // Use an immutable versioned object name. This avoids Storage upsert
+        // requiring UPDATE/SELECT on an older cover and prevents stale CDN images.
+        const path = story.id + "-" + t + ".webp";
         const { error: uploadError } = await sb.storage.from("covers").upload(path, optimized, {
           contentType: "image/webp",
           cacheControl: "31536000",
-          upsert: true,
+          upsert: false,
         });
         if (uploadError) {
           const raw = String(uploadError.message || "");
-          if (/object exceeded|maximum allowed size|too large/i.test(raw)) {
+          if (/object exceeded|maximum allowed size|too large|payload too large|413/i.test(raw)) {
             throw new Error("Ảnh bìa vượt giới hạn tải lên. Website đã thử nén ảnh; hãy chọn ảnh khác nếu lỗi vẫn còn.");
           }
           throw publicError(uploadError, "Không tải được ảnh bìa.");

@@ -2545,8 +2545,8 @@
               const isOwner = u.id === ownerId;
               return `<li class="member-row${isOwner ? " is-owner" : ""}">
                 <div class="member-identity"><strong>${esc(u.profile.display_name)}</strong><span>${esc(u.email)}</span></div>
-                <div class="member-state">${isOwner ? '<b class="owner-badge">Chủ sở hữu</b>' : `<span>${u.status === "active" ? "Đang hoạt động" : "Đã khóa"}</span>`}</div>
-                <div class="member-actions">${isOwner ? '<span class="owner-protected">Được bảo vệ</span>' : `<button type="button" data-ban="${u.id}">${u.status === "active" ? "Khóa" : "Mở khóa"}</button>`}</div>
+                <div class="member-state">${isOwner ? '<b class="owner-badge">Chủ sở hữu</b>' : `<span>${u.status === "banned" ? "Đã khóa" : "Đang hoạt động"}</span>`}</div>
+                <div class="member-actions">${isOwner ? '<span class="owner-protected">Được bảo vệ</span>' : `<button type="button" data-ban="${u.id}">${u.status === "banned" ? "Mở khóa" : "Khóa"}</button>`}</div>
               </li>`;
             })
             .join("")}</ul>
@@ -2748,7 +2748,7 @@
         (b.onclick = () => {
           try {
             const u = VCBG.adminUsers().find((x) => x.id === b.dataset.ban);
-            VCBG.setUserStatus(b.dataset.ban, u.status === "active" ? "banned" : "active");
+            VCBG.setUserStatus(b.dataset.ban, u.status === "banned" ? "active" : "banned");
             render();
           } catch (e) {
             toast(e.message);

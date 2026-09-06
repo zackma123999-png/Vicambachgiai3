@@ -13,7 +13,7 @@
   function realAvatar(u){const a=u&&u.avatar?String(u.avatar):'';return /^(https?:|covers\/|brand\/)/i.test(a)?a:''}
   function srcFor(u){return realAvatar(u)||srcByIndex(indexFor(u||{}))}
   function decorate(el,u,admin){
-    if(!el)return;const src=srcFor(u||{});el.classList.add('vc-pool-avatar');el.classList.toggle('vc-admin-avatar',!!admin);
+    if(!el)return;const src=admin?srcByIndex(ADMIN_AVATAR_INDEX):srcFor(u||{});el.classList.add('vc-pool-avatar');el.classList.toggle('vc-admin-avatar',!!admin);
     if(el.tagName==='IMG'){if(el.getAttribute('src')!==src)el.src=src;return}
     let img=el.querySelector(':scope > img.vc-avatar-img');
     if(!img){el.textContent='';img=document.createElement('img');img.className='vc-avatar-img';img.alt='';el.appendChild(img)}

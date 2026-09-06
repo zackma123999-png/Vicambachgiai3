@@ -807,6 +807,9 @@
 
   async function fillCatalogRest(stories) {
     try {
+      const chapterIndexColumns = currentUser()
+        ? "id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds,youtube_audio_url,notify_edit_at"
+        : "id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,notify_edit_at";
     const [genres, tags, story_genres, story_tags, chapters, settingsRows] = await Promise.all([
       loadOptional("genres"),
       loadOptional("tags"),
@@ -815,7 +818,7 @@
       settle(
         sb
           .from("chapters")
-          .select("id,story_id,number,chapter_number,title,status,publish_at,published_at,created_at,updated_at,audio_url,audio_cover_url,audio_title,audio_duration_seconds,youtube_audio_url,notify_edit_at"),
+          .select(chapterIndexColumns),
         7000,
         "chapters"
       )
@@ -1567,6 +1570,7 @@
     },
     async ensureChapterBody(ch) {
       if (!ch) return ch;
+      requireUser();
       const fallbackBody = ch.body || ch.content || "";
       let { data, error } = await sb.from("chapters").select("id,content,updated_at").eq("id", ch.id).maybeSingle();
       if (error && /42703|column .* does not exist/i.test(String(error.message || ""))) {

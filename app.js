@@ -3300,6 +3300,13 @@
     }
     clearTimeout(watchdog);
     const route = parseHash();
+    if ((route.name === "story" || route.name === "read") && VCBG.syncPublicContent) {
+      try {
+        await VCBG.syncPublicContent({ maxAge: 5000 });
+      } catch (error) {
+        console.warn("[VCBG content sync]", error && error.message);
+      }
+    }
     const pendingAuthReturn = authReturnSnapshot();
     if (route.name === "home" && VCBG.currentUser() && pendingAuthReturn) {
       await returnFromAuth(pendingAuthReturn.path);
@@ -3386,6 +3393,19 @@
     currentPath = readLocationPath();
     render();
   });
+  let resumeSyncTimer = 0;
+  function syncVisibleContent() {
+    if (!/^#\/truyen\//.test(location.hash || "") || !VCBG.syncPublicContent) return;
+    clearTimeout(resumeSyncTimer);
+    resumeSyncTimer = setTimeout(async () => {
+      try {
+        const changed = await VCBG.syncPublicContent({ maxAge: 0 });
+        if (changed) await render();
+      } catch (_) {}
+    }, 120);
+  }
+  window.addEventListener("pageshow", (event) => { if (event.persisted) syncVisibleContent(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncVisibleContent(); });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
   async function boot() {

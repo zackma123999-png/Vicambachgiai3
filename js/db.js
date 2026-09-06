@@ -56,6 +56,9 @@
   const communityListeners = new Set();
   const authStateListeners = new Set();
   let authSubscriptionStarted = false;
+  let accountStatusChannel = null;
+  let accountStatusTimer = null;
+  let monitoredAccountId = "";
   let publicMetricChannel = null;
   let publicMetricTimer = null;
   let publicMetricStarting = false;
@@ -1034,6 +1037,77 @@
     });
   }
 
+  const LOCKED_ACCOUNT_MESSAGE = "Tài khoản đã bị khóa, không thể đăng nhập website.";
+
+  function stopAccountStatusMonitor() {
+    if (accountStatusTimer) global.clearInterval(accountStatusTimer);
+    accountStatusTimer = null;
+    monitoredAccountId = "";
+    if (accountStatusChannel && sb) {
+      const channel = accountStatusChannel;
+      accountStatusChannel = null;
+      Promise.resolve(sb.removeChannel(channel)).catch(() => {});
+    }
+  }
+
+  async function rejectLockedAccount({ announce = false } = {}) {
+    if (!sessionUser) return false;
+    const p = profileOf(sessionUser.id);
+    if (!p || p.status !== "banned") return false;
+    stopAccountStatusMonitor();
+    storeDel(SESSION_KEY);
+    try {
+      /* The blocked member's own session can revoke all of their refresh
+         tokens, signing the same account out on its other devices too. */
+      await sb.auth.signOut({ scope: "global" });
+    } catch (_) {
+      try { await sb.auth.signOut({ scope: "local" }); } catch (_) {}
+    }
+    sessionUser = null;
+    emitAuthState();
+    if (announce) {
+      try {
+        global.dispatchEvent(new CustomEvent("vcbg:account-blocked", {
+          detail: { message: LOCKED_ACCOUNT_MESSAGE },
+        }));
+      } catch (_) {}
+    }
+    return true;
+  }
+
+  function startAccountStatusMonitor() {
+    if (!sessionUser || !sb) return;
+    const userId = sessionUser.id;
+    if (monitoredAccountId === userId) return;
+    stopAccountStatusMonitor();
+    monitoredAccountId = userId;
+
+    const check = async () => {
+      if (!sessionUser || sessionUser.id !== userId) return;
+      await loadOwnProfile();
+      await rejectLockedAccount({ announce: true });
+    };
+    accountStatusTimer = global.setInterval(() => {
+      check().catch(() => {});
+    }, 30000);
+    accountStatusChannel = sb
+      .channel("vcbg-account-status-" + userId)
+      .on("postgres_changes", {
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: "user_id=eq." + userId,
+      }, (payload) => {
+        const next = payload && payload.new;
+        if (next && next.status === "banned") {
+          const p = profileOf(userId);
+          if (p) p.status = "banned";
+          rejectLockedAccount({ announce: true }).catch(() => {});
+        }
+      })
+      .subscribe();
+  }
+
   function startAuthSubscription() {
     if (authSubscriptionStarted || !sb) return;
     authSubscriptionStarted = true;
@@ -1046,8 +1120,12 @@
           try { await loadOwnProfile(); } catch (err) {
             console.warn("[VCBG auth profile]", err && err.message);
           }
-          storeSet(SESSION_KEY, JSON.stringify({ userId: sessionUser.id, at: now() }));
+          if (!(await rejectLockedAccount({ announce: true }))) {
+            storeSet(SESSION_KEY, JSON.stringify({ userId: sessionUser.id, at: now() }));
+            startAccountStatusMonitor();
+          }
         } else {
+          stopAccountStatusMonitor();
           storeDel(SESSION_KEY);
         }
         if (before !== authFingerprint()) emitAuthState();
@@ -1157,7 +1235,10 @@
         const authPending = (async () => {
           try {
             await settle(syncSession(), 3000, "phiên");
-            if (sessionUser) await settle(loadOwnProfile(), 3000, "hồ sơ");
+            if (sessionUser) {
+              await settle(loadOwnProfile(), 3000, "hồ sơ");
+              if (!(await rejectLockedAccount({ announce: true }))) startAccountStatusMonitor();
+            }
           } catch (err) {
             console.warn("[VCBG auth restore]", err && err.message);
           }
@@ -1332,6 +1413,8 @@
         await loadOwnProfile();
         if (!bootstrapped) await refresh();
       } catch (_) {}
+      if (await rejectLockedAccount()) throw new Error(LOCKED_ACCOUNT_MESSAGE);
+      startAccountStatusMonitor();
       return currentUser();
     },
 
@@ -1348,18 +1431,16 @@
       } catch (err) {
         console.error("[VCBG login refresh]", err);
       }
+      if (await rejectLockedAccount()) throw new Error(LOCKED_ACCOUNT_MESSAGE);
       const u = currentUser();
-      if (u && u.status && u.status !== "active") {
-        await sb.auth.signOut();
-        sessionUser = null;
-        throw new Error("Tài khoản đã bị khóa.");
-      }
       if (!u) throw new Error("Không thể đăng nhập. Vui lòng thử lại.");
+      startAccountStatusMonitor();
       return u;
     },
 
     logout() {
       sessionUser = null;
+      stopAccountStatusMonitor();
       storeDel(SESSION_KEY);
       persist(async () => {
         await sb.auth.signOut();

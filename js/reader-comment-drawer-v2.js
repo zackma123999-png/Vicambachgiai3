@@ -3,6 +3,8 @@
   const REACTIONS = [
     ['like','👍'], ['love','❤️'], ['haha','😂'], ['wow','😮'], ['sad','😢'], ['angry','😡']
   ];
+  const PAGE_SIZE = 20;
+  let drawerView = { key:'', sort:'latest', visible:PAGE_SIZE, quoteOpen:false, expandedReplies:new Set() };
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = (s) => String(s == null ? '' : s)
@@ -60,7 +62,14 @@
     const c = client();
     if (!c || !commentIds.length) return map;
     try {
-      const { data } = await c.from('comment_reactions').select('comment_id,user_id,reaction').in('comment_id', commentIds);
+      const chunks=[];
+      for(let i=0;i<commentIds.length;i+=80) chunks.push(commentIds.slice(i,i+80));
+      const rows=await Promise.all(chunks.map(async ids=>{
+        const {data,error}=await c.from('comment_reactions').select('comment_id,user_id,reaction').in('comment_id',ids);
+        if(error) throw error;
+        return data||[];
+      }));
+      const data=rows.flat();
       let uid = '';
       try { const { data: s } = await c.auth.getSession(); uid = s && s.session && s.session.user ? s.session.user.id : ''; } catch (_) {}
       (data || []).forEach(r => {
@@ -97,12 +106,15 @@
     if (av && /^https?:/i.test(av)) return `<img src="${esc(av)}" alt="">`;
     return `<span>${esc(String(av || name).slice(0,1).toUpperCase())}</span>`;
   }
-  function renderThread(c, state) {
+  function renderThread(c, state, expandedReplies) {
     const u = c.user || {};
     const name = u.display_name || 'Độc giả';
     const st = state[c.id] || {counts:{},mine:''};
     const chips = REACTIONS.filter(([k]) => st.counts[k]).map(([k,e]) => `<button type="button" class="vc-react-chip${st.mine===k?' on':''}" data-react="${k}" data-cid="${c.id}">${e}<b>${st.counts[k]}</b></button>`).join('');
-    const replies = (c.replies || []).map(r => `<div class="vc-reply">
+    const allReplies = c.replies || [];
+    const repliesOpen = expandedReplies.has(String(c.id));
+    const visibleReplies = repliesOpen ? allReplies : allReplies.slice(0,2);
+    const replies = visibleReplies.map(r => `<div class="vc-reply">
       <div class="vc-thread-line"></div><div class="vc-avatar vc-avatar-sm">${avatar(r.user || {})}</div>
       <div class="vc-reply-body"><div class="vc-comment-meta"><b>${esc((r.user && r.user.display_name) || 'Độc giả')}</b><span>${relTime(r.created_at)}</span></div><p>${esc(r.body)}</p></div>
     </div>`).join('');
@@ -118,6 +130,7 @@
         <div class="vc-react-summary">${chips}</div>
         <div class="vc-reaction-pop" data-pop="${c.id}">${REACTIONS.map(([k,e]) => `<button type="button" data-react="${k}" data-cid="${c.id}" class="${st.mine===k?'on':''}">${e}</button>`).join('')}</div>
         ${replies}
+        ${allReplies.length > 2 ? `<button type="button" class="vc-more-replies" data-expand-replies="${c.id}">${repliesOpen ? 'Thu gọn trả lời' : `Xem thêm ${allReplies.length - 2} trả lời`}</button>` : ''}
       </div>
     </article>`;
   }
@@ -130,20 +143,42 @@
     bubble.textContent = count ? String(count) : '';
     bubble.setAttribute('aria-label', count ? `Đoạn này có ${count} bình luận và phản hồi` : 'Bình luận đoạn');
   }
-  async function openDrawer(ctx, quote, paraKey) {
+  function drawerKey(ctx, paraKey) {
+    return String(ctx.ch.id) + ':' + String(paraKey || 'all');
+  }
+  function prepareDrawerView(ctx, paraKey) {
+    const key = drawerKey(ctx, paraKey);
+    if (drawerView.key !== key) drawerView = { key, sort:'latest', visible:PAGE_SIZE, quoteOpen:false, expandedReplies:new Set() };
+    return drawerView;
+  }
+  function sortComments(list, reactions, mode) {
+    return list.slice().sort((a,b) => {
+      if (mode === 'popular') {
+        const score = c => (c.replies || []).length + Object.values((reactions[c.id] || {}).counts || {}).reduce((n,v)=>n+Number(v||0),0);
+        const diff = score(b) - score(a);
+        if (diff) return diff;
+      }
+      return (Date.parse(b.created_at || '') || Number(b.created_at) || 0) - (Date.parse(a.created_at || '') || Number(a.created_at) || 0);
+    });
+  }
+  async function openDrawer(ctx, quote, paraKey, options) {
     const host = $('#rDraw');
     if (!host) return;
+    const view = prepareDrawerView(ctx, paraKey);
     const list0 = VCBG.listComments(ctx.ch.id) || [];
     const list = paraKey ? list0.filter(c => c.para_key === paraKey || (!c.para_key && c.quote === quote)) : list0;
     const state = await reactionState(list.map(c => c.id));
     const count = list.length + list.reduce((n,c)=>n+(c.replies||[]).length,0);
+    const sorted = sortComments(list,state,view.sort);
+    const visible = sorted.slice(0,view.visible);
     syncBubbleCount(paraKey, count);
     host.innerHTML = `<div class="vc-comment-backdrop" data-vc-close></div>
       <aside class="vc-comment-drawer" role="dialog" aria-modal="true" aria-label="Bình luận">
         <div class="vc-signal-line"></div>
-        <header class="vc-comment-head"><div><h3>Bình luận</h3><span>${count ? count + ' phản hồi' : 'Chưa có phản hồi'}</span></div><button type="button" class="vc-close" data-vc-close aria-label="Đóng">×</button></header>
-        ${quote ? `<section class="vc-quote"><div class="vc-quote-line"></div><div><p>${esc(quote)}</p><a href="#/truyen/${esc(ctx.story.slug)}/chuong-${ctx.ch.number}${paraKey?'?para='+encodeURIComponent(paraKey):''}">${esc(ctx.story.title)} · Chương ${ctx.ch.number}${paraKey ? ' · ' + esc(paraKey.replace(/^p/,'Đoạn ')) : ''}</a></div></section>` : ''}
-        <div class="vc-thread-list">${list.length ? list.map(c => renderThread(c,state)).join('') : `<div class="vc-empty"><span>✦</span><b>Chưa có bình luận</b><p>Hãy là người đầu tiên để lại một tín hiệu ở đây.</p></div>`}</div>
+        <header class="vc-comment-head"><div><h3>Bình luận</h3><span>${count ? count + ' bình luận' : 'Chưa có bình luận'}</span></div><button type="button" class="vc-close" data-vc-close aria-label="Đóng">×</button></header>
+        ${quote ? `<section class="vc-quote${view.quoteOpen?' is-open':''}"><div class="vc-quote-line"></div><div><p>${esc(quote)}</p><div class="vc-quote-meta"><a href="#/truyen/${esc(ctx.story.slug)}/chuong-${ctx.ch.number}${paraKey?'?para='+encodeURIComponent(paraKey):''}">${esc(ctx.story.title)} · Chương ${ctx.ch.number}${paraKey ? ' · ' + esc(paraKey.replace(/^p/,'Đoạn ')) : ''}</a><button type="button" data-toggle-quote>${view.quoteOpen?'Thu gọn':'Xem đầy đủ'}</button></div></div></section>` : ''}
+        ${list.length ? `<nav class="vc-comment-sort" aria-label="Sắp xếp bình luận"><button type="button" data-comment-sort="latest" class="${view.sort==='latest'?'on':''}">Mới nhất</button><button type="button" data-comment-sort="popular" class="${view.sort==='popular'?'on':''}">Nổi bật</button></nav>` : ''}
+        <div class="vc-thread-list">${list.length ? visible.map(c => renderThread(c,state,view.expandedReplies)).join('') + (visible.length < sorted.length ? `<button type="button" class="vc-load-more" data-load-more>Đang tải thêm…</button>` : `<div class="vc-list-end">Đã xem hết ${count} bình luận</div>`) : `<div class="vc-empty"><span>✦</span><b>Chưa có bình luận</b><p>Hãy là người đầu tiên để lại một tín hiệu ở đây.</p></div>`}</div>
         <div class="vc-composer-wrap">
           <div class="vc-replying" id="vcReplying" hidden></div>
           <form id="vcCommentForm" class="vc-composer">
@@ -158,6 +193,32 @@
     $$('[data-vc-close]',host).forEach(b => b.onclick = close);
     const ta = $('textarea', host);
     if (ta) ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=Math.min(150,ta.scrollHeight)+'px';});
+
+    $('[data-toggle-quote]',host)?.addEventListener('click', async () => {
+      view.quoteOpen=!view.quoteOpen;
+      await openDrawer(ctx,quote,paraKey,{scrollTop:$('.vc-thread-list',host)?.scrollTop||0});
+    });
+    $$('[data-comment-sort]',host).forEach(b => b.onclick = async () => {
+      view.sort=b.dataset.commentSort; view.visible=PAGE_SIZE;
+      await openDrawer(ctx,quote,paraKey);
+    });
+    $$('[data-expand-replies]',host).forEach(b => b.onclick = async () => {
+      const id=String(b.dataset.expandReplies);
+      if(view.expandedReplies.has(id)) view.expandedReplies.delete(id); else view.expandedReplies.add(id);
+      await openDrawer(ctx,quote,paraKey,{scrollTop:$('.vc-thread-list',host)?.scrollTop||0});
+    });
+    let loadingMore=false;
+    const threadList=$('.vc-thread-list',host);
+    const loadMore=async()=>{
+      if(loadingMore || view.visible>=sorted.length) return;
+      loadingMore=true; const top=threadList.scrollTop; view.visible+=PAGE_SIZE;
+      await openDrawer(ctx,quote,paraKey,{scrollTop:top});
+    };
+    $('[data-load-more]',host)?.addEventListener('click',loadMore);
+    if(threadList){
+      if(options && Number.isFinite(options.scrollTop)) requestAnimationFrame(()=>{threadList.scrollTop=options.scrollTop;});
+      threadList.addEventListener('scroll',()=>{if(threadList.scrollHeight-threadList.scrollTop-threadList.clientHeight<180) loadMore();},{passive:true});
+    }
 
     $$('.vc-react-open',host).forEach(b => b.onclick = () => {
       const pop = $(`.vc-reaction-pop[data-pop="${b.dataset.cid}"]`,host);

@@ -120,9 +120,10 @@
     return backgroundInit;
   }
 
-  window.VCBG.init = function nonBlockingInit() {
-    startBackgroundRefresh();
-    return Promise.resolve();
+  window.VCBG.init = function sessionSafeInit() {
+    /* Cached story data remains available immediately, but routing and account
+       controls must wait until the persisted Supabase session is restored. */
+    return startBackgroundRefresh();
   };
 
   /* Auth guards must wait for this promise, not VCBG.whenReady(), whose bootPromise can

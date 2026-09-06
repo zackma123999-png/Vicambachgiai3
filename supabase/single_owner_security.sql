@@ -22,6 +22,8 @@ as $$
 $$;
 
 revoke all on function private.is_admin_internal() from public, anon, authenticated;
+grant usage on schema private to authenticated;
+grant execute on function private.is_admin_internal() to authenticated;
 
 create or replace function public.protect_profile_privileges()
 returns trigger

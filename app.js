@@ -2212,6 +2212,12 @@
       safeInternalPath(authRoute.q && authRoute.q.next) ||
       (savedReturn && safeInternalPath(savedReturn.path)) ||
       "";
+    /* If auth finishes after a route transition, leave the login page
+       automatically instead of asking an already signed-in user to sign in again. */
+    if (VCBG.currentUser()) {
+      returnFromAuth(returnTarget || "/");
+      return;
+    }
     setMeta("Đăng nhập — ViCamBachGiai", "Đăng nhập ViCamBachGiai bằng Google.");
     app().innerHTML =
       header() +

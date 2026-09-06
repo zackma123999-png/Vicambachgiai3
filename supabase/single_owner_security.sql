@@ -1,4 +1,4 @@
--- Enforce a single immutable site owner.
+-- Enforce one verified owner Gmail as the only administrator.
 begin;
 
 create or replace function private.is_admin_internal()
@@ -8,12 +8,17 @@ stable
 security definer
 set search_path = ''
 as $$
-  select auth.uid() = '3e5ea3a2-c462-482f-9671-bc59a220adda'::uuid
-     and exists (
-       select 1 from public.profiles
-       where user_id = '3e5ea3a2-c462-482f-9671-bc59a220adda'::uuid
-         and role = 'admin' and status = 'active'
-     )
+  select exists (
+    select 1
+    from auth.users u
+    join public.profiles p on p.user_id = u.id
+    where u.id = auth.uid()
+      and lower(u.email) = 'jasminenemo3311@gmail.com'
+      and u.email_confirmed_at is not null
+      and lower(p.email) = 'jasminenemo3311@gmail.com'
+      and p.role = 'admin'
+      and p.status = 'active'
+  )
 $$;
 
 revoke all on function private.is_admin_internal() from public, anon, authenticated;
@@ -21,34 +26,42 @@ revoke all on function private.is_admin_internal() from public, anon, authentica
 create or replace function public.protect_profile_privileges()
 returns trigger
 language plpgsql
-set search_path = public
+security definer
+set search_path = ''
 as $$
 declare
-  owner_id constant uuid := '3e5ea3a2-c462-482f-9671-bc59a220adda'::uuid;
+  owner_email constant text := 'jasminenemo3311@gmail.com';
+  verified_owner boolean := false;
 begin
+  select exists (
+    select 1 from auth.users u
+    where u.id = new.user_id
+      and lower(u.email) = owner_email
+      and u.email_confirmed_at is not null
+  ) into verified_owner;
+
   if tg_op = 'INSERT' then
-    new.role := 'reader';
+    new.email := lower(new.email);
+    new.role := case when verified_owner then 'admin' else 'reader' end;
     new.status := 'active';
-    if new.avatar = 'vca:16' then
+    if new.avatar = 'vca:16' and not verified_owner then
       raise exception 'Avatar nay chi danh cho chu so huu';
     end if;
     return new;
   end if;
 
-  if old.user_id = owner_id then
-    new.user_id := old.user_id;
-    new.email := old.email;
+  new.user_id := old.user_id;
+  new.email := old.email;
+
+  if lower(old.email) = owner_email then
     new.role := 'admin';
     new.status := 'active';
     return new;
   end if;
 
-  if new.user_id is distinct from old.user_id
-     or new.email is distinct from old.email
-     or new.role is distinct from old.role then
-    raise exception 'Khong duoc thay doi danh tinh hoac quyen tai khoan';
+  if new.role is distinct from old.role then
+    raise exception 'Khong duoc thay doi quyen tai khoan';
   end if;
-
   new.role := 'reader';
 
   if not public.is_admin() and new.status is distinct from old.status then
@@ -63,10 +76,38 @@ begin
 end;
 $$;
 
-update public.profiles set role = 'reader'
-where user_id <> '3e5ea3a2-c462-482f-9671-bc59a220adda'::uuid and role <> 'reader';
+revoke all on function public.protect_profile_privileges() from public, anon, authenticated;
 
-update public.profiles set role = 'admin', status = 'active'
-where user_id = '3e5ea3a2-c462-482f-9671-bc59a220adda'::uuid;
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (user_id, display_name, avatar, bio, role, status, email)
+  values (
+    new.id,
+    coalesce(nullif(new.raw_user_meta_data->>'display_name',''), split_part(coalesce(new.email,''),'@',1), 'Doc gia'),
+    upper(left(coalesce(nullif(new.raw_user_meta_data->>'display_name',''), split_part(coalesce(new.email,''),'@',1), 'D'), 1)),
+    '',
+    case when lower(new.email) = 'jasminenemo3311@gmail.com' and new.email_confirmed_at is not null then 'admin' else 'reader' end,
+    'active',
+    lower(new.email)
+  )
+  on conflict (user_id) do update
+    set role = excluded.role,
+        status = 'active',
+        email = excluded.email;
+  return new;
+end;
+$$;
+
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+grant execute on function public.handle_new_user() to supabase_auth_admin;
+
+update public.profiles p
+set role = case when lower(p.email) = 'jasminenemo3311@gmail.com' then 'admin' else 'reader' end,
+    status = case when lower(p.email) = 'jasminenemo3311@gmail.com' then 'active' else p.status end;
 
 commit;

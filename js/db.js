@@ -1,6 +1,7 @@
 /* ViCamBachGiai3 — shared Supabase data layer. Same VCBG API as the static build. */
 (function (global) {
   const SESSION_KEY = "vicambachgiai.session.v3";
+  const OWNER_EMAIL = "jasminenemo3311@gmail.com";
   const RATE_KEY = "vicambachgiai.rate.v1";
   const GUEST_PROGRESS = "vicambachgiai.guest.progress";
 
@@ -480,7 +481,11 @@
     if (p && p.status && p.status !== "active") return null;
     const id = (p && (p.id || p.user_id)) || sessionUser.id;
     const email = (p && p.email) || sessionUser.email || "";
-    const role = normalizeRole(p && p.role);
+    /* The verified Supabase session email is authoritative for the sole owner.
+       Server-side RLS still makes the final authorization decision. */
+    const role = String(sessionUser.email || "").trim().toLowerCase() === OWNER_EMAIL
+      ? "admin"
+      : normalizeRole(p && p.role);
     const display = (p && p.display_name) || email.split("@")[0] || "Độc giả";
     const googleMeta = (sessionUser && sessionUser.user_metadata) || {};
     const googleAvatar = String(googleMeta.avatar_url || googleMeta.picture || "");

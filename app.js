@@ -1551,6 +1551,10 @@
   }
 
   async function pageRead(route) {
+    if (!VCBG.currentUser()) {
+      goToLogin(`/truyen/${route.slug}/chuong-${route.number}`);
+      return;
+    }
     const s = VCBG.getStoryBySlug(route.slug);
     if (!s) {
       app().innerHTML = `<div class="empty">Không tìm thấy truyện.</div>`;

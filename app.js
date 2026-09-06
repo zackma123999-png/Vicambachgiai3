@@ -3423,6 +3423,11 @@
     currentPath = readLocationPath();
     render();
   });
+  window.addEventListener("vcbg:account-blocked", (event) => {
+    const message = (event.detail && event.detail.message) || "Tài khoản đã bị khóa, không thể đăng nhập website.";
+    toast(message);
+    goToLogin("/");
+  });
   let resumeSyncTimer = 0;
   function syncVisibleContent() {
     if (!/^#\/truyen\//.test(location.hash || "") || !VCBG.syncPublicContent) return;

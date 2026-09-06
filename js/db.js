@@ -2151,19 +2151,8 @@
       });
     },
 
-    setUserRole(id, role) {
-      const admin = requireAdmin();
-      if (admin.id === id) throw new Error("Không đổi quyền của chính mình.");
-      const next = normalizeRole(role);
-      const user = cache.users.find((u) => u.id === id);
-      const p = cache.profiles.find((x) => x.id === id);
-      if (!user || !p) throw new Error("Không tìm thấy.");
-      user.role = next;
-      p.role = next;
-      persist(async () => {
-        const { error } = await sb.from("profiles").update({ role: next }).eq("user_id", id);
-        if (error) throw error;
-      });
+    setUserRole() {
+      throw new Error("Website chỉ có một chủ sở hữu. Không thể cấp hoặc hạ quyền quản trị.");
     },
 
     ensureGenre(name) {

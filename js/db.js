@@ -609,6 +609,7 @@
 
   let bootstrapped = false;
   let bootPromise = null;
+  let authReadyPromise = null;
   let publicSyncPromise = null;
   let publicSyncedAt = 0;
 
@@ -1088,10 +1089,19 @@
       const snap = readSnap();
       if (snap) applyCatalog(snap);
       if (!bootPromise) {
-        const pending = (async () => {
+        /* Resolve the persisted Supabase session and the live profile before any
+           cached public page is allowed to paint its account controls. */
+        const authPending = (async () => {
           try {
             await settle(syncSession(), 3000, "phiên");
-          } catch (_) {}
+            if (sessionUser) await settle(loadOwnProfile(), 3000, "hồ sơ");
+          } catch (err) {
+            console.warn("[VCBG auth restore]", err && err.message);
+          }
+        })();
+        authReadyPromise = authPending;
+        const pending = (async () => {
+          await authPending;
           try {
             Promise.resolve(sb.rpc("publish_due_chapters")).then(
               () => {},
@@ -1120,6 +1130,11 @@
          admin route must wait for syncSession() + loadOwnProfile() so a forged
          localStorage catalog can never unlock the admin UI. */
       const adminRoute = /^#\/admin(?:\/|\?|$)/.test(global.location.hash || "");
+      /* Cached stories may render immediately, but account controls must wait
+         until Supabase has restored the shared browser session. */
+      try {
+        await settle(authReadyPromise || Promise.resolve(), 6500, "phiên");
+      } catch (_) {}
       if (cache.stories && cache.stories.length && !adminRoute) return;
       try {
         await settle(bootPromise || Promise.resolve(), 8000, "thư viện");

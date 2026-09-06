@@ -1793,7 +1793,7 @@
     (comments || []).forEach((c) => {
       const k = c.para_key || hashQuote(c.quote);
       if (!k) return;
-      counts[k] = (counts[k] || 0) + 1;
+      counts[k] = (counts[k] || 0) + 1 + (Array.isArray(c.replies) ? c.replies.length : 0);
     });
     let n = 0;
     box.querySelectorAll("p").forEach((p) => {
@@ -1805,7 +1805,8 @@
       bub.type = "button";
       bub.className = "p-bubble" + (nC ? " has" : "");
       bub.dataset.pk = key;
-      bub.setAttribute("aria-label", "Bình luận đoạn");
+      bub.dataset.count = nC > 99 ? "99+" : String(nC || "");
+      bub.setAttribute("aria-label", nC ? `Đoạn này có ${nC} bình luận và phản hồi` : "Bình luận đoạn");
       bub.textContent = nC ? String(nC) : "";
       p.appendChild(bub);
     });

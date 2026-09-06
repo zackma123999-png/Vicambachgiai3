@@ -53,6 +53,8 @@
   const PUBLIC_VISITOR_KEY = "vicambachgiai.public-visitor.v1";
   const publicMetricListeners = new Set();
   const communityListeners = new Set();
+  const authStateListeners = new Set();
+  let authSubscriptionStarted = false;
   let publicMetricChannel = null;
   let publicMetricTimer = null;
   let publicMetricStarting = false;
@@ -999,6 +1001,39 @@
     });
   }
 
+  function authFingerprint() {
+    const u = currentUser();
+    return u ? [u.id, u.role, u.status, u.profile && u.profile.avatar].join("|") : "";
+  }
+
+  function emitAuthState() {
+    const user = currentUser();
+    authStateListeners.forEach((listener) => {
+      try { listener(user); } catch (_) {}
+    });
+  }
+
+  function startAuthSubscription() {
+    if (authSubscriptionStarted || !sb) return;
+    authSubscriptionStarted = true;
+    sb.auth.onAuthStateChange((_event, session) => {
+      const nextUser = (session && session.user) || null;
+      global.setTimeout(async () => {
+        const before = authFingerprint();
+        sessionUser = nextUser;
+        if (sessionUser) {
+          try { await loadOwnProfile(); } catch (err) {
+            console.warn("[VCBG auth profile]", err && err.message);
+          }
+          storeSet(SESSION_KEY, JSON.stringify({ userId: sessionUser.id, at: now() }));
+        } else {
+          storeDel(SESSION_KEY);
+        }
+        if (before !== authFingerprint()) emitAuthState();
+      }, 0);
+    });
+  }
+
   async function syncSession() {
     try {
       const { data, error } = await sb.auth.getSession();
@@ -1026,6 +1061,7 @@
     sb = global.supabase.createClient(url, key, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     });
+    startAuthSubscription();
     return sb;
   }
 
@@ -1066,6 +1102,12 @@
       listener({ ...publicMetrics });
       startPublicMetrics();
       return () => publicMetricListeners.delete(listener);
+    },
+
+    watchAuthState(listener) {
+      if (typeof listener !== "function") return () => {};
+      authStateListeners.add(listener);
+      return () => authStateListeners.delete(listener);
     },
 
     watchCommunityFeed(listener) {

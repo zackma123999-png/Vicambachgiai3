@@ -2514,14 +2514,43 @@
           )
           .join("")}`;
     } else if (sub === "thanh-vien") {
-      body = `<ul class="chapter-list">${VCBG.adminUsers()
-        .map(
-          (u) =>
-            `<li class="row"><span>${esc(u.profile.display_name)}</span><span>${esc(u.email)} · ${u.role} · ${u.status}</span>
-            <span><button data-ban="${u.id}">${u.status === "active" ? "Khóa" : "Mở"}</button>
-            <button data-role="${u.id}">${u.role === "admin" ? "Hạ thành người đọc" : "Thành quản trị"}</button></span></li>`
-        )
-        .join("")}</ul>`;
+      const ownerId = VCBG.currentUser().id;
+      const memberQuery = String(route.q.q || "").trim().toLowerCase();
+      const allMembers = VCBG.adminUsers().filter((u) => {
+        if (!memberQuery) return true;
+        return [u.profile.display_name, u.email].some((value) => String(value || "").toLowerCase().includes(memberQuery));
+      });
+      const memberPageSize = 25;
+      const memberPages = Math.max(1, Math.ceil(allMembers.length / memberPageSize));
+      const memberPage = Math.min(memberPages, Math.max(1, Number(route.q.p) || 1));
+      const shownMembers = allMembers.slice((memberPage - 1) * memberPageSize, memberPage * memberPageSize);
+      const memberHref = (page) => "#/admin/thanh-vien?p=" + page + (memberQuery ? "&q=" + encodeURIComponent(memberQuery) : "");
+      body = `<section class="member-admin">
+        <div class="member-admin-head">
+          <div><h2>Thành viên</h2><p>${allMembers.length} tài khoản · 25 tài khoản mỗi trang</p></div>
+          <form id="memberSearch" class="member-search">
+            <input name="q" value="${esc(route.q.q || "")}" placeholder="Tìm tên hoặc Gmail" aria-label="Tìm thành viên">
+            <button type="submit">Tìm</button>
+          </form>
+        </div>
+        <div class="member-list-scroll">
+          <ul class="member-list">${shownMembers
+            .map((u) => {
+              const isOwner = u.id === ownerId;
+              return `<li class="member-row${isOwner ? " is-owner" : ""}">
+                <div class="member-identity"><strong>${esc(u.profile.display_name)}</strong><span>${esc(u.email)}</span></div>
+                <div class="member-state">${isOwner ? '<b class="owner-badge">Chủ sở hữu</b>' : `<span>${u.status === "active" ? "Đang hoạt động" : "Đã khóa"}</span>`}</div>
+                <div class="member-actions">${isOwner ? '<span class="owner-protected">Được bảo vệ</span>' : `<button type="button" data-ban="${u.id}">${u.status === "active" ? "Khóa" : "Mở khóa"}</button>`}</div>
+              </li>`;
+            })
+            .join("")}</ul>
+        </div>
+        <nav class="member-pager" aria-label="Trang thành viên">
+          ${memberPage > 1 ? `<a href="${memberHref(memberPage - 1)}">‹ Trước</a>` : "<span></span>"}
+          <b>Trang ${memberPage}/${memberPages}</b>
+          ${memberPage < memberPages ? `<a href="${memberHref(memberPage + 1)}">Sau ›</a>` : "<span></span>"}
+        </nav>
+      </section>`;
     } else if (sub === "phan-loai") {
       body = `<h3>Bối cảnh</h3>
         <form id="gAdd" class="chapter-toolbar"><input name="name" placeholder="Bối cảnh mới" required><button class="btn btn-primary">Thêm</button></form>
@@ -2720,18 +2749,13 @@
           }
         })
     );
-    $$("[data-role]").forEach(
-      (b) =>
-        (b.onclick = () => {
-          try {
-            const u = VCBG.adminUsers().find((x) => x.id === b.dataset.role);
-            VCBG.setUserRole(b.dataset.role, u.role === "admin" ? "reader" : "admin");
-            render();
-          } catch (e) {
-            toast(e.message);
-          }
-        })
-    );
+    const memberSearch = $("#memberSearch");
+    if (memberSearch)
+      memberSearch.onsubmit = (e) => {
+        e.preventDefault();
+        const q = String(new FormData(memberSearch).get("q") || "").trim();
+        go("/admin/thanh-vien" + (q ? "?q=" + encodeURIComponent(q) : ""));
+      };
     const gAdd = $("#gAdd");
     if (gAdd)
       gAdd.onsubmit = (e) => {

@@ -645,7 +645,14 @@
     cache.stories = payload.stories || [];
     cache.story_genres = payload.story_genres || [];
     cache.story_tags = payload.story_tags || [];
-    cache.chapters = payload.chapters || [];
+    // A device snapshot may contain an old chapter body from earlier builds.
+    // Keep only chapter metadata here; the reader always requests the shared
+    // server copy before displaying a chapter.
+    cache.chapters = mapChapters(payload.chapters || []).map((chapter) => ({
+      ...chapter,
+      body: "",
+      content: undefined,
+    }));
     cache.comments = payload.comments || [];
     cache.comment_replies = payload.comment_replies || [];
     cache.comment_likes = payload.comment_likes || [];
@@ -683,7 +690,24 @@
           stories: cache.stories,
           story_genres: cache.story_genres,
           story_tags: cache.story_tags,
-          chapters: cache.chapters,
+          chapters: cache.chapters.map((chapter) => ({
+            id: chapter.id,
+            story_id: chapter.story_id,
+            number: chapter.number,
+            chapter_number: chapter.number,
+            title: chapter.title,
+            status: chapter.status,
+            publish_at: chapter.publish_at,
+            published_at: chapter.published_at,
+            created_at: chapter.created_at,
+            updated_at: chapter.updated_at,
+            audio_url: chapter.audio_url,
+            audio_cover_url: chapter.audio_cover_url,
+            audio_title: chapter.audio_title,
+            audio_duration_seconds: chapter.audio_duration_seconds,
+            youtube_audio_url: chapter.youtube_audio_url,
+            notify_edit_at: chapter.notify_edit_at,
+          })),
           comments: cache.comments,
           comment_replies: cache.comment_replies,
           comment_likes: cache.comment_likes,
@@ -1362,14 +1386,20 @@
       return cache.chapters.find((c) => c.id === id) || null;
     },
     async ensureChapterBody(ch) {
-      if (!ch || (ch.body != null && ch.body !== "")) return ch;
-      let { data, error } = await sb.from("chapters").select("id,content").eq("id", ch.id).maybeSingle();
+      if (!ch) return ch;
+      const fallbackBody = ch.body || ch.content || "";
+      let { data, error } = await sb.from("chapters").select("id,content,updated_at").eq("id", ch.id).maybeSingle();
       if (error && /42703|column .* does not exist/i.test(String(error.message || ""))) {
-        ({ data, error } = await sb.from("chapters").select("id,body").eq("id", ch.id).maybeSingle());
+        ({ data, error } = await sb.from("chapters").select("id,body,updated_at").eq("id", ch.id).maybeSingle());
+      }
+      if (error && fallbackBody) {
+        ch.body = fallbackBody;
+        return ch;
       }
       if (error) throwHttp(error, "Không tải được chương.");
       if (!data) throw new Error("Không tìm thấy nội dung chương.");
       ch.body = data.content != null && data.content !== "" ? data.content : data.body || "";
+      ch.updated_at = toMs(data.updated_at) || ch.updated_at;
       return ch;
     },
 

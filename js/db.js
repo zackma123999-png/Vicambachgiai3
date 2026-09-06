@@ -932,22 +932,25 @@
     const uid_ = sessionUser.id;
     await loadOwnProfile();
     if (isAdmin()) {
-      try {
-        const all = await loadTable("profiles");
-        cache.profiles = (all || []).map((p) => ({
-          ...p,
-          id: p.user_id || p.id,
-          user_id: p.user_id || p.id,
-          created_at: toMs(p.created_at),
-        }));
-        cache.users = cache.profiles.map((x) => ({
-          id: x.id,
-          email: x.email,
-          role: x.role,
-          status: x.status,
-          created_at: x.created_at,
-        }));
-      } catch (_) {}
+      const { data: all, error: memberError } = await settle(
+        sb.rpc("admin_list_members"),
+        7000,
+        "danh sách thành viên"
+      );
+      if (memberError) throwHttp(memberError, "Không tải được danh sách thành viên.");
+      cache.profiles = (all || []).map((p) => ({
+        ...p,
+        id: p.user_id || p.id,
+        user_id: p.user_id || p.id,
+        created_at: toMs(p.created_at),
+      }));
+      cache.users = cache.profiles.map((x) => ({
+        id: x.id,
+        email: x.email,
+        role: x.role,
+        status: x.status || "active",
+        created_at: x.created_at,
+      }));
     }
     const [favorites, follows, reading_progress, reading_history, notifications, inbox] = await Promise.all([
       loadTable("favorites", (q) => q.eq("user_id", uid_)),

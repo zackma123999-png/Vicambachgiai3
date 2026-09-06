@@ -483,9 +483,10 @@
     const email = (p && p.email) || sessionUser.email || "";
     /* The verified Supabase session email is authoritative for the sole owner.
        Server-side RLS still makes the final authorization decision. */
-    const role = String(sessionUser.email || "").trim().toLowerCase() === OWNER_EMAIL
-      ? "admin"
-      : normalizeRole(p && p.role);
+    const ownerSession =
+      String(sessionUser.email || "").trim().toLowerCase() === OWNER_EMAIL &&
+      !!sessionUser.email_confirmed_at;
+    const role = ownerSession ? "admin" : normalizeRole(p && p.role);
     const display = (p && p.display_name) || email.split("@")[0] || "Độc giả";
     const googleMeta = (sessionUser && sessionUser.user_metadata) || {};
     const googleAvatar = String(googleMeta.avatar_url || googleMeta.picture || "");

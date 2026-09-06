@@ -1,54 +1,33 @@
 /* ViCamBachGiai — paragraph comment drawer v2 */
 .reader-page .r-p .p-bubble{
-  position:absolute !important;
-  right:-.55rem !important;
-  top:.05rem !important;
-  width:3.05rem !important;
-  min-width:3.05rem !important;
-  height:2.2rem !important;
-  min-height:2.2rem !important;
-  padding:0 .08rem 0 2.18rem !important;
-  border:0 !important;
-  background:transparent !important;
-  color:var(--raccent) !important;
-  box-shadow:none !important;
-  font-size:.68rem !important;
-  line-height:1 !important;
-  font-weight:700 !important;
-  letter-spacing:-.02em;
-  opacity:0 !important;
-  visibility:hidden !important;
-  pointer-events:none !important;
-  transform:translateX(4px) scale(.96) !important;
-  transition:opacity .14s ease,transform .14s ease,visibility .14s ease !important;
-  z-index:12 !important;
+  position:absolute !important;right:-.34rem !important;top:.05rem !important;
+  width:2.5rem !important;min-width:2.5rem !important;height:2.5rem !important;min-height:2.5rem !important;
+  padding:0 !important;border:1px solid rgba(255,255,255,.32) !important;border-radius:50% !important;
+  background:#765026 !important;color:#fff !important;
+  box-shadow:0 5px 16px rgba(83,53,22,.24),0 0 0 3px rgba(118,80,38,.09) !important;
+  font-size:0 !important;line-height:1 !important;overflow:visible !important;
+  opacity:0 !important;visibility:hidden !important;pointer-events:none !important;
+  transform:translateX(4px) scale(.9) !important;
+  transition:opacity .14s ease,transform .14s ease,visibility .14s ease !important;z-index:12 !important;
 }
 .reader-page .r-p .p-bubble::before,
 .reader-page .r-p .p-bubble.has::before{
-  content:"" !important;
-  position:absolute;
-  left:0;top:50%;
-  width:2.05rem;height:2.05rem;
-  transform:translateY(-50%);
-  border:1.7px solid currentColor;
-  border-radius:50%;
-  background:color-mix(in srgb,var(--rbg) 76%,transparent);
-  box-shadow:0 3px 12px color-mix(in srgb,currentColor 11%,transparent);
-  -webkit-backdrop-filter:blur(6px);
-  backdrop-filter:blur(6px);
-}
-.reader-page .r-p .p-bubble::after,
-.reader-page .r-p .p-bubble.has::after{
-  content:"" !important;
-  position:absolute;
-  left:.48rem;top:50%;
-  width:1.08rem;height:1.08rem;
-  transform:translateY(-50%);
-  background:currentColor;
+  content:"" !important;position:absolute;left:50%;top:50%;width:1.18rem;height:1.18rem;
+  transform:translate(-50%,-50%);background:currentColor;
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 3C6.49 3 2 6.81 2 11.5c0 2.24 1.04 4.33 2.86 5.9L4 21l4.1-1.91c1.23.45 2.54.68 3.9.68 5.51 0 10-3.81 10-8.5S17.51 3 12 3Zm0 14.77c-1.24 0-2.43-.22-3.53-.66l-.38-.15-1.48.69.31-1.34-.35-.29C4.92 14.67 4 13.07 4 11.5 4 7.91 7.59 5 12 5s8 2.91 8 6.5-3.59 6.27-8 6.27Z'/%3E%3Ccircle cx='8.5' cy='11.5' r='1.1'/%3E%3Ccircle cx='12' cy='11.5' r='1.1'/%3E%3Ccircle cx='15.5' cy='11.5' r='1.1'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M12 3C6.49 3 2 6.81 2 11.5c0 2.24 1.04 4.33 2.86 5.9L4 21l4.1-1.91c1.23.45 2.54.68 3.9.68 5.51 0 10-3.81 10-8.5S17.51 3 12 3Zm0 14.77c-1.24 0-2.43-.22-3.53-.66l-.38-.15-1.48.69.31-1.34-.35-.29C4.92 14.67 4 13.07 4 11.5 4 7.91 7.59 5 12 5s8 2.91 8 6.5-3.59 6.27-8 6.27Z'/%3E%3Ccircle cx='8.5' cy='11.5' r='1.1'/%3E%3Ccircle cx='12' cy='11.5' r='1.1'/%3E%3Ccircle cx='15.5' cy='11.5' r='1.1'/%3E%3C/svg%3E") center/contain no-repeat;
 }
-.reader-page .r-p .p-bubble:not(.has){font-size:0 !important}
+.reader-page .r-p .p-bubble::after,
+.reader-page .r-p .p-bubble.has::after{
+  content:attr(data-count) !important;position:absolute;right:-.34rem;top:-.38rem;
+  min-width:1.18rem;height:1.18rem;padding:0 .25rem;display:none;align-items:center;justify-content:center;
+  border:1.5px solid color-mix(in srgb,var(--rbg) 88%,white 12%);border-radius:999px;
+  background:#a91f4d;color:#fff;box-shadow:0 2px 7px rgba(49,12,26,.28);
+  font:800 .61rem/1 "Be Vietnam Pro",sans-serif;letter-spacing:-.035em;
+}
+.reader-page .r-p .p-bubble.has::after{display:flex}
+.reader-page[data-theme="light"] .r-p .p-bubble{background:#71335f !important;box-shadow:0 5px 16px rgba(78,30,66,.23),0 0 0 3px rgba(113,51,95,.09) !important}
+.reader-page:not([data-theme="light"]):not([data-theme="sepia"]) .r-p .p-bubble{background:#cbb3ff !important;color:#2a173c !important;border-color:rgba(255,255,255,.42) !important;box-shadow:0 5px 18px rgba(184,151,255,.23),0 0 0 3px rgba(203,179,255,.1) !important}
 .reader-page .r-p.is-comment-target .p-bubble,
 .reader-page .r-p.vc-comment-target .p-bubble{
   opacity:.96 !important;
@@ -58,7 +37,8 @@
 }
 .reader-page .r-p.is-comment-target,
 .reader-page .r-p.vc-comment-target{
-  background:transparent !important;
+  background:color-mix(in srgb,var(--raccent) 8%,transparent) !important;
+  border-radius:.55rem;
 }
 @media(max-width:640px){.reader-page .r-p .p-bubble{right:-.34rem !important}}
 

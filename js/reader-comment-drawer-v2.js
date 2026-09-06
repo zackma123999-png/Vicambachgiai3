@@ -121,6 +121,15 @@
       </div>
     </article>`;
   }
+  function syncBubbleCount(paraKey, count) {
+    if (!paraKey) return;
+    const bubble = $(`.reader-page .r-p[data-pk="${CSS.escape(paraKey)}"] .p-bubble`);
+    if (!bubble) return;
+    bubble.classList.toggle('has', count > 0);
+    bubble.dataset.count = count > 99 ? '99+' : (count ? String(count) : '');
+    bubble.textContent = count ? String(count) : '';
+    bubble.setAttribute('aria-label', count ? `Đoạn này có ${count} bình luận và phản hồi` : 'Bình luận đoạn');
+  }
   async function openDrawer(ctx, quote, paraKey) {
     const host = $('#rDraw');
     if (!host) return;
@@ -128,6 +137,7 @@
     const list = paraKey ? list0.filter(c => c.para_key === paraKey || (!c.para_key && c.quote === quote)) : list0;
     const state = await reactionState(list.map(c => c.id));
     const count = list.length + list.reduce((n,c)=>n+(c.replies||[]).length,0);
+    syncBubbleCount(paraKey, count);
     host.innerHTML = `<div class="vc-comment-backdrop" data-vc-close></div>
       <aside class="vc-comment-drawer" role="dialog" aria-modal="true" aria-label="Bình luận">
         <div class="vc-signal-line"></div>

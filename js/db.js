@@ -366,7 +366,7 @@
   async function refreshCommunityData() {
     try {
       const [profiles, comments, replies, likes] = await Promise.all([
-        loadOptional("public_profiles").then((rows) => (rows && rows.length ? rows : loadOptional("profiles"))),
+        loadCommunityProfiles(),
         loadOptional("comments"),
         loadOptional("comment_replies"),
         loadOptional("comment_likes"),
@@ -379,7 +379,7 @@
         id: p.id,
         email: p.email,
         role: p.role,
-        status: p.status,
+        status: p.status === "banned" ? "banned" : "active",
         created_at: p.created_at,
       }));
       cache.comment_likes = likes || [];
@@ -615,6 +615,18 @@
     });
   }
 
+  async function loadCommunityProfiles() {
+    /* The public profile view omits private account fields such as status.
+       Admin screens must keep using the authoritative member RPC. */
+    if (isAdmin()) {
+      const { data, error } = await settle(sb.rpc("admin_list_members"), 7000, "danh sách thành viên");
+      if (error) throwHttp(error, "Không tải được danh sách thành viên.");
+      return data || [];
+    }
+    const publicRows = await loadOptional("public_profiles");
+    return publicRows && publicRows.length ? publicRows : loadOptional("profiles");
+  }
+
   let bootstrapped = false;
   let bootPromise = null;
   let authReadyPromise = null;
@@ -842,7 +854,7 @@
     writeSnap();
 
     Promise.all([
-      loadOptional("public_profiles").then((rows) => (rows && rows.length ? rows : loadOptional("profiles"))),
+      loadCommunityProfiles(),
       loadOptional("comments"),
       loadOptional("comment_replies"),
       loadOptional("comment_likes"),
@@ -878,7 +890,7 @@
             id: p.id,
             email: p.email,
             role: p.role,
-            status: p.status,
+            status: p.status === "banned" ? "banned" : "active",
             created_at: p.created_at,
           }));
           cache.comments = (comments || []).map((c) => ({

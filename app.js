@@ -3409,6 +3409,13 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
   async function boot() {
+    let authRenderTimer = 0;
+    if (VCBG.watchAuthState) {
+      VCBG.watchAuthState(() => {
+        clearTimeout(authRenderTimer);
+        authRenderTimer = setTimeout(() => render(), 0);
+      });
+    }
     await render();
     const liveReady = VCBG.backgroundReady || VCBG.whenReady;
     if (liveReady) {

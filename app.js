@@ -3390,8 +3390,9 @@
   else boot();
   async function boot() {
     await render();
-    if (VCBG.whenReady) {
-      VCBG.whenReady()
+    const liveReady = VCBG.backgroundReady || VCBG.whenReady;
+    if (liveReady) {
+      liveReady.call(VCBG)
         .then(() => render())
         .catch(() => {});
     }

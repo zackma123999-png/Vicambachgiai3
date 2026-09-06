@@ -609,6 +609,14 @@
 
   let bootstrapped = false;
   let bootPromise = null;
+  let publicSyncPromise = null;
+  let publicSyncedAt = 0;
+
+  function publicCatalogVersion() {
+    const storyVersion = cache.stories.reduce((max, row) => Math.max(max, Number(row.updated_at || 0)), 0);
+    const chapterVersion = cache.chapters.reduce((max, row) => Math.max(max, Number(row.updated_at || 0)), 0);
+    return [cache.stories.length, storyVersion, cache.chapters.length, chapterVersion].join(":");
+  }
 
   async function loadOwnProfile() {
     if (!sessionUser) return;
@@ -769,9 +777,8 @@
     const stories = await loadTable("stories");
     cache.stories = mapStories(stories);
     cache.ready = true;
-    writeSnap();
-
-    fillCatalogRest(stories);
+    await fillCatalogRest(stories);
+    publicSyncedAt = now();
   }
 
   async function fillCatalogRest(stories) {
@@ -1032,6 +1039,20 @@
 
     whenReady() {
       return bootPromise || Promise.resolve();
+    },
+
+    async syncPublicContent({ maxAge = 5000 } = {}) {
+      client();
+      if (publicSyncPromise) return publicSyncPromise;
+      if (publicSyncedAt && now() - publicSyncedAt < Math.max(0, Number(maxAge) || 0)) return false;
+      const before = publicCatalogVersion();
+      const pending = refreshCatalog().then(() => publicCatalogVersion() !== before);
+      publicSyncPromise = pending;
+      try {
+        return await pending;
+      } finally {
+        if (publicSyncPromise === pending) publicSyncPromise = null;
+      }
     },
 
     publicSiteStats() {

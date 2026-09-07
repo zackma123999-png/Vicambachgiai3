@@ -102,3 +102,50 @@
     min-width: 0;
   }
 }
+.admin-visibility-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: .25rem .58rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-visibility-badge.is-public {
+  color: #bdf6d2;
+  background: rgba(43, 137, 84, .18);
+}
+
+.admin-visibility-badge.is-hidden {
+  color: #ffd1df;
+  background: rgba(176, 52, 94, .2);
+}
+
+.admin-story-visibility-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  margin: 1rem 0;
+  padding: .9rem 1rem;
+  border: 1px solid rgba(196, 166, 255, .2);
+  border-radius: 14px;
+  background: rgba(120, 82, 174, .08);
+}
+
+.admin-story-visibility-toggle input {
+  margin-top: .2rem;
+}
+
+.admin-story-visibility-toggle span,
+.admin-story-visibility-toggle small {
+  display: block;
+}
+
+.admin-story-visibility-toggle small {
+  margin-top: .25rem;
+  color: var(--muted);
+  line-height: 1.45;
+}

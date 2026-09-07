@@ -574,6 +574,10 @@
     return { ...story, genres, tags, stats: storyStats(story.id) };
   }
 
+  function isStoryPublic(story) {
+    return !!story && story.published !== false;
+  }
+
   function settle(q, ms, label) {
     return new Promise((resolve, reject) => {
       let done = false;
@@ -1493,7 +1497,7 @@
     },
 
     listStories({ status, featured, upcoming, q, genre, tag, sort } = {}) {
-      let list = cache.stories.slice();
+      let list = cache.stories.filter(isStoryPublic);
       if (status) list = list.filter((s) => s.status === status);
       if (featured) list = list.filter((s) => s.featured);
       if (upcoming) list = list.filter((s) => s.upcoming);
@@ -1532,7 +1536,7 @@
     },
 
     getStoryBySlug(slug) {
-      return hydrateStory(cache.stories.find((s) => s.slug === slug));
+      return hydrateStory(cache.stories.find((s) => s.slug === slug && isStoryPublic(s)));
     },
     getStory(id) {
       return hydrateStory(cache.stories.find((s) => s.id === id));
@@ -1544,7 +1548,7 @@
       if (!author) return [];
       const n = String(author).trim().toLowerCase();
       return cache.stories
-        .filter((s) => s.id !== exceptId && String(s.author || "").trim().toLowerCase() === n)
+        .filter((s) => isStoryPublic(s) && s.id !== exceptId && String(s.author || "").trim().toLowerCase() === n)
         .map(hydrateStory);
     },
     searchSuggest(q, limit) {
@@ -1737,25 +1741,25 @@
       return {
         favorites: favs.map((f) => ({
           ...f,
-          story: hydrateStory(cache.stories.find((s) => s.id === f.story_id)),
+          story: hydrateStory(cache.stories.find((s) => s.id === f.story_id && isStoryPublic(s))),
           progress: progress.find((p) => p.story_id === f.story_id),
-        })),
+        })).filter((item) => item.story),
         follows: fols.map((f) => ({
           ...f,
-          story: hydrateStory(cache.stories.find((s) => s.id === f.story_id)),
+          story: hydrateStory(cache.stories.find((s) => s.id === f.story_id && isStoryPublic(s))),
           progress: progress.find((p) => p.story_id === f.story_id),
-        })),
+        })).filter((item) => item.story),
         history: history.map((h) => ({
           ...h,
-          story: hydrateStory(cache.stories.find((s) => s.id === h.story_id)),
-        })),
+          story: hydrateStory(cache.stories.find((s) => s.id === h.story_id && isStoryPublic(s))),
+        })).filter((item) => item.story),
         comments: cache.comments
           .filter((c) => c.user_id === u.id)
           .slice(0, 40)
           .map((c) => ({
             ...c,
-            story: hydrateStory(cache.stories.find((s) => s.id === c.story_id)),
-          })),
+            story: hydrateStory(cache.stories.find((s) => s.id === c.story_id && isStoryPublic(s))),
+          })).filter((item) => item.story),
       };
     },
 
@@ -1999,6 +2003,24 @@
       return hydrateStory(story);
     },
 
+    async setStoryVisibility(id, visible) {
+      requireAdmin();
+      const story = cache.stories.find((item) => item.id === id);
+      if (!story) throw new Error("Không tìm thấy truyện.");
+      const published = !!visible;
+      const { data, error } = await sb
+        .from("stories")
+        .update({ published, updated_at: new Date().toISOString() })
+        .eq("id", story.id)
+        .select("id,published,updated_at")
+        .single();
+      if (error) throw publicError(error, published ? "Không hiện lại được truyện." : "Không ẩn được truyện.");
+      story.published = data.published !== false;
+      story.updated_at = toMs(data.updated_at) || now();
+      writeSnap();
+      return hydrateStory(story);
+    },
+
     async upsertStory(data) {
       requireAdmin();
       const t = now();
@@ -2023,6 +2045,7 @@
       story.status = status;
       story.featured = !!data.featured;
       story.upcoming = upcoming;
+      story.published = data.published !== false;
       const priority = Number(data.home_priority);
       story.home_priority = Number.isInteger(priority) && priority >= 1 && priority <= 99 ? priority : null;
       story.accent = data.accent || "#8a6a4a";
@@ -2081,7 +2104,7 @@
         cover_url: story.cover,
         home_priority: story.home_priority,
         tiktok_intro_url: story.tiktok_intro_url || null,
-        published: story.status !== "draft",
+        published: story.published,
         updated_at: iso(story.updated_at),
       };
       const gRows = (data.genre_ids || []).map((gid) => ({ story_id: story.id, genre_id: gid }));
@@ -2382,6 +2405,7 @@
 
     weeklyRanking(limit) {
       const rows = cache.stories
+        .filter(isStoryPublic)
         .map((s) => ({
           story: hydrateStory(s),
           week: Number((cache.story_stats[s.id] && cache.story_stats[s.id].week_views) || 0),
@@ -2401,7 +2425,7 @@
       const items = [];
       published.forEach((c) => {
         if (seen.has(c.story_id) || items.length >= (limit || 6)) return;
-        const story = hydrateStory(cache.stories.find((s) => s.id === c.story_id));
+        const story = hydrateStory(cache.stories.find((s) => s.id === c.story_id && isStoryPublic(s)));
         if (!story) return;
         seen.add(c.story_id);
         const kind = story.status === "completed" ? "done" : "new";
@@ -2422,7 +2446,8 @@
     communityFeed({ sort, storyId } = {}) {
       const DAY = 24 * 60 * 60 * 1000;
       const nowMs = now();
-      const comments = (cache.comments || []).filter((c) => c.status !== "hidden");
+      const publicStoryIds = new Set(cache.stories.filter(isStoryPublic).map((story) => story.id));
+      const comments = (cache.comments || []).filter((c) => c.status !== "hidden" && publicStoryIds.has(c.story_id));
       const talking = new Set();
       comments.forEach((c) => {
         if (nowMs - c.created_at < DAY) talking.add(c.user_id);
@@ -2495,7 +2520,7 @@
     featuredQuote() {
       const q = cache.site_settings.featured_quote;
       if (!q) return null;
-      const story = hydrateStory(cache.stories.find((s) => s.id === q.story_id));
+      const story = hydrateStory(cache.stories.find((s) => s.id === q.story_id && isStoryPublic(s)));
       const chapter = cache.chapters.find((c) => c.id === q.chapter_id);
       if (!story || !chapter) return null;
       return { text: q.text, story, chapter, href: "#/truyen/" + story.slug + "/chuong-" + chapter.number };
@@ -2516,7 +2541,7 @@
       const mine = u ? votes.find((v) => v.user_id === u.id) : null;
       const options = (poll.story_ids || [])
         .map((id) => {
-          const story = hydrateStory(cache.stories.find((s) => s.id === id));
+          const story = hydrateStory(cache.stories.find((s) => s.id === id && isStoryPublic(s)));
           if (!story) return null;
           const count = votes.filter((v) => v.story_id === id).length;
           return { story, count, pct: total ? Math.round((count / total) * 100) : 0 };

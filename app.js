@@ -2479,13 +2479,14 @@
           <button class="btn btn-primary" type="button" id="saveHomePriorities" disabled>Lưu thứ tự ưu tiên</button>
         </div>
         <div class="table-wrapper"><table class="admin-story-table" style="width:100%;border-collapse:collapse">
-        <thead><tr><th>Tên</th><th>Trạng thái</th><th>Ưu tiên</th><th>Chương</th><th></th></tr></thead>
+        <thead><tr><th>Tên</th><th>Trạng thái</th><th>Hiển thị</th><th>Ưu tiên</th><th>Chương</th><th></th></tr></thead>
         <tbody>${list
           .map(
             (s) =>
               `<tr>
                 <td><a href="#/admin/truyen/${s.id}">${esc(s.title)}</a></td>
                 <td>${esc(storyStatusLabel(s))}</td>
+                <td><span class="admin-visibility-badge ${s.published === false ? "is-hidden" : "is-public"}">${s.published === false ? "Đang ẩn" : "Công khai"}</span></td>
                 <td><select class="admin-priority-select" data-home-priority="${s.id}" data-initial-priority="${s.home_priority || ""}" aria-label="Ưu tiên hiển thị của ${esc(s.title)}">
                   <option value="" ${s.home_priority ? "" : "selected"}>Không ưu tiên</option>
                   ${Array.from({ length: 20 }, (_, i) => i + 1)
@@ -2493,7 +2494,7 @@
                     .join("")}
                 </select></td>
                 <td>${s.stats.chapter_count}</td>
-                <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button data-delst="${s.id}">Xóa</button></td>
+                <td><a href="#/admin/chuong/moi?story=${s.id}">+ Chương</a> · <button type="button" data-story-visibility="${s.id}" data-visible="${s.published === false ? "false" : "true"}">${s.published === false ? "Hiện lại" : "Ẩn"}</button> · <button data-delst="${s.id}">Xóa</button></td>
               </tr>`
           )
           .join("")}</tbody></table></div>`;
@@ -2705,6 +2706,24 @@
         }
       };
     }
+    $$("[data-story-visibility]").forEach((button) => {
+      button.onclick = async () => {
+        const isVisible = button.dataset.visible !== "false";
+        const action = isVisible ? "ẩn" : "hiện lại";
+        if (isVisible && !confirm("Ẩn truyện này khỏi toàn bộ website? Dữ liệu và các chương vẫn được giữ nguyên.")) return;
+        button.disabled = true;
+        button.textContent = "Đang " + action + "…";
+        try {
+          await VCBG.setStoryVisibility(button.dataset.storyVisibility, !isVisible);
+          toast(isVisible ? "Đã ẩn truyện khỏi website." : "Đã hiện lại truyện trên website.");
+          await render();
+        } catch (error) {
+          button.disabled = false;
+          button.textContent = isVisible ? "Ẩn" : "Hiện lại";
+          toast(error.message || "Không đổi được trạng thái hiển thị.");
+        }
+      };
+    });
     $$("[data-delst]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -2889,7 +2908,7 @@
       };
   }
   function adminStoryForm(id) {
-    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, home_priority: null, accent: "#8a6a4a", cover: "", tiktok_intro_url: "", genres: [], tags: [] };
+    const s = id ? VCBG.getStory(id) : { title: "", slug: "", author: "", editor: "", synopsis: "", description: "", status: "ongoing", featured: false, upcoming: false, published: true, home_priority: null, accent: "#8a6a4a", cover: "", tiktok_intro_url: "", genres: [], tags: [] };
     const selectedStatus = s.upcoming ? "upcoming" : s.status;
     const gids = (s.genres || []).map((g) => g.id);
     const tids = (s.tags || []).map((t) => t.id);
@@ -2914,6 +2933,7 @@
               <option value="upcoming" ${selectedStatus === "upcoming" ? "selected" : ""}>Sắp ra mắt</option>
             </select>
           </div>
+          <label class="admin-story-visibility-toggle"><input type="checkbox" name="published" ${s.published === false ? "" : "checked"}> <span><b>Hiển thị truyện trên website</b><small>Tắt mục này để ẩn toàn bộ truyện và các chương khỏi thành viên, khách và đường dẫn đọc trực tiếp. Dữ liệu vẫn được giữ nguyên trong quản trị.</small></span></label>
           <div class="field admin-story-priority-field"><label>Ưu tiên trên trang chủ</label>
             <select name="home_priority">
               <option value="" ${s.home_priority ? "" : "selected"}>Không ưu tiên</option>
@@ -2985,6 +3005,7 @@
           description: fd.get("description"),
           status: fd.get("status"),
           featured: e.target.featured.checked,
+          published: e.target.published.checked,
           home_priority: fd.get("home_priority"),
           tiktok_intro_url: fd.get("tiktok_intro_url"),
           upcoming: fd.get("status") === "upcoming",

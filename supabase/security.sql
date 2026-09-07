@@ -196,7 +196,18 @@ create policy "stories_admin" on public.stories for all
   using (public.is_admin()) with check (public.is_admin());
 
 create policy "chapters_select" on public.chapters for select
-  using ((status = 'published' and (published_at is null or published_at <= now())) or public.is_admin());
+  using (
+    public.is_admin()
+    or (
+      status = 'published'
+      and (published_at is null or published_at <= now())
+      and exists (
+        select 1 from public.stories
+        where stories.id = chapters.story_id
+          and stories.published = true
+      )
+    )
+  );
 create policy "chapters_admin" on public.chapters for all
   using (public.is_admin()) with check (public.is_admin());
 

@@ -37,6 +37,7 @@ create table if not exists public.stories (
   editor text not null default '',
   synopsis text not null default '',
   status text not null default 'ongoing',
+  published boolean not null default true,
   featured boolean not null default false,
   upcoming boolean not null default false,
   accent text not null default '#8a6a4a',
@@ -298,10 +299,21 @@ alter table public.site_settings enable row level security;
 create policy "profiles_read" on public.profiles for select using (true);
 create policy "genres_read" on public.genres for select using (true);
 create policy "tags_read" on public.tags for select using (true);
-create policy "stories_read" on public.stories for select using (true);
+create policy "stories_read" on public.stories for select
+  using (published = true or public.is_admin());
 create policy "story_genres_read" on public.story_genres for select using (true);
 create policy "story_tags_read" on public.story_tags for select using (true);
-create policy "chapters_read" on public.chapters for select using (status = 'published' or public.is_admin());
+create policy "chapters_read" on public.chapters for select using (
+  public.is_admin()
+  or (
+    status = 'published'
+    and exists (
+      select 1 from public.stories
+      where stories.id = chapters.story_id
+        and stories.published = true
+    )
+  )
+);
 create policy "comments_read" on public.comments for select using (status <> 'hidden' or public.is_admin() or user_id = auth.uid());
 create policy "replies_read" on public.comment_replies for select using (status <> 'hidden' or public.is_admin() or user_id = auth.uid());
 create policy "comment_likes_read" on public.comment_likes for select using (true);

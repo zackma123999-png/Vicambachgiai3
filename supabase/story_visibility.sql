@@ -1,21 +1,15 @@
--- Guests may see the published chapter index, but chapter content requires
--- a signed-in, active member account. Admin access remains unchanged.
+-- Run once in Supabase SQL Editor before using the Hide story control.
+alter table public.stories
+  add column if not exists published boolean not null default true;
 
-revoke select on table public.chapters from anon;
+drop policy if exists "stories_read" on public.stories;
+drop policy if exists "stories_select" on public.stories;
 
-grant select (
-  id,
-  story_id,
-  number,
-  chapter_number,
-  title,
-  status,
-  publish_at,
-  published_at,
-  created_at,
-  updated_at,
-  notify_edit_at
-) on table public.chapters to anon;
+create policy "stories_select" on public.stories for select
+  using (published = true or public.is_admin());
+
+create index if not exists stories_published_updated_idx
+  on public.stories (published, updated_at desc);
 
 drop policy if exists chapters_select on public.chapters;
 drop policy if exists chapters_select_public_index on public.chapters;
@@ -50,8 +44,7 @@ using (
         and stories.published = true
     )
     and exists (
-      select 1
-      from public.profiles as member_profile
+      select 1 from public.profiles as member_profile
       where member_profile.user_id = (select auth.uid())
         and member_profile.status = 'active'
     )

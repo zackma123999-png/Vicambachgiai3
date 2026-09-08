@@ -1985,6 +1985,39 @@
         .map(hydrateStory);
     },
 
+    async refreshAdminEngagements() {
+      requireAdmin();
+      const [favorites, ratings] = await Promise.all([
+        loadTable("favorites", (q) => q.order("created_at", { ascending: false })),
+        loadTable("ratings", (q) => q.order("created_at", { ascending: false })),
+      ]);
+      cache.favorites = (favorites || []).map((f) => ({
+        ...f,
+        id: f.id || f.user_id + ":" + f.story_id,
+        at: toMs(f.at || f.created_at),
+      }));
+      cache.ratings = (ratings || []).map((r) => ({
+        ...r,
+        id: r.id || r.user_id + ":" + r.story_id,
+        at: toMs(r.at || r.created_at),
+      }));
+      return this.adminEngagements();
+    },
+
+    adminEngagements() {
+      requireAdmin();
+      const decorate = (row, type) => ({
+        ...row,
+        type,
+        user: profileOf(row.user_id),
+        story: cache.stories.find((story) => story.id === row.story_id) || null,
+      });
+      return {
+        favorites: cache.favorites.map((row) => decorate(row, "favorite")),
+        ratings: cache.ratings.map((row) => decorate(row, "rating")),
+      };
+    },
+
     async setStoryHomePriority(id, value) {
       requireAdmin();
       const story = cache.stories.find((item) => item.id === id);

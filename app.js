@@ -2736,11 +2736,20 @@
     );
     $$("[data-delch]").forEach(
       (b) =>
-        (b.onclick = () => {
-          if (confirm("Xóa chương?")) {
-            VCBG.deleteChapter(b.dataset.delch);
-            toast("Đã xóa chương.");
-            render();
+        (b.onclick = async () => {
+          if (confirm("Xóa chương này? Nội dung và bình luận trong chương cũng sẽ bị xóa.")) {
+            const originalText = b.textContent;
+            b.disabled = true;
+            b.textContent = "Đang xóa…";
+            try {
+              await VCBG.deleteChapter(b.dataset.delch);
+              toast("Đã xóa chương.");
+              await render();
+            } catch (error) {
+              b.disabled = false;
+              b.textContent = originalText;
+              toast(error.message || "Không xóa được chương.");
+            }
           }
         })
     );

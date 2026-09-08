@@ -2205,15 +2205,22 @@
       return ch;
     },
 
-    deleteChapter(id) {
+    async deleteChapter(id) {
       requireAdmin();
+      const chapter = cache.chapters.find((c) => c.id === id);
+      if (!chapter) throw new Error("Không tìm thấy chương.");
+      const { data, error } = await sb.from("chapters").delete().eq("id", id).select("id");
+      if (error) throw publicError(error, "Không xóa được chương.");
+      if (!(data || []).some((row) => row.id === id)) {
+        throw new Error("Chương chưa được xóa. Vui lòng tải lại trang rồi thử lại.");
+      }
+      const commentIds = cache.comments.filter((c) => c.chapter_id === id).map((c) => c.id);
       cache.chapters = cache.chapters.filter((c) => c.id !== id);
       cache.comments = cache.comments.filter((c) => c.chapter_id !== id);
+      cache.comment_replies = cache.comment_replies.filter((r) => !commentIds.includes(r.comment_id));
       cache.chapter_likes = cache.chapter_likes.filter((l) => l.chapter_id !== id);
-      persist(async () => {
-        const { error } = await sb.from("chapters").delete().eq("id", id);
-        if (error) throw error;
-      });
+      writeSnap();
+      return chapter;
     },
 
     nextChapterNumber(storyId) {

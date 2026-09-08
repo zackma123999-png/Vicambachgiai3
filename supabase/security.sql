@@ -264,12 +264,15 @@ create policy "chapter_likes_select" on public.chapter_likes for select using (t
 create policy "chapter_likes_own" on public.chapter_likes for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
-create policy "ratings_select" on public.ratings for select using (true);
+create policy "ratings_admin_select" on public.ratings for select to authenticated
+  using ((select public.is_admin()));
 create policy "ratings_own" on public.ratings for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 create policy "favorites_own" on public.favorites for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "favorites_admin_select" on public.favorites for select to authenticated
+  using ((select public.is_admin()));
 create policy "follows_own" on public.follows for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "follows_admin_select" on public.follows for select

@@ -2550,7 +2550,7 @@
               const isOwner = u.id === ownerId;
               return `<li class="member-row${isOwner ? " is-owner" : ""}">
                 <div class="member-person">
-                  <span class="member-avatar" data-avatar-user="${esc(u.id)}" data-avatar-value="${esc((u.profile && u.profile.avatar) || "")}" data-avatar-admin="${isOwner ? "true" : "false"}" aria-hidden="true">${esc(String((u.profile && u.profile.display_name) || u.email || "?").trim().slice(0, 1).toUpperCase())}</span>
+                  <span class="member-avatar" data-member-avatar data-avatar-value="${esc((u.profile && u.profile.avatar) || "")}" data-avatar-letter="${esc(String((u.profile && u.profile.display_name) || u.email || "?").trim().slice(0, 1).toUpperCase())}" aria-hidden="true">${esc(String((u.profile && u.profile.display_name) || u.email || "?").trim().slice(0, 1).toUpperCase())}</span>
                   <div class="member-identity"><strong>${esc(u.profile.display_name)}</strong><span>${esc(u.email)}</span></div>
                 </div>
                 <div class="member-state">${isOwner ? '<b class="owner-badge">Chủ sở hữu</b>' : `<span>${u.status === "banned" ? "Đã khóa" : "Đang hoạt động"}</span>`}</div>

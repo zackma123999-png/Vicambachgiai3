@@ -492,7 +492,7 @@
     const role = ownerSession ? "admin" : normalizeRole(p && p.role);
     const display = (p && p.display_name) || email.split("@")[0] || "Độc giả";
     const googleMeta = (sessionUser && sessionUser.user_metadata) || {};
-    const googleAvatar = String(googleMeta.avatar_url || googleMeta.picture || "");
+    const googleAvatar = String((p && p.google_avatar) || googleMeta.avatar_url || googleMeta.picture || "");
     return {
       id,
       email,

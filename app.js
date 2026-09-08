@@ -2440,6 +2440,7 @@
       ["/truyen", "Truyện"],
       ["/chuong", "Chương"],
       ["/binh-luan", "Bình luận"],
+      ["/tuong-tac", "Đánh giá & yêu thích"],
       ["/thanh-vien", "Thành viên"],
       ["/phan-loai", "Phân loại"],
       ["/trang-chu", "Trang chủ"],
@@ -2459,6 +2460,13 @@
     if (sub === "truyen" && route.parts[2]) return adminStoryForm(route.parts[2]);
     if (sub === "chuong" && route.parts[2] === "moi") return adminChapterForm(null, route.q.story, route.q.intro === "1");
     if (sub === "chuong" && route.parts[2]) return adminChapterForm(route.parts[2]);
+    if (sub === "tuong-tac") {
+      try {
+        await VCBG.refreshAdminEngagements();
+      } catch (error) {
+        toast(error.message || "Không tải được đánh giá và lượt yêu thích.");
+      }
+    }
     let body = "";
     if (!sub) {
       const st = VCBG.adminStats();
@@ -2524,6 +2532,72 @@
               <button data-hide="${c.id}">Ẩn</button> <button data-kill="${c.id}">Xóa</button></article>`
           )
           .join("")}`;
+    } else if (sub === "tuong-tac") {
+      const engagement = VCBG.adminEngagements();
+      const type = ["rating", "favorite"].includes(route.q.type) ? route.q.type : "all";
+      const storyId = String(route.q.story || "");
+      const query = String(route.q.q || "").trim().toLowerCase();
+      const combined = engagement.ratings.concat(engagement.favorites).filter((item) => {
+        if (type !== "all" && item.type !== type) return false;
+        if (storyId && item.story_id !== storyId) return false;
+        if (!query) return true;
+        const user = item.user || {};
+        const story = item.story || {};
+        return [user.display_name, user.email, story.title].some((value) => String(value || "").toLowerCase().includes(query));
+      }).sort((a, b) => (b.at || 0) - (a.at || 0));
+      const pageSize = 30;
+      const pages = Math.max(1, Math.ceil(combined.length / pageSize));
+      const page = Math.min(pages, Math.max(1, Number(route.q.p) || 1));
+      const shown = combined.slice((page - 1) * pageSize, page * pageSize);
+      const filterHref = (nextType, nextPage) => {
+        const params = new URLSearchParams();
+        if (nextType && nextType !== "all") params.set("type", nextType);
+        if (storyId) params.set("story", storyId);
+        if (route.q.q) params.set("q", route.q.q);
+        if (nextPage && nextPage > 1) params.set("p", nextPage);
+        return "#/admin/tuong-tac" + (params.toString() ? "?" + params.toString() : "");
+      };
+      const stories = VCBG.adminListStories();
+      body = `<section class="engagement-admin">
+        <div class="engagement-head">
+          <div><h2>Đánh giá & yêu thích</h2><p>Xem chính xác thành viên đã tương tác với từng truyện.</p></div>
+          <div class="engagement-kpis"><span><b>${engagement.ratings.length}</b> lượt đánh giá</span><span><b>${engagement.favorites.length}</b> lượt yêu thích</span></div>
+        </div>
+        <div class="engagement-tabs" role="navigation" aria-label="Loại tương tác">
+          <a class="${type === "all" ? "on" : ""}" href="${filterHref("all", 1)}">Tất cả</a>
+          <a class="${type === "rating" ? "on" : ""}" href="${filterHref("rating", 1)}">★ Đánh giá</a>
+          <a class="${type === "favorite" ? "on" : ""}" href="${filterHref("favorite", 1)}">♡ Yêu thích</a>
+        </div>
+        <form id="engagementFilter" class="engagement-filter">
+          <input type="hidden" name="type" value="${esc(type)}">
+          <select name="story" aria-label="Lọc theo truyện">
+            <option value="">Tất cả truyện</option>
+            ${stories.map((story) => `<option value="${story.id}" ${story.id === storyId ? "selected" : ""}>${esc(story.title)}</option>`).join("")}
+          </select>
+          <input name="q" value="${esc(route.q.q || "")}" placeholder="Tìm tên, Gmail hoặc truyện" aria-label="Tìm tương tác">
+          <button type="submit">Lọc</button>
+        </form>
+        <p class="engagement-result">${combined.length} kết quả</p>
+        <div class="engagement-list-scroll">
+          <ul class="engagement-list">${shown.length ? shown.map((item) => {
+            const user = item.user || {};
+            const story = item.story || {};
+            const identity = user.display_name || user.email || "Thành viên không xác định";
+            const letter = String(identity).trim().slice(0, 1).toUpperCase() || "?";
+            return `<li class="engagement-row">
+              <span class="member-avatar" data-member-avatar data-avatar-value="${esc(user.avatar || "")}" data-google-avatar="${esc(user.google_avatar || "")}" data-avatar-letter="${esc(letter)}" aria-hidden="true">${esc(letter)}</span>
+              <div class="engagement-person"><strong>${esc(identity)}</strong><span>${esc(user.email || "Không còn hồ sơ thành viên")}</span></div>
+              <div class="engagement-story"><b>${esc(story.title || "Truyện đã bị xoá")}</b><span>${item.type === "rating" ? `<i class="engagement-stars">${"★".repeat(Number(item.stars) || 0)}${"☆".repeat(Math.max(0, 5 - (Number(item.stars) || 0)))}</i> ${Number(item.stars) || 0}/5` : '<i class="engagement-heart">♥</i> Đã yêu thích'}</span></div>
+              <time datetime="${item.at ? new Date(item.at).toISOString() : ""}">${fmtDate(item.at)}</time>
+            </li>`;
+          }).join("") : '<li class="engagement-empty">Không có tương tác phù hợp.</li>'}</ul>
+        </div>
+        <nav class="member-pager" aria-label="Trang tương tác">
+          ${page > 1 ? `<a href="${filterHref(type, page - 1)}">‹ Trước</a>` : "<span></span>"}
+          <b>Trang ${page}/${pages}</b>
+          ${page < pages ? `<a href="${filterHref(type, page + 1)}">Sau ›</a>` : "<span></span>"}
+        </nav>
+      </section>`;
     } else if (sub === "thanh-vien") {
       const ownerId = VCBG.currentUser().id;
       const memberQuery = String(route.q.q || "").trim().toLowerCase();
@@ -2796,6 +2870,17 @@
         e.preventDefault();
         const q = String(new FormData(memberSearch).get("q") || "").trim();
         go("/admin/thanh-vien" + (q ? "?q=" + encodeURIComponent(q) : ""));
+      };
+    const engagementFilter = $("#engagementFilter");
+    if (engagementFilter)
+      engagementFilter.onsubmit = (e) => {
+        e.preventDefault();
+        const fd = new FormData(engagementFilter);
+        const params = new URLSearchParams();
+        if (fd.get("type") && fd.get("type") !== "all") params.set("type", fd.get("type"));
+        if (fd.get("story")) params.set("story", fd.get("story"));
+        if (String(fd.get("q") || "").trim()) params.set("q", String(fd.get("q")).trim());
+        go("/admin/tuong-tac" + (params.toString() ? "?" + params.toString() : ""));
       };
     const gAdd = $("#gAdd");
     if (gAdd)

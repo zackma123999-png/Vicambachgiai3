@@ -26,7 +26,8 @@
 .home-music.is-empty .home-music-timeline { opacity:.55; }
 .home-music-water { position:absolute; z-index:2; left:0; right:0; bottom:0; height:3.75rem; overflow:hidden; border-top:1px solid rgba(157,221,255,.5); background:linear-gradient(180deg,rgba(12,75,127,.76),rgba(4,38,76,.97)); }
 .home-music-water::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(168,221,255,.18),transparent 72%); filter:blur(2px); animation:home-water-light 7s ease-in-out infinite alternate; }
-.home-music-reflection { position:absolute; inset:-.25rem 0 auto 0; height:3.5rem; opacity:.3; filter:blur(.7px); transform:scaleY(-1); }
+.home-music-ripple-filter { position:absolute; pointer-events:none; }
+.home-music-reflection { position:absolute; inset:-.25rem 0 auto 0; height:3.5rem; opacity:.34; filter:url(#homeMusicRipple); transform:scaleY(-1); animation:home-reflection-drift 4.8s ease-in-out infinite alternate; }
 .home-music-reflection i { position:absolute; left:1.55rem; top:-2.25rem; width:4.7rem; height:4.7rem; border-radius:50%; background:radial-gradient(circle,#cdeeff 0 4%,#071425 5% 13%,rgba(6,14,28,.88) 14% 62%,transparent 63%); }
 .home-music-reflection b,.home-music-reflection em { position:absolute; left:7.9rem; top:.25rem; width:42%; height:.42rem; border-radius:1rem; background:rgba(220,241,255,.58); }
 .home-music-reflection em { top:1.1rem; width:28%; height:.28rem; opacity:.65; }
@@ -37,6 +38,7 @@
 @keyframes home-music-spin { to { transform:rotate(360deg); } }
 @keyframes home-water-wave { from { transform:translateX(-1.5%) scaleY(.7); } to { transform:translateX(1.5%) scaleY(1.35); } }
 @keyframes home-water-light { to { transform:translateX(22%); } }
+@keyframes home-reflection-drift { from { transform:scaleY(-1) translateX(-.45rem) skewX(-1deg); } to { transform:scaleY(-1) translateX(.45rem) skewX(1.5deg); } }
 @media (max-width:560px) {
   .home-music { height:9.65rem; margin-top:.9rem; }
   .home-music-player { grid-template-columns:5.4rem minmax(0,1fr) 2.35rem; gap:.65rem; height:6.35rem; padding:.4rem .8rem .15rem; }
@@ -49,4 +51,4 @@
   .home-music-reflection i { left:1.15rem; width:4.1rem; height:4.1rem; }
   .home-music-reflection b,.home-music-reflection em { left:6.9rem; }
 }
-@media (prefers-reduced-motion:reduce) { .home-music-disc,.home-music-water::before,.home-music-water > i { animation:none !important; } }
+@media (prefers-reduced-motion:reduce) { .home-music-disc,.home-music-water::before,.home-music-water > i,.home-music-reflection { animation:none !important; } }

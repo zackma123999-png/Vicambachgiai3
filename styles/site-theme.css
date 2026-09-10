@@ -59,9 +59,14 @@ html[data-site-theme="blue"] body {
 }
 html[data-site-theme="blue"] .site-header {
   background: rgba(7,166,187,.94);
-  border-bottom-color: transparent;
-  box-shadow: none;
+  border: 0 !important;
+  box-shadow: none !important;
 }
+html[data-site-theme="blue"] .site-header::before,
+html[data-site-theme="blue"] .site-header::after,
+html[data-site-theme="blue"] .header-inner::before,
+html[data-site-theme="blue"] .header-inner::after { display: none !important; content: none !important; }
+html[data-site-theme="blue"] .header-inner { border: 0 !important; box-shadow: none !important; }
 html[data-site-theme="blue"] .site-header .brand-word-img,
 html[data-site-theme="blue"] .site-header .brand-mark-img { filter: brightness(0) invert(1) drop-shadow(0 2px 7px rgba(0,61,111,.22)); }
 html[data-site-theme="blue"] .site-header .icon-btn,
@@ -102,6 +107,8 @@ html[data-site-theme="blue"] #app .stack-actions .btn-ghost {
 }
 
 /* Open shelves with genuinely light story cards. */
+html[data-site-theme="blue"] body #app .rails,
+html[data-site-theme="blue"] body #app .rail,
 html[data-site-theme="blue"] #app .rail-panel,
 html[data-site-theme="blue"] #app .rail-panel.tone-cyan,
 html[data-site-theme="blue"] #app .rail-panel.tone-violet,
@@ -115,6 +122,10 @@ html[data-site-theme="blue"] #app .rail-panel:has(.wide-card:focus-within) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+html[data-site-theme="blue"] body #app .rails::before,
+html[data-site-theme="blue"] body #app .rails::after,
+html[data-site-theme="blue"] body #app .rail::before,
+html[data-site-theme="blue"] body #app .rail::after { display: none !important; content: none !important; }
 html[data-site-theme="blue"] #app .rail-panel::before,
 html[data-site-theme="blue"] #app .rail-panel::after { display: none !important; content: none !important; }
 html[data-site-theme="blue"] #app .rail-head { --heading-color: #fff; }
@@ -127,25 +138,25 @@ html[data-site-theme="blue"] #app .rail-head .count { background: transparent !i
 html[data-site-theme="blue"] #app .wide-card,
 html[data-site-theme="blue"] #app .rail-panel .wide-card {
   color: #08275f !important;
-  background: linear-gradient(145deg,rgba(224,253,254,.2),rgba(67,191,211,.09)) !important;
-  border: 1px solid rgba(228,254,255,.78) !important;
+  background: rgba(218,252,253,.08) !important;
+  border: 1px solid rgba(236,255,255,.84) !important;
   box-shadow:
-    inset 1px 1px 0 rgba(255,255,255,.55),
-    inset -1px -1px 0 rgba(0,102,139,.16),
-    0 14px 24px rgba(2,83,116,.23),
-    0 3px 7px rgba(2,73,104,.16) !important;
-  -webkit-backdrop-filter: blur(11px) saturate(112%);
-  backdrop-filter: blur(11px) saturate(112%);
+    inset 2px 2px 1px rgba(255,255,255,.48),
+    inset -2px -2px 2px rgba(0,94,128,.2),
+    0 16px 0 -8px rgba(0,105,139,.2),
+    0 20px 30px rgba(1,72,102,.25) !important;
+  -webkit-backdrop-filter: blur(7px) saturate(110%);
+  backdrop-filter: blur(7px) saturate(110%);
 }
 html[data-site-theme="blue"] #app .wide-card:is(.is-selected,:active,:focus-within),
 html[data-site-theme="blue"] #app .rail-panel .wide-card:is(.is-selected,:active,:focus-within) {
-  background: linear-gradient(145deg,rgba(232,254,255,.26),rgba(84,201,218,.13)) !important;
+  background: rgba(230,254,255,.13) !important;
   border-color: rgba(240,255,255,.9) !important;
   box-shadow:
-    inset 1px 1px 0 rgba(255,255,255,.64),
-    inset -1px -1px 0 rgba(0,102,139,.18),
-    0 18px 30px rgba(2,75,108,.27),
-    0 4px 8px rgba(2,73,104,.18) !important;
+    inset 2px 2px 1px rgba(255,255,255,.58),
+    inset -2px -2px 2px rgba(0,94,128,.22),
+    0 18px 0 -8px rgba(0,105,139,.22),
+    0 23px 34px rgba(1,68,98,.28) !important;
 }
 html[data-site-theme="blue"] #app .wide-card::before,
 html[data-site-theme="blue"] #app .wide-card::after { display: none !important; content: none !important; }
@@ -168,15 +179,15 @@ html[data-site-theme="blue"] #app .sig-board,
 html[data-site-theme="blue"] #app .resonance,
 html[data-site-theme="blue"] #app > .site-footer > .foot-card {
   color: #08275f !important;
-  background: linear-gradient(145deg,rgba(224,253,254,.18),rgba(67,191,211,.08)) !important;
-  border: 1px solid rgba(228,254,255,.72) !important;
+  background: rgba(218,252,253,.07) !important;
+  border: 1px solid rgba(236,255,255,.8) !important;
   box-shadow:
-    inset 1px 1px 0 rgba(255,255,255,.5),
-    inset -1px -1px 0 rgba(0,102,139,.15),
-    0 16px 28px rgba(2,83,116,.22),
-    0 3px 7px rgba(2,73,104,.14) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(112%);
-  backdrop-filter: blur(12px) saturate(112%);
+    inset 2px 2px 1px rgba(255,255,255,.44),
+    inset -2px -2px 2px rgba(0,94,128,.18),
+    0 16px 0 -8px rgba(0,105,139,.18),
+    0 22px 32px rgba(1,72,102,.23) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(110%);
+  backdrop-filter: blur(8px) saturate(110%);
 }
 html[data-site-theme="blue"] #app .medal-picks-head h2,
 html[data-site-theme="blue"] #app .sig-brand h2,

@@ -579,6 +579,16 @@
         <button class="home-music-toggle" data-music-toggle type="button" aria-label="${src ? "Phát nhạc" : "Chưa có bài hát"}" aria-pressed="false" ${src ? "" : "disabled"}><span aria-hidden="true">${src ? "▶" : "♪"}</span></button>
       </div>
       <div class="home-music-water" aria-hidden="true">
+        <svg class="home-music-ripple-filter" width="0" height="0" focusable="false">
+          <filter id="homeMusicRipple" x="-15%" y="-35%" width="130%" height="170%">
+            <feTurbulence type="fractalNoise" baseFrequency=".012 .085" numOctaves="2" seed="7" result="noise">
+              <animate attributeName="baseFrequency" dur="7s" values=".012 .075;.018 .11;.01 .07;.012 .075" repeatCount="indefinite"/>
+              <animate attributeName="seed" dur="13s" values="7;13;19;7" repeatCount="indefinite"/>
+            </feTurbulence>
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="13" xChannelSelector="R" yChannelSelector="B"/>
+            <feGaussianBlur stdDeviation=".45"/>
+          </filter>
+        </svg>
         <span class="home-music-reflection"><i></i><b></b><em></em></span>
         <i></i><i></i><i></i>
       </div>

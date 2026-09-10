@@ -558,12 +558,11 @@
   function homeMusicPanel() {
     const music = ((VCBG.settings().social || {}).home_music) || {};
     const src = String(music.url || "").trim();
-    if (!src) return "";
-    const title = String(music.title || "Hộp âm nhạc").trim();
-    const artist = String(music.artist || "ViCamBachGiai").trim();
+    const title = String(music.title || (src ? "Hộp âm nhạc" : "Chưa cập nhật bài hát")).trim();
+    const artist = String(music.artist || (src ? "ViCamBachGiai" : "Hộp âm nhạc")).trim();
     const cover = String(music.cover || "brand/mark.png").trim();
-    return `<section class="wrap home-music" data-home-music aria-label="Hộp âm nhạc">
-      <audio data-music-audio preload="metadata" src="${esc(src)}"></audio>
+    return `<section class="wrap home-music${src ? "" : " is-empty"}" data-home-music aria-label="Hộp âm nhạc">
+      <audio data-music-audio preload="metadata"${src ? ` src="${esc(src)}"` : ""}></audio>
       <div class="home-music-player">
         <span class="home-music-disc" style="--music-cover:url('${esc(cover)}')" aria-hidden="true"><i></i></span>
         <div class="home-music-copy">
@@ -574,7 +573,7 @@
             <span data-music-duration>0:00</span>
           </div>
         </div>
-        <button class="home-music-toggle" data-music-toggle type="button" aria-label="Phát nhạc" aria-pressed="false"><span aria-hidden="true">▶</span></button>
+        <button class="home-music-toggle" data-music-toggle type="button" aria-label="${src ? "Phát nhạc" : "Chưa có bài hát"}" aria-pressed="false" ${src ? "" : "disabled"}><span aria-hidden="true">${src ? "▶" : "♪"}</span></button>
       </div>
       <div class="home-music-water" aria-hidden="true"><i></i><i></i><i></i></div>
     </section>`;

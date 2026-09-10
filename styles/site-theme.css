@@ -122,20 +122,17 @@ html[data-site-theme="blue"] #app .rail-head .count { background: transparent !i
 html[data-site-theme="blue"] #app .wide-card,
 html[data-site-theme="blue"] #app .rail-panel .wide-card {
   color: #08275f !important;
-  background:
-    linear-gradient(145deg,rgba(205,249,251,.66),rgba(133,225,235,.48)) padding-box,
-    linear-gradient(135deg,#fff,#65ccea 45%,#ffcf38 72%,#ef5269) border-box !important;
-  border: 1px solid transparent !important;
+  background: linear-gradient(145deg,rgba(198,247,250,.62),rgba(111,216,228,.46)) !important;
+  border: 1px solid rgba(224,253,255,.72) !important;
   box-shadow: 0 15px 32px rgba(4,71,124,.16), inset 0 1px 0 rgba(255,255,255,.7) !important;
   -webkit-backdrop-filter: blur(16px) saturate(118%);
   backdrop-filter: blur(16px) saturate(118%);
 }
 html[data-site-theme="blue"] #app .wide-card:is(.is-selected,:active,:focus-within),
 html[data-site-theme="blue"] #app .rail-panel .wide-card:is(.is-selected,:active,:focus-within) {
-  background:
-    linear-gradient(145deg,rgba(219,252,253,.76),rgba(146,230,239,.6)) padding-box,
-    linear-gradient(120deg,#ffc312,#ef5269 48%,#087fd1) border-box !important;
-  box-shadow: 0 0 0 2px rgba(255,195,18,.3),0 18px 38px rgba(4,71,124,.22) !important;
+  background: linear-gradient(145deg,rgba(215,251,252,.72),rgba(126,224,233,.56)) !important;
+  border-color: rgba(240,255,255,.9) !important;
+  box-shadow: 0 0 0 2px rgba(214,251,253,.28),0 18px 38px rgba(4,71,124,.22) !important;
 }
 html[data-site-theme="blue"] #app .wide-card::before,
 html[data-site-theme="blue"] #app .wide-card::after { display: none !important; content: none !important; }
@@ -158,10 +155,8 @@ html[data-site-theme="blue"] #app .sig-board,
 html[data-site-theme="blue"] #app .resonance,
 html[data-site-theme="blue"] #app > .site-footer > .foot-card {
   color: #08275f !important;
-  background:
-    linear-gradient(145deg,rgba(202,248,250,.6),rgba(113,215,228,.44)) padding-box,
-    linear-gradient(125deg,#ffc312,#ef5269 42%,#087fd1 76%,#15c8cb) border-box !important;
-  border: 1px solid transparent !important;
+  background: linear-gradient(145deg,rgba(198,247,250,.6),rgba(105,212,225,.44)) !important;
+  border: 1px solid rgba(224,253,255,.68) !important;
   box-shadow: 0 16px 36px rgba(4,71,124,.16), inset 0 1px 0 rgba(255,255,255,.68) !important;
   -webkit-backdrop-filter: blur(18px) saturate(118%);
   backdrop-filter: blur(18px) saturate(118%);
@@ -171,7 +166,13 @@ html[data-site-theme="blue"] #app .sig-brand h2,
 html[data-site-theme="blue"] #app .res-head h2 { color: #08275f !important; text-shadow: none; }
 html[data-site-theme="blue"] #app .medal-picks-head small { color: #0874c3 !important; }
 html[data-site-theme="blue"] #app .medal-picks-list { border-color: rgba(7,89,168,.16); }
-html[data-site-theme="blue"] #app .medal-pick { color: #08275f !important; border-color: rgba(7,89,168,.14); }
+html[data-site-theme="blue"] #app .medal-pick {
+  color: #08275f !important;
+  background: transparent !important;
+  border-color: rgba(7,89,168,.14);
+}
+html[data-site-theme="blue"] #app .medal-pick:hover,
+html[data-site-theme="blue"] #app .medal-pick:focus-visible { background: rgba(205,249,251,.3) !important; }
 html[data-site-theme="blue"] #app .medal-pick-copy > b,
 html[data-site-theme="blue"] #app .medal-pick-stats b { color: #08275f !important; }
 html[data-site-theme="blue"] #app .medal-pick-copy > small,
@@ -223,9 +224,8 @@ html[data-site-theme="blue"] #app .foot-kicker { color: #0874c3 !important; back
 html[data-site-theme="blue"] #app .foot-desc { color: #173b6d !important; }
 html[data-site-theme="blue"] #app .foot-action {
   color: #08275f;
-  background:
-    linear-gradient(rgba(205,249,251,.58),rgba(143,227,236,.44)) padding-box,
-    linear-gradient(110deg,var(--foot-a),var(--foot-b)) border-box;
+  background: linear-gradient(rgba(205,249,251,.58),rgba(143,227,236,.44));
+  border-color: rgba(224,253,255,.7);
 }
 html[data-site-theme="blue"] #app .foot-legal,
 html[data-site-theme="blue"] #app .foot-copy { color: #507694 !important; }

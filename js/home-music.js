@@ -12,17 +12,19 @@
     const current = root.querySelector("[data-music-current]");
     const duration = root.querySelector("[data-music-duration]");
     if (!audio || !toggle || !seek) return;
+    const available = Boolean(audio.getAttribute("src"));
     const paint = () => {
       const playing = !audio.paused && !audio.ended;
       root.classList.toggle("is-playing", playing);
       toggle.setAttribute("aria-pressed", String(playing));
       toggle.setAttribute("aria-label", playing ? "Tạm dừng nhạc" : "Phát nhạc");
-      toggle.querySelector("span").textContent = playing ? "Ⅱ" : "▶";
+      toggle.querySelector("span").textContent = available ? (playing ? "Ⅱ" : "▶") : "♪";
       current.textContent = formatTime(audio.currentTime);
       duration.textContent = formatTime(audio.duration);
       seek.value = audio.duration ? String((audio.currentTime / audio.duration) * 100) : "0";
     };
     toggle.addEventListener("click", async () => {
+      if (!available) return;
       try { if (audio.paused) await audio.play(); else audio.pause(); }
       catch (_) { toggle.setAttribute("aria-label", "Không thể phát đường dẫn nhạc này"); }
       paint();

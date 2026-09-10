@@ -555,6 +555,30 @@
       </div>
     </section>`;
   }
+  function homeMusicPanel() {
+    const music = ((VCBG.settings().social || {}).home_music) || {};
+    const src = String(music.url || "").trim();
+    if (!src) return "";
+    const title = String(music.title || "Hộp âm nhạc").trim();
+    const artist = String(music.artist || "ViCamBachGiai").trim();
+    const cover = String(music.cover || "brand/mark.png").trim();
+    return `<section class="wrap home-music" data-home-music aria-label="Hộp âm nhạc">
+      <audio data-music-audio preload="metadata" src="${esc(src)}"></audio>
+      <div class="home-music-player">
+        <span class="home-music-disc" style="--music-cover:url('${esc(cover)}')" aria-hidden="true"><i></i></span>
+        <div class="home-music-copy">
+          <b>${esc(title)}</b><small>${esc(artist)}</small>
+          <div class="home-music-timeline">
+            <span data-music-current>0:00</span>
+            <input data-music-seek type="range" min="0" max="100" value="0" step="0.1" aria-label="Vị trí phát nhạc">
+            <span data-music-duration>0:00</span>
+          </div>
+        </div>
+        <button class="home-music-toggle" data-music-toggle type="button" aria-label="Phát nhạc" aria-pressed="false"><span aria-hidden="true">▶</span></button>
+      </div>
+      <div class="home-music-water" aria-hidden="true"><i></i><i></i><i></i></div>
+    </section>`;
+  }
   function recommendationPanel() {
     const weekly = VCBG.weeklyRanking ? VCBG.weeklyRanking(5) : [];
     const ranked = weekly.length ? weekly : VCBG.listStories({ sort: "views" }).slice(0, 5).map((story, i) => ({ rank: i + 1, story, week: 0 }));
@@ -1098,7 +1122,8 @@
       </div>
       ${recommendationPanel()}
       ${homeLower()}
-      ${resonancePanel()}` +
+      ${resonancePanel()}
+      ${homeMusicPanel()}` +
       footer();
     bindChrome();
     bindResonance();
@@ -2710,6 +2735,7 @@
     } else if (sub === "cai-dat") {
       const st = VCBG.settings();
       const so = st.social || {};
+      const music = so.home_music || {};
       body = `<form id="setF">
         <div class="field"><label>Tên website</label><input name="name" value="${esc(st.name)}"></div>
         <div class="field"><label>Khẩu hiệu</label><input name="tagline" value="${esc(st.tagline)}"></div>
@@ -2718,6 +2744,12 @@
         <div class="field"><label>Instagram</label><input name="instagram" value="${esc(so.instagram || "")}"></div>
         <div class="field"><label>Facebook</label><input name="facebook" value="${esc(so.facebook || "")}"></div>
         <div class="field"><label>Wattpad</label><input name="wattpad" value="${esc(so.wattpad || "")}"></div>
+        <h2>Hộp âm nhạc trang chủ</h2>
+        <p class="sub">Để trống đường dẫn nhạc nếu muốn ẩn trình phát khỏi trang chủ.</p>
+        <div class="field"><label>Tên bài hát</label><input name="music_title" value="${esc(music.title || "")}" placeholder="Tên bài hát"></div>
+        <div class="field"><label>Ca sĩ</label><input name="music_artist" value="${esc(music.artist || "")}" placeholder="Tên ca sĩ"></div>
+        <div class="field"><label>Ảnh bìa</label><input name="music_cover" type="url" inputmode="url" value="${esc(music.cover || "")}" placeholder="https://..."></div>
+        <div class="field"><label>Đường dẫn tệp nhạc</label><input name="music_url" type="url" inputmode="url" value="${esc(music.url || "")}" placeholder="https://.../bai-hat.mp3"></div>
         <label><input type="checkbox" name="allow_registration" ${st.allow_registration ? "checked" : ""}> Cho phép đăng ký</label>
         <label><input type="checkbox" name="allow_comments" ${st.allow_comments ? "checked" : ""}> Cho phép bình luận</label>
         <p><button class="btn btn-primary">Lưu</button></p>
@@ -2948,6 +2980,12 @@
             instagram: fd.get("instagram") || "",
             facebook: fd.get("facebook") || "",
             wattpad: fd.get("wattpad") || "",
+            home_music: {
+              title: fd.get("music_title") || "",
+              artist: fd.get("music_artist") || "",
+              cover: fd.get("music_cover") || "",
+              url: fd.get("music_url") || "",
+            },
           },
         });
         toast("Đã lưu cài đặt.");

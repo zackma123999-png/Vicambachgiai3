@@ -1,0 +1,55 @@
+.home-music {
+  position: relative;
+  width: min(39rem, calc(100% - 1.7rem));
+  height: 7.2rem;
+  margin: 1.4rem auto 2.4rem;
+  overflow: hidden;
+  color: #f6f3ff;
+  border: 1px solid rgba(153, 183, 255, .17);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, rgba(26, 42, 77, .9), rgba(12, 18, 39, .97));
+  box-shadow: inset 0 1px rgba(255,255,255,.06), 0 12px 28px rgba(0,0,0,.25);
+}
+.home-music-player {
+  position: relative; z-index: 3; display: grid;
+  grid-template-columns: 4.15rem minmax(0,1fr) 2.65rem;
+  align-items: center; gap: .8rem; height: 5.25rem; padding: .55rem 1rem .4rem;
+}
+.home-music-disc {
+  position: relative; width: 3.85rem; height: 3.85rem; border-radius: 50%;
+  background: radial-gradient(circle, transparent 0 14%, #0c0d13 15% 23%, transparent 24%), var(--music-cover) center/cover, #111;
+  box-shadow: 0 0 0 4px #0b0c11, 0 0 0 5px rgba(203,184,255,.2), 0 7px 15px rgba(0,0,0,.4);
+}
+.home-music-disc::before,.home-music-disc::after { content:""; position:absolute; inset:.28rem; border:1px solid rgba(255,255,255,.1); border-radius:50%; }
+.home-music-disc::after { inset: .58rem; }
+.home-music-disc i { position:absolute; inset:45%; border-radius:50%; background:#ddd5ff; }
+.home-music.is-playing .home-music-disc { animation: home-music-spin 7s linear infinite; }
+.home-music-copy { min-width:0; }
+.home-music-copy b,.home-music-copy small { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.home-music-copy b { font-family:var(--serif); font-size:1.05rem; font-weight:500; }
+.home-music-copy small { margin-top:.1rem; color:rgba(220,224,244,.62); font-size:.67rem; }
+.home-music-timeline { display:grid; grid-template-columns:2rem minmax(0,1fr) 2rem; align-items:center; gap:.45rem; margin-top:.45rem; }
+.home-music-timeline span { color:rgba(225,229,246,.64); font-size:.57rem; font-variant-numeric:tabular-nums; }
+.home-music-timeline span:last-child { text-align:right; }
+.home-music-timeline input { width:100%; height:.85rem; margin:0; accent-color:#bda4ff; cursor:pointer; }
+.home-music-toggle { display:grid; width:2.5rem; height:2.5rem; padding:0; place-items:center; color:#fff; border:1px solid rgba(218,204,255,.25); border-radius:50%; background:rgba(153,112,229,.2); box-shadow:0 0 18px rgba(151,105,232,.13); cursor:pointer; }
+.home-music-toggle span { margin-left:.12rem; font-size:.78rem; }
+.home-music.is-playing .home-music-toggle span { margin-left:0; }
+.home-music-water { position:absolute; z-index:1; left:0; right:0; bottom:0; height:2rem; overflow:hidden; background:linear-gradient(180deg,rgba(35,108,168,.24),rgba(21,67,119,.62)); }
+.home-music-water::before { content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(168,211,255,.14),transparent 72%); filter:blur(2px); animation:home-water-light 7s ease-in-out infinite alternate; }
+.home-music-water i { position:absolute; left:-10%; width:120%; height:.7rem; border:1px solid rgba(135,206,255,.28); border-color:rgba(135,206,255,.28) transparent transparent; border-radius:50%; animation:home-water-wave 5s ease-in-out infinite alternate; }
+.home-music-water i:nth-child(1) { top:.25rem; }
+.home-music-water i:nth-child(2) { top:.75rem; animation-delay:-1.7s; animation-duration:6.5s; opacity:.65; }
+.home-music-water i:nth-child(3) { top:1.25rem; animation-delay:-3s; animation-duration:8s; opacity:.4; }
+@keyframes home-music-spin { to { transform:rotate(360deg); } }
+@keyframes home-water-wave { from { transform:translateX(-1.5%) scaleY(.7); } to { transform:translateX(1.5%) scaleY(1.35); } }
+@keyframes home-water-light { to { transform:translateX(22%); } }
+@media (max-width:560px) {
+  .home-music { height:6.65rem; margin-top:.9rem; }
+  .home-music-player { grid-template-columns:3.55rem minmax(0,1fr) 2.35rem; gap:.65rem; height:4.85rem; padding-inline:.8rem; }
+  .home-music-disc { width:3.25rem; height:3.25rem; }
+  .home-music-toggle { width:2.25rem; height:2.25rem; }
+  .home-music-copy b { font-size:.94rem; }
+  .home-music-water { height:1.8rem; }
+}
+@media (prefers-reduced-motion:reduce) { .home-music-disc,.home-music-water::before,.home-music-water i { animation:none !important; } }

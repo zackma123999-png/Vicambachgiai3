@@ -564,7 +564,10 @@
     return `<section class="wrap home-music${src ? "" : " is-empty"}" data-home-music aria-label="Hộp âm nhạc">
       <audio data-music-audio preload="metadata"${src ? ` src="${esc(src)}"` : ""}></audio>
       <div class="home-music-player">
-        <span class="home-music-disc" style="--music-cover:url('${esc(cover)}')" aria-hidden="true"><i></i></span>
+        <span class="home-music-deck" aria-hidden="true">
+          <span class="home-music-disc" style="--music-cover:url('${esc(cover)}')"><i></i></span>
+          <span class="home-music-arm"></span>
+        </span>
         <div class="home-music-copy">
           <b>${esc(title)}</b><small>${esc(artist)}</small>
           <div class="home-music-timeline">
@@ -575,7 +578,10 @@
         </div>
         <button class="home-music-toggle" data-music-toggle type="button" aria-label="${src ? "Phát nhạc" : "Chưa có bài hát"}" aria-pressed="false" ${src ? "" : "disabled"}><span aria-hidden="true">${src ? "▶" : "♪"}</span></button>
       </div>
-      <div class="home-music-water" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="home-music-water" aria-hidden="true">
+        <span class="home-music-reflection"><i></i><b></b><em></em></span>
+        <i></i><i></i><i></i>
+      </div>
     </section>`;
   }
   function recommendationPanel() {

@@ -58,9 +58,9 @@ html[data-site-theme="blue"] body {
   background-attachment: fixed;
 }
 html[data-site-theme="blue"] .site-header {
-  background: linear-gradient(100deg, rgba(6,132,190,.96), rgba(7,174,190,.94));
-  border-bottom-color: rgba(255,255,255,.3);
-  box-shadow: 0 8px 26px rgba(5,74,132,.15);
+  background: rgba(7,166,187,.94);
+  border-bottom-color: transparent;
+  box-shadow: none;
 }
 html[data-site-theme="blue"] .site-header .brand-word-img,
 html[data-site-theme="blue"] .site-header .brand-mark-img { filter: brightness(0) invert(1) drop-shadow(0 2px 7px rgba(0,61,111,.22)); }
@@ -105,10 +105,15 @@ html[data-site-theme="blue"] #app .stack-actions .btn-ghost {
 html[data-site-theme="blue"] #app .rail-panel,
 html[data-site-theme="blue"] #app .rail-panel.tone-cyan,
 html[data-site-theme="blue"] #app .rail-panel.tone-violet,
-html[data-site-theme="blue"] #app .rail-panel.tone-blue {
+html[data-site-theme="blue"] #app .rail-panel.tone-blue,
+html[data-site-theme="blue"] #app .rail-panel.is-glowing,
+html[data-site-theme="blue"] #app .rail-panel:has(.wide-card:active),
+html[data-site-theme="blue"] #app .rail-panel:has(.wide-card:focus-within) {
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 html[data-site-theme="blue"] #app .rail-panel::before,
 html[data-site-theme="blue"] #app .rail-panel::after { display: none !important; content: none !important; }
@@ -122,17 +127,25 @@ html[data-site-theme="blue"] #app .rail-head .count { background: transparent !i
 html[data-site-theme="blue"] #app .wide-card,
 html[data-site-theme="blue"] #app .rail-panel .wide-card {
   color: #08275f !important;
-  background: linear-gradient(145deg,rgba(198,247,250,.62),rgba(111,216,228,.46)) !important;
-  border: 1px solid rgba(224,253,255,.72) !important;
-  box-shadow: 0 15px 32px rgba(4,71,124,.16), inset 0 1px 0 rgba(255,255,255,.7) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(118%);
-  backdrop-filter: blur(16px) saturate(118%);
+  background: linear-gradient(145deg,rgba(224,253,254,.2),rgba(67,191,211,.09)) !important;
+  border: 1px solid rgba(228,254,255,.78) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.55),
+    inset -1px -1px 0 rgba(0,102,139,.16),
+    0 14px 24px rgba(2,83,116,.23),
+    0 3px 7px rgba(2,73,104,.16) !important;
+  -webkit-backdrop-filter: blur(11px) saturate(112%);
+  backdrop-filter: blur(11px) saturate(112%);
 }
 html[data-site-theme="blue"] #app .wide-card:is(.is-selected,:active,:focus-within),
 html[data-site-theme="blue"] #app .rail-panel .wide-card:is(.is-selected,:active,:focus-within) {
-  background: linear-gradient(145deg,rgba(215,251,252,.72),rgba(126,224,233,.56)) !important;
+  background: linear-gradient(145deg,rgba(232,254,255,.26),rgba(84,201,218,.13)) !important;
   border-color: rgba(240,255,255,.9) !important;
-  box-shadow: 0 0 0 2px rgba(214,251,253,.28),0 18px 38px rgba(4,71,124,.22) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.64),
+    inset -1px -1px 0 rgba(0,102,139,.18),
+    0 18px 30px rgba(2,75,108,.27),
+    0 4px 8px rgba(2,73,104,.18) !important;
 }
 html[data-site-theme="blue"] #app .wide-card::before,
 html[data-site-theme="blue"] #app .wide-card::after { display: none !important; content: none !important; }
@@ -155,11 +168,15 @@ html[data-site-theme="blue"] #app .sig-board,
 html[data-site-theme="blue"] #app .resonance,
 html[data-site-theme="blue"] #app > .site-footer > .foot-card {
   color: #08275f !important;
-  background: linear-gradient(145deg,rgba(198,247,250,.6),rgba(105,212,225,.44)) !important;
-  border: 1px solid rgba(224,253,255,.68) !important;
-  box-shadow: 0 16px 36px rgba(4,71,124,.16), inset 0 1px 0 rgba(255,255,255,.68) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(118%);
-  backdrop-filter: blur(18px) saturate(118%);
+  background: linear-gradient(145deg,rgba(224,253,254,.18),rgba(67,191,211,.08)) !important;
+  border: 1px solid rgba(228,254,255,.72) !important;
+  box-shadow:
+    inset 1px 1px 0 rgba(255,255,255,.5),
+    inset -1px -1px 0 rgba(0,102,139,.15),
+    0 16px 28px rgba(2,83,116,.22),
+    0 3px 7px rgba(2,73,104,.14) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(112%);
+  backdrop-filter: blur(12px) saturate(112%);
 }
 html[data-site-theme="blue"] #app .medal-picks-head h2,
 html[data-site-theme="blue"] #app .sig-brand h2,
@@ -232,11 +249,11 @@ html[data-site-theme="blue"] #app .foot-copy { color: #507694 !important; }
 
 html[data-site-theme="blue"] :is(.story-card, .panel, .surface, .account-card, .auth-card, .admin-card, .empty) {
   color: #08275f;
-  background: rgba(177,235,242,.52);
-  border-color: rgba(7,89,168,.22);
-  box-shadow: 0 14px 34px rgba(5,76,129,.14), inset 0 1px rgba(255,255,255,.62);
-  -webkit-backdrop-filter: blur(16px) saturate(118%);
-  backdrop-filter: blur(16px) saturate(118%);
+  background: rgba(198,245,248,.14);
+  border-color: rgba(228,254,255,.7);
+  box-shadow: inset 1px 1px rgba(255,255,255,.48),0 13px 24px rgba(2,83,116,.2);
+  -webkit-backdrop-filter: blur(11px) saturate(112%);
+  backdrop-filter: blur(11px) saturate(112%);
 }
 html[data-site-theme="blue"] :is(.story-card, .panel, .surface) :is(p, small, .muted, .by) { color: #35688d; }
 html[data-site-theme="blue"] :is(.pill, .tag, .badge) { color: #08275f; background: #9bddf0; border-color: rgba(7,89,168,.25); }

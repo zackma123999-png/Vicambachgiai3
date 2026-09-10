@@ -84,13 +84,155 @@ html[data-site-theme="blue"] .hero.stack-hero {
     radial-gradient(circle at 88% 74%, rgba(239,82,105,.2), transparent 30%),
     transparent;
 }
-html[data-site-theme="blue"] :is(.story-wide, .story-card, .panel, .surface, .foot-card, .sig-card, .medal-picks, .account-card, .auth-card, .admin-card, .empty) {
+
+/* The hero keeps its photographic dark overlay, so all copy must remain light. */
+html[data-site-theme="blue"] #app .stack-body,
+html[data-site-theme="blue"] #app .stack-title { color: #fff; }
+html[data-site-theme="blue"] #app .stack-syn { color: #eef9ff; }
+html[data-site-theme="blue"] #app .stack-actions .btn-cyan {
   color: #08275f;
-  background: rgba(247,253,255,.9);
+  background: linear-gradient(105deg,#ffd329,#ffad1f);
+  border-color: rgba(255,229,111,.92);
+  box-shadow: 0 8px 22px rgba(93,51,0,.24);
+}
+html[data-site-theme="blue"] #app .stack-actions .btn-ghost {
+  color: #fff;
+  background: rgba(5,43,91,.48);
+  border-color: rgba(255,255,255,.58);
+}
+
+/* Open shelves with genuinely light story cards. */
+html[data-site-theme="blue"] #app .rail-panel,
+html[data-site-theme="blue"] #app .rail-panel.tone-cyan,
+html[data-site-theme="blue"] #app .rail-panel.tone-violet,
+html[data-site-theme="blue"] #app .rail-panel.tone-blue {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+html[data-site-theme="blue"] #app .rail-panel::before,
+html[data-site-theme="blue"] #app .rail-panel::after { display: none !important; content: none !important; }
+html[data-site-theme="blue"] #app .rail-head { --heading-color: #fff; }
+html[data-site-theme="blue"] #app .rail-head h2,
+html[data-site-theme="blue"] #app .rail-head .count {
+  color: #fff !important;
+  text-shadow: 0 2px 10px rgba(4,67,119,.22);
+}
+html[data-site-theme="blue"] #app .rail-head .count { background: transparent !important; border: 0 !important; }
+html[data-site-theme="blue"] #app .wide-card,
+html[data-site-theme="blue"] #app .rail-panel .wide-card {
+  color: #08275f !important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.98),rgba(231,248,255,.96)) padding-box,
+    linear-gradient(135deg,#fff,#65ccea 45%,#ffcf38 72%,#ef5269) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 15px 32px rgba(4,71,124,.18), inset 0 1px 0 #fff !important;
+}
+html[data-site-theme="blue"] #app .wide-card:is(.is-selected,:active,:focus-within),
+html[data-site-theme="blue"] #app .rail-panel .wide-card:is(.is-selected,:active,:focus-within) {
+  background:
+    linear-gradient(145deg,#fff,#e7f8ff) padding-box,
+    linear-gradient(120deg,#ffc312,#ef5269 48%,#087fd1) border-box !important;
+  box-shadow: 0 0 0 2px rgba(255,195,18,.3),0 18px 38px rgba(4,71,124,.22) !important;
+}
+html[data-site-theme="blue"] #app .wide-card::before,
+html[data-site-theme="blue"] #app .wide-card::after { display: none !important; content: none !important; }
+html[data-site-theme="blue"] #app .wide-title h3 { color: #08275f !important; }
+html[data-site-theme="blue"] #app .wide-title em { color: #ef5269 !important; }
+html[data-site-theme="blue"] #app .wide-body .by { color: #0874c3 !important; }
+html[data-site-theme="blue"] #app .wide-stats { color: #35688d !important; }
+html[data-site-theme="blue"] #app .wide-latest {
+  color: #08275f !important;
+  background: linear-gradient(105deg,rgba(255,211,41,.5),rgba(255,174,31,.28)) !important;
+  border: 1px solid rgba(220,143,0,.28) !important;
+  box-shadow: none !important;
+}
+html[data-site-theme="blue"] #app .wide-latest span,
+html[data-site-theme="blue"] #app .wide-latest b { color: #173b6d !important; }
+
+/* Ranking, reader signals, resonance and footer become pale cards. */
+html[data-site-theme="blue"] #app .medal-picks,
+html[data-site-theme="blue"] #app .sig-board,
+html[data-site-theme="blue"] #app .resonance,
+html[data-site-theme="blue"] #app > .site-footer > .foot-card {
+  color: #08275f !important;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.97),rgba(226,247,252,.96)) padding-box,
+    linear-gradient(125deg,#ffc312,#ef5269 42%,#087fd1 76%,#15c8cb) border-box !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 16px 36px rgba(4,71,124,.18), inset 0 1px 0 #fff !important;
+}
+html[data-site-theme="blue"] #app .medal-picks-head h2,
+html[data-site-theme="blue"] #app .sig-brand h2,
+html[data-site-theme="blue"] #app .res-head h2 { color: #08275f !important; text-shadow: none; }
+html[data-site-theme="blue"] #app .medal-picks-head small { color: #0874c3 !important; }
+html[data-site-theme="blue"] #app .medal-picks-list { border-color: rgba(7,89,168,.16); }
+html[data-site-theme="blue"] #app .medal-pick { color: #08275f !important; border-color: rgba(7,89,168,.14); }
+html[data-site-theme="blue"] #app .medal-pick-copy > b,
+html[data-site-theme="blue"] #app .medal-pick-stats b { color: #08275f !important; }
+html[data-site-theme="blue"] #app .medal-pick-copy > small,
+html[data-site-theme="blue"] #app .medal-pick-stats small { color: #35688d !important; }
+html[data-site-theme="blue"] #app .medal-tiktok-button.is-unavailable {
+  color: #507694;
+  background: rgba(7,89,168,.06);
+  border-color: rgba(7,89,168,.2);
+}
+
+html[data-site-theme="blue"] #app .sig-brand p,
+html[data-site-theme="blue"] #app .sig-meta time,
+html[data-site-theme="blue"] #app .sig-login { color: #35688d !important; }
+html[data-site-theme="blue"] #app .sig-card { color: #08275f; border-bottom-color: rgba(7,89,168,.15); }
+html[data-site-theme="blue"] #app .sig-text,
+html[data-site-theme="blue"] #app .sig-meta b { color: #173b6d !important; }
+html[data-site-theme="blue"] #app .sig-quote {
+  background: color-mix(in srgb,var(--sig-tone) 10%,#eefaff) !important;
+  border-color: color-mix(in srgb,var(--sig-tone) 32%,transparent);
+}
+html[data-site-theme="blue"] #app .sig-quote p { color: #35617f !important; }
+html[data-site-theme="blue"] #app .sig-tab,
+html[data-site-theme="blue"] #app .sig-filter select,
+html[data-site-theme="blue"] #app .sig-compose {
+  color: #173b6d;
+  background: rgba(255,255,255,.72);
+  border-color: rgba(7,89,168,.2);
+}
+html[data-site-theme="blue"] #app .sig-tab.on { color: #fff; background: #087fd1; border-color: #087fd1; }
+html[data-site-theme="blue"] #app .sig-fake { color: #507694; }
+
+html[data-site-theme="blue"] #app .res-head time,
+html[data-site-theme="blue"] #app .res-live > small,
+html[data-site-theme="blue"] #app .res-hero-visits small,
+html[data-site-theme="blue"] #app .res-stat-copy small { color: #35688d !important; }
+html[data-site-theme="blue"] #app .res-live > strong,
+html[data-site-theme="blue"] #app .res-hero-visits b,
+html[data-site-theme="blue"] #app .res-stat-copy b,
+html[data-site-theme="blue"] #app .res-radar b { color: #08275f !important; text-shadow: none; }
+html[data-site-theme="blue"] #app .res-live { border-right-color: rgba(7,89,168,.18); }
+html[data-site-theme="blue"] #app .res-illustration img,
+html[data-site-theme="blue"] #app .res-visit-art img { mix-blend-mode: multiply !important; filter: none; }
+
+html[data-site-theme="blue"] #app > .site-footer { background: transparent; }
+html[data-site-theme="blue"] #app > .site-footer > .foot-card::after { display: none !important; content: none !important; }
+html[data-site-theme="blue"] #app .foot-card .brand-word-img,
+html[data-site-theme="blue"] #app .foot-card .brand-mark-img { filter: none; }
+html[data-site-theme="blue"] #app .foot-kicker { color: #0874c3 !important; background: none; -webkit-text-fill-color: currentColor; }
+html[data-site-theme="blue"] #app .foot-desc { color: #173b6d !important; }
+html[data-site-theme="blue"] #app .foot-action {
+  color: #08275f;
+  background:
+    linear-gradient(#f7fdff,#eefaff) padding-box,
+    linear-gradient(110deg,var(--foot-a),var(--foot-b)) border-box;
+}
+html[data-site-theme="blue"] #app .foot-legal,
+html[data-site-theme="blue"] #app .foot-copy { color: #507694 !important; }
+
+html[data-site-theme="blue"] :is(.story-card, .panel, .surface, .account-card, .auth-card, .admin-card, .empty) {
+  color: #08275f;
+  background: rgba(247,253,255,.94);
   border-color: rgba(7,89,168,.22);
   box-shadow: 0 14px 34px rgba(5,76,129,.14), inset 0 1px rgba(255,255,255,.75);
 }
-html[data-site-theme="blue"] :is(.story-wide, .story-card, .panel, .surface, .sig-card, .medal-picks) :is(p, small, .muted, .by) { color: #35688d; }
+html[data-site-theme="blue"] :is(.story-card, .panel, .surface) :is(p, small, .muted, .by) { color: #35688d; }
 html[data-site-theme="blue"] :is(.pill, .tag, .badge) { color: #08275f; background: #9bddf0; border-color: rgba(7,89,168,.25); }
 html[data-site-theme="blue"] :is(.pill, .tag, .badge):nth-child(2n) { background: #ffcf38; }
 html[data-site-theme="blue"] :is(.pill, .tag, .badge):nth-child(3n) { color: #fff; background: #ef5269; }

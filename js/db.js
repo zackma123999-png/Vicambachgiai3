@@ -803,6 +803,15 @@
 
   async function refreshCatalog() {
     const stories = await loadTable("stories");
+    /* An established library returning zero rows is a failed/blocked public
+       read, not proof that every story was deleted. Never replace the last
+       good catalogue with that transient empty response. */
+    if (!stories.length) {
+      cache.ready = true;
+      publicSyncedAt = now();
+      if (cache.stories && cache.stories.length) return;
+      throw new Error("Danh mục truyện tạm thời chưa tải được.");
+    }
     cache.stories = mapStories(stories);
     cache.ready = true;
     await fillCatalogRest(stories);

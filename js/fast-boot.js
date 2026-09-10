@@ -6,6 +6,8 @@
   var CATALOG_KEY = "vicambachgiai.catalog.v1";
   var originalInit = window.VCBG.init.bind(window.VCBG);
   var originalListStories = window.VCBG.listStories.bind(window.VCBG);
+  var originalGetStoryBySlug = window.VCBG.getStoryBySlug.bind(window.VCBG);
+  var originalGetStory = window.VCBG.getStory.bind(window.VCBG);
   var started = false;
   var backgroundInit = null;
   var backgroundDone = false;
@@ -67,6 +69,23 @@
     try { live = originalListStories(opts || {}); } catch (_) {}
     if (live && live.length) return live;
     return filterFallback(opts || {});
+  };
+
+  /* A failed catalogue refresh must not turn an existing story URL into a
+     false "not found" page. Keep detail routes readable from the last known
+     public catalogue until the live request succeeds. */
+  window.VCBG.getStoryBySlug = function resilientGetStoryBySlug(slug) {
+    var live = null;
+    try { live = originalGetStoryBySlug(slug); } catch (_) {}
+    if (live) return live;
+    return fallbackStories.find(function (story) { return story.slug === slug; }) || null;
+  };
+
+  window.VCBG.getStory = function resilientGetStory(id) {
+    var live = null;
+    try { live = originalGetStory(id); } catch (_) {}
+    if (live) return live;
+    return fallbackStories.find(function (story) { return story.id === id; }) || null;
   };
 
   function saveLiveFallback() {

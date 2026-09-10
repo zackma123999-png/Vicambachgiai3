@@ -1,0 +1,116 @@
+/* ViCamBachGiai dual site theme. Reader colors remain controlled by the Aa panel. */
+.site-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: .38rem;
+  min-height: 36px;
+  padding: .28rem .55rem .28rem .35rem;
+  border: 1px solid rgba(148, 187, 233, .25);
+  border-radius: 999px;
+  background: rgba(12, 19, 34, .72);
+  color: var(--ink);
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.site-theme-toggle__track {
+  position: relative;
+  width: 30px;
+  height: 18px;
+  border-radius: 99px;
+  background: #202a45;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.site-theme-toggle__track i {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #c4b5fd;
+  box-shadow: 0 0 10px rgba(167,139,250,.7);
+  transition: transform .22s ease, background .22s ease;
+}
+.site-theme-toggle__label { font-size: .72rem; font-weight: 700; line-height: 1; }
+.site-theme-toggle:focus-visible { outline: 3px solid rgba(255,195,18,.7); outline-offset: 2px; }
+
+html[data-site-theme="blue"] {
+  --bg: #08aebe;
+  --bg-2: #0796ad;
+  --ink: #08275f;
+  --muted: #275e86;
+  --line: rgba(7, 66, 132, .2);
+  --cyan: #087fd1;
+  --cyan-2: #0759a8;
+  --violet: #ef5269;
+  --accent: #0759a8;
+  --accent-fill: rgba(255, 195, 18, .86);
+  --accent-fill-2: rgba(239, 82, 105, .2);
+  --accent-line: rgba(7, 89, 168, .55);
+  --accent-glow: 0 8px 24px rgba(5, 91, 151, .18);
+}
+html[data-site-theme="blue"] body {
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 19%, rgba(255,255,255,.18) 0 8rem, transparent 8.1rem),
+    radial-gradient(circle at 94% 48%, rgba(0,104,181,.14) 0 11rem, transparent 11.1rem),
+    linear-gradient(145deg, #12c6d2 0%, #08aebe 46%, #0796ad 100%);
+  background-attachment: fixed;
+}
+html[data-site-theme="blue"] .site-header {
+  background: linear-gradient(100deg, rgba(6,132,190,.96), rgba(7,174,190,.94));
+  border-bottom-color: rgba(255,255,255,.3);
+  box-shadow: 0 8px 26px rgba(5,74,132,.15);
+}
+html[data-site-theme="blue"] .site-header .brand-word-img,
+html[data-site-theme="blue"] .site-header .brand-mark-img { filter: brightness(0) invert(1) drop-shadow(0 2px 7px rgba(0,61,111,.22)); }
+html[data-site-theme="blue"] .site-header .icon-btn,
+html[data-site-theme="blue"] .site-header .nav-links,
+html[data-site-theme="blue"] .site-header .nav-links a.on { color: #fff; }
+html[data-site-theme="blue"] .head-search,
+html[data-site-theme="blue"] .head-search.is-open { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.34); }
+html[data-site-theme="blue"] .head-search input { color: #fff; }
+html[data-site-theme="blue"] .head-search input::placeholder { color: rgba(255,255,255,.78); }
+html[data-site-theme="blue"] .site-theme-toggle { color: #fff; background: rgba(0,62,130,.2); border-color: rgba(255,255,255,.42); }
+html[data-site-theme="blue"] .site-theme-toggle__track { background: #ffc312; }
+html[data-site-theme="blue"] .site-theme-toggle__track i { background: #fff; transform: translateX(12px); box-shadow: 0 2px 7px rgba(6,65,115,.32); }
+html[data-site-theme="blue"] .btn-login { color: #fff; border-color: rgba(255,255,255,.55); background: rgba(255,255,255,.12); }
+html[data-site-theme="blue"] .avatar-chip { background: #fff; color: #0759a8; }
+
+html[data-site-theme="blue"] .hero.stack-hero {
+  background:
+    radial-gradient(58% 70% at 50% 42%, color-mix(in srgb, var(--hero-tone) 24%, transparent), transparent 72%),
+    radial-gradient(circle at 12% 20%, rgba(255,195,18,.22), transparent 28%),
+    radial-gradient(circle at 88% 74%, rgba(239,82,105,.2), transparent 30%),
+    transparent;
+}
+html[data-site-theme="blue"] :is(.story-wide, .story-card, .panel, .surface, .foot-card, .sig-card, .medal-picks, .account-card, .auth-card, .admin-card, .empty) {
+  color: #08275f;
+  background: rgba(247,253,255,.9);
+  border-color: rgba(7,89,168,.22);
+  box-shadow: 0 14px 34px rgba(5,76,129,.14), inset 0 1px rgba(255,255,255,.75);
+}
+html[data-site-theme="blue"] :is(.story-wide, .story-card, .panel, .surface, .sig-card, .medal-picks) :is(p, small, .muted, .by) { color: #35688d; }
+html[data-site-theme="blue"] :is(.pill, .tag, .badge) { color: #08275f; background: #9bddf0; border-color: rgba(7,89,168,.25); }
+html[data-site-theme="blue"] :is(.pill, .tag, .badge):nth-child(2n) { background: #ffcf38; }
+html[data-site-theme="blue"] :is(.pill, .tag, .badge):nth-child(3n) { color: #fff; background: #ef5269; }
+html[data-site-theme="blue"] :is(.section-title, .shelf-title, .sig-title, .medal-picks-title, .foot-kicker) { color: #fff; text-shadow: 0 2px 10px rgba(4,67,119,.2); }
+html[data-site-theme="blue"] .wide-latest { background: linear-gradient(100deg, #ffc312, #ff9f1c); color: #08275f; border-color: transparent; }
+html[data-site-theme="blue"] .btn-primary { background: #ffc312; color: #08275f; border-color: #ffc312; box-shadow: 0 8px 20px rgba(188,116,0,.18); }
+html[data-site-theme="blue"] .site-footer { color: #fff; background: rgba(5,83,142,.28); border-top-color: rgba(255,255,255,.22); }
+html[data-site-theme="blue"] .mobile-menu { color: #08275f; background: rgba(247,253,255,.98); border-color: rgba(7,89,168,.22); }
+html[data-site-theme="blue"] .search-panel { color: #08275f; background: rgba(247,253,255,.98); border-color: rgba(7,89,168,.22); }
+
+/* Keep the chapter reader's own dark/light/cream themes authoritative. */
+html[data-site-theme="blue"] .reader-page { color-scheme: normal; }
+
+@media (max-width: 430px) {
+  .site-theme-toggle { width: 38px; height: 38px; min-height: 38px; padding: 0; justify-content: center; }
+  .site-theme-toggle__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .site-theme-toggle__track { width: 28px; }
+  html[data-site-theme="blue"] .site-theme-toggle__track i { transform: translateX(10px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-theme-toggle__track i { transition: none; }
+}

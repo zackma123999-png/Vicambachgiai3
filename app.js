@@ -423,6 +423,10 @@
       ? `<a class="icon-btn" href="#/thong-bao" aria-label="Thông báo">${unread ? "●" : "○"}</a>
          <a class="avatar-chip" href="#/tai-khoan" title="${esc(u.profile.display_name)}">${esc(u.profile.avatar)}</a>`
       : `<a class="btn btn-login" href="#/dang-nhap">Đăng nhập</a>`;
+    const themeSwitch = `<button type="button" class="site-theme-toggle" data-site-theme-toggle aria-label="Chuyển sang nền xanh" aria-pressed="false">
+      <span class="site-theme-toggle__track" aria-hidden="true"><i></i></span>
+      <span class="site-theme-toggle__label">Tối</span>
+    </button>`;
     return `${modeBanner}<header class="site-header">
       <div class="header-inner">
         ${logoHTML()}
@@ -438,6 +442,7 @@
           <input id="qLive" type="search" placeholder="Tìm truyện..." autocomplete="off">
         </form>
         ${acc}
+        ${themeSwitch}
         <button class="icon-btn menu-btn" id="btnMenu" aria-label="Menu" aria-expanded="false">☰</button>
       </div>
       <div id="searchBox" class="search-panel" hidden></div>

@@ -3452,7 +3452,11 @@
     }
     clearTimeout(watchdog);
     const route = parseHash();
-    if ((route.name === "story" || route.name === "read") && VCBG.syncPublicContent) {
+    /* The homepage must not stay on the bundled/local fallback catalog. This is
+       especially visible in in-app browsers (Facebook, Messenger), where the
+       initial Supabase request often finishes after the first paint. Wait for
+       the shared catalog on every direct homepage open as well as story pages. */
+    if ((route.name === "home" || route.name === "story" || route.name === "read") && VCBG.syncPublicContent) {
       try {
         await VCBG.syncPublicContent({ maxAge: 5000 });
       } catch (error) {

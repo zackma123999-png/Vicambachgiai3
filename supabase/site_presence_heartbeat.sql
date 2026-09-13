@@ -45,7 +45,7 @@ begin
         last_seen = excluded.last_seen;
 
   delete from public.site_presence
-    where last_seen < v_now - interval '60 seconds';
+    where last_seen < v_now - interval '90 seconds';
 
   return query
   select
@@ -53,7 +53,7 @@ begin
     count(*) filter (where not is_member)::bigint,
     count(*) filter (where is_member)::bigint
   from public.site_presence
-  where last_seen >= v_now - interval '60 seconds';
+  where last_seen >= v_now - interval '90 seconds';
 end;
 $$;
 

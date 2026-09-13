@@ -340,7 +340,7 @@
     }
     const generation = publicPresenceGeneration;
     publicPresenceInFlight = true;
-    let nextDelay = 15000;
+    let nextDelay = 30000;
     try {
       const { data, error } = await sb.rpc("heartbeat_site_presence", {
         p_visitor_key: publicVisitorId(),
@@ -532,6 +532,26 @@
       console.error("[VCBG persist]", err);
     });
     return run;
+  }
+
+  function isRateLimitError(err) {
+    const status = Number(err && (err.status || err.statusCode));
+    const code = String((err && err.code) || "").toLowerCase();
+    const message = String((err && err.message) || "").toLowerCase();
+    return status === 429 || code.indexOf("rate_limit") !== -1 ||
+      message.indexOf("rate limit") !== -1 || message.indexOf("too many requests") !== -1;
+  }
+
+  async function retryRateLimited(operation) {
+    const delays = [2000, 4000, 8000, 15000];
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await operation();
+      } catch (err) {
+        if (!isRateLimitError(err) || attempt >= delays.length) throw err;
+        await new Promise((resolve) => global.setTimeout(resolve, delays[attempt]));
+      }
+    }
   }
 
   let bgQueue = Promise.resolve();
@@ -2308,11 +2328,22 @@
         published_at: iso(ch.published_at),
         updated_at: iso(ch.updated_at),
       };
-      await persist(async () => {
-        const { error } = await sb.from("chapters").upsert(row);
-        if (error) throw error;
-        if (story) await sb.from("stories").update({ updated_at: iso(t) }).eq("id", story.id);
-      });
+      // Chapter publishing is more important than the background online
+      // counter. Pause heartbeats while saving, and retry only a confirmed 429
+      // response so a temporary platform limit does not lose the editor's work.
+      stopPublicPresence();
+      try {
+        await persist(() => retryRateLimited(async () => {
+          const { error } = await sb.from("chapters").upsert(row);
+          if (error) throw error;
+          if (story) {
+            const { error: storyError } = await sb.from("stories").update({ updated_at: iso(t) }).eq("id", story.id);
+            if (storyError) throw storyError;
+          }
+        }));
+      } finally {
+        startPublicPresence();
+      }
       return ch;
     },
 

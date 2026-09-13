@@ -62,14 +62,20 @@
   let publicMetricChannel = null;
   let publicMetricTimer = null;
   let publicMetricStarting = false;
+  let publicMetricRetryTimer = null;
+  let publicMetricRetryAttempt = 0;
+  let publicMetricLifecycleBound = false;
+  let publicPresenceIdentity = "";
   let publicVisitRecorded = false;
   let communityChannel = null;
   let communityStarting = false;
   let communityRefreshTimer = null;
   let publicMetrics = {
-    online: 0,
-    online_guests: 0,
-    online_members: 0,
+    // null means Realtime Presence has not confirmed a live count yet. Never
+    // present a connection failure as a real zero-person result.
+    online: null,
+    online_guests: null,
+    online_members: null,
     visits_today: null,
     members: null,
     comments: null,
@@ -307,9 +313,63 @@
     }
   }
 
-  async function startPublicMetrics() {
-    if (publicMetricChannel || publicMetricStarting) return;
-    publicMetricStarting = true;
+  function publicPresenceDescriptor() {
+    const visitorId = publicVisitorId();
+    const me = currentUser();
+    return {
+      visitorId,
+      key: me ? "member:" + me.id : "guest:" + visitorId,
+      kind: me ? "member" : "guest",
+    };
+  }
+
+  function stopPublicPresence({ untrack = false } = {}) {
+    if (publicMetricRetryTimer) global.clearTimeout(publicMetricRetryTimer);
+    publicMetricRetryTimer = null;
+    const channel = publicMetricChannel;
+    publicMetricChannel = null;
+    publicPresenceIdentity = "";
+    publicMetricStarting = false;
+    if (!channel || !sb) return;
+    if (untrack) Promise.resolve(channel.untrack()).catch(() => {});
+    Promise.resolve(sb.removeChannel(channel)).catch(() => {});
+  }
+
+  function schedulePublicPresenceRetry(reason) {
+    if (publicMetricRetryTimer) return;
+    const delays = [1000, 2000, 5000, 10000, 30000];
+    const delay = delays[Math.min(publicMetricRetryAttempt, delays.length - 1)];
+    publicMetricRetryAttempt += 1;
+    console.warn("[VCBG presence]", reason || "mất kết nối", "- thử lại sau", delay, "ms");
+    publicMetricRetryTimer = global.setTimeout(() => {
+      publicMetricRetryTimer = null;
+      stopPublicPresence();
+      startPublicPresence();
+    }, delay);
+  }
+
+  function bindPublicMetricLifecycle() {
+    if (publicMetricLifecycleBound) return;
+    publicMetricLifecycleBound = true;
+    global.addEventListener("online", () => {
+      publicMetricRetryAttempt = 0;
+      stopPublicPresence();
+      startPublicPresence();
+    });
+    global.addEventListener("offline", () => {
+      stopPublicPresence();
+      emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+    });
+    global.addEventListener("pagehide", () => {
+      stopPublicPresence({ untrack: true });
+    });
+    global.addEventListener("pageshow", () => {
+      if (!publicMetricChannel) startPublicPresence();
+    });
+  }
+
+  async function startPublicMetricPolling() {
+    if (publicMetricTimer) return;
     const visitorId = publicVisitorId();
     const recordVisit = async () => {
       if (publicVisitRecorded) return true;
@@ -329,35 +389,97 @@
       if (!publicVisitRecorded) await recordVisit();
       await refreshPublicMetrics();
     }, 60 * 1000);
+  }
 
-    const me = currentUser();
-    const presenceKey = me ? "member:" + me.id : "guest:" + visitorId;
-    const kind = me ? "member" : "guest";
-    publicMetricChannel = sb.channel("vicam-public-presence", {
-      config: { presence: { key: presenceKey } },
+  function startPublicPresence() {
+    if (publicMetricChannel || publicMetricStarting || !sb) return;
+    if (global.navigator && global.navigator.onLine === false) {
+      emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+      return;
+    }
+    publicMetricStarting = true;
+    const descriptor = publicPresenceDescriptor();
+    const channel = sb.channel("vicam-public-presence", {
+      config: { presence: { key: descriptor.key } },
     });
+    publicMetricChannel = channel;
+    publicPresenceIdentity = descriptor.key;
+    let trackingStarted = false;
+    let presenceConfirmed = false;
+    let confirmationTimer = null;
+
     const updatePresence = () => {
-      const state = publicMetricChannel.presenceState() || {};
+      if (publicMetricChannel !== channel) return;
+      const state = channel.presenceState() || {};
+      // The first sync can arrive before track() completes. Publishing that
+      // empty snapshot would flash a false zero and previously could leave the
+      // panel stuck there. Only publish after this client appears in state.
+      if (!trackingStarted || !(state[descriptor.key] || []).length) return;
+      presenceConfirmed = true;
+      if (confirmationTimer) global.clearTimeout(confirmationTimer);
+      confirmationTimer = null;
+      publicMetricRetryAttempt = 0;
       let guests = 0;
       let members = 0;
       Object.keys(state).forEach((key) => {
         const entries = state[key] || [];
+        if (!entries.length) return;
         const entryKind = (entries[0] && entries[0].kind) || (key.indexOf("member:") === 0 ? "member" : "guest");
         if (entryKind === "member") members += 1;
         else guests += 1;
       });
       emitPublicMetrics({ online: guests + members, online_guests: guests, online_members: members });
     };
-    publicMetricChannel
+    channel
       .on("presence", { event: "sync" }, updatePresence)
       .on("presence", { event: "join" }, updatePresence)
       .on("presence", { event: "leave" }, updatePresence)
       .subscribe(async (status) => {
+        if (publicMetricChannel !== channel) return;
         if (status === "SUBSCRIBED") {
-          await publicMetricChannel.track({ kind, joined_at: new Date().toISOString() });
+          publicMetricStarting = false;
+          try {
+            const result = await channel.track({
+              kind: descriptor.kind,
+              joined_at: new Date().toISOString(),
+            });
+            if (result !== "ok") throw new Error("track trả về " + result);
+            trackingStarted = true;
+            updatePresence();
+            confirmationTimer = global.setTimeout(() => {
+              if (publicMetricChannel !== channel || presenceConfirmed) return;
+              emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+              schedulePublicPresenceRetry("không nhận được Presence sync");
+            }, 5000);
+          } catch (err) {
+            emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+            schedulePublicPresenceRetry(err && err.message);
+          }
+          return;
+        }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          publicMetricStarting = false;
+          emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+          schedulePublicPresenceRetry(status);
         }
       });
-    publicMetricStarting = false;
+  }
+
+  function restartPublicPresenceForIdentityChange() {
+    const nextIdentity = publicPresenceDescriptor().key;
+    if (publicPresenceIdentity === nextIdentity && publicMetricChannel) return;
+    publicMetricRetryAttempt = 0;
+    stopPublicPresence({ untrack: true });
+    startPublicPresence();
+  }
+
+  function startPublicMetrics() {
+    bindPublicMetricLifecycle();
+    if (!sb) return;
+    startPublicMetricPolling().catch((err) => {
+      console.warn("[VCBG public metrics]", err && err.message);
+    });
+    startPublicPresence();
   }
 
   function emitCommunityChange() {
@@ -1135,6 +1257,7 @@
           stopAccountStatusMonitor();
           storeDel(SESSION_KEY);
         }
+        restartPublicPresenceForIdentityChange();
         if (before !== authFingerprint()) emitAuthState();
       }, 0);
     });
@@ -1233,6 +1356,10 @@
 
     async init() {
       client();
+      // Presence is site-wide: visitors who open a shared story/chapter link
+      // directly must be counted too, not only visitors who render the home
+      // page's resonance panel.
+      startPublicMetrics();
       if (bootstrapped) return;
       const snap = readSnap();
       if (snap) applyCatalog(snap);

@@ -59,19 +59,18 @@
   let accountStatusChannel = null;
   let accountStatusTimer = null;
   let monitoredAccountId = "";
-  let publicMetricChannel = null;
   let publicMetricTimer = null;
-  let publicMetricStarting = false;
-  let publicMetricRetryTimer = null;
-  let publicMetricRetryAttempt = 0;
   let publicMetricLifecycleBound = false;
-  let publicPresenceIdentity = "";
+  let publicPresenceTimer = null;
+  let publicPresenceInFlight = false;
+  let publicPresenceGeneration = 0;
+  let publicPresenceFailures = 0;
   let publicVisitRecorded = false;
   let communityChannel = null;
   let communityStarting = false;
   let communityRefreshTimer = null;
   let publicMetrics = {
-    // null means Realtime Presence has not confirmed a live count yet. Never
+    // null means the presence heartbeat has not confirmed a live count yet. Never
     // present a connection failure as a real zero-person result.
     online: null,
     online_guests: null,
@@ -313,46 +312,69 @@
     }
   }
 
-  function publicPresenceDescriptor() {
-    const visitorId = publicVisitorId();
-    const me = currentUser();
-    return {
-      visitorId,
-      key: me ? "member:" + me.id : "guest:" + visitorId,
-      kind: me ? "member" : "guest",
-    };
+  function schedulePublicPresence(delay) {
+    if (publicPresenceTimer) global.clearTimeout(publicPresenceTimer);
+    publicPresenceTimer = global.setTimeout(() => {
+      publicPresenceTimer = null;
+      runPublicPresenceHeartbeat();
+    }, Math.max(0, delay || 0));
   }
 
-  function stopPublicPresence({ untrack = false } = {}) {
-    if (publicMetricRetryTimer) global.clearTimeout(publicMetricRetryTimer);
-    publicMetricRetryTimer = null;
-    const channel = publicMetricChannel;
-    publicMetricChannel = null;
-    publicPresenceIdentity = "";
-    publicMetricStarting = false;
-    if (!channel || !sb) return;
-    if (untrack) Promise.resolve(channel.untrack()).catch(() => {});
-    Promise.resolve(sb.removeChannel(channel)).catch(() => {});
+  function stopPublicPresence({ leave = false } = {}) {
+    publicPresenceGeneration += 1;
+    publicPresenceInFlight = false;
+    if (publicPresenceTimer) global.clearTimeout(publicPresenceTimer);
+    publicPresenceTimer = null;
+    if (leave && sb) {
+      Promise.resolve(sb.rpc("leave_site_presence", {
+        p_visitor_key: publicVisitorId(),
+      })).catch(() => {});
+    }
   }
 
-  function schedulePublicPresenceRetry(reason) {
-    if (publicMetricRetryTimer) return;
-    const delays = [1000, 2000, 5000, 10000, 30000];
-    const delay = delays[Math.min(publicMetricRetryAttempt, delays.length - 1)];
-    publicMetricRetryAttempt += 1;
-    console.warn("[VCBG presence]", reason || "mất kết nối", "- thử lại sau", delay, "ms");
-    publicMetricRetryTimer = global.setTimeout(() => {
-      publicMetricRetryTimer = null;
-      stopPublicPresence();
-      startPublicPresence();
-    }, delay);
+  async function runPublicPresenceHeartbeat() {
+    if (publicPresenceInFlight || !sb) return;
+    if (global.navigator && global.navigator.onLine === false) {
+      emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+      return;
+    }
+    const generation = publicPresenceGeneration;
+    publicPresenceInFlight = true;
+    let nextDelay = 15000;
+    try {
+      const { data, error } = await sb.rpc("heartbeat_site_presence", {
+        p_visitor_key: publicVisitorId(),
+      });
+      if (generation !== publicPresenceGeneration) return;
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) throw new Error("không nhận được số liệu hiện diện");
+      emitPublicMetrics({
+        online: Number(row.online || 0),
+        online_guests: Number(row.online_guests || 0),
+        online_members: Number(row.online_members || 0),
+      });
+      publicPresenceFailures = 0;
+    } catch (err) {
+      if (generation !== publicPresenceGeneration) return;
+      publicPresenceFailures += 1;
+      const delays = [2000, 5000, 10000, 30000];
+      nextDelay = delays[Math.min(publicPresenceFailures - 1, delays.length - 1)];
+      emitPublicMetrics({ online: null, online_guests: null, online_members: null });
+      console.warn("[VCBG presence heartbeat]", err && err.message);
+    } finally {
+      if (generation === publicPresenceGeneration) {
+        publicPresenceInFlight = false;
+        schedulePublicPresence(nextDelay);
+      }
+    }
   }
 
   function bindPublicMetricLifecycle() {
     if (publicMetricLifecycleBound) return;
     publicMetricLifecycleBound = true;
     global.addEventListener("online", () => {
-      publicMetricRetryAttempt = 0;
+      publicPresenceFailures = 0;
       stopPublicPresence();
       startPublicPresence();
     });
@@ -361,10 +383,10 @@
       emitPublicMetrics({ online: null, online_guests: null, online_members: null });
     });
     global.addEventListener("pagehide", () => {
-      stopPublicPresence({ untrack: true });
+      stopPublicPresence({ leave: true });
     });
     global.addEventListener("pageshow", () => {
-      if (!publicMetricChannel) startPublicPresence();
+      startPublicPresence();
     });
   }
 
@@ -392,84 +414,13 @@
   }
 
   function startPublicPresence() {
-    if (publicMetricChannel || publicMetricStarting || !sb) return;
-    if (global.navigator && global.navigator.onLine === false) {
-      emitPublicMetrics({ online: null, online_guests: null, online_members: null });
-      return;
-    }
-    publicMetricStarting = true;
-    const descriptor = publicPresenceDescriptor();
-    const channel = sb.channel("vicam-public-presence", {
-      config: { presence: { key: descriptor.key } },
-    });
-    publicMetricChannel = channel;
-    publicPresenceIdentity = descriptor.key;
-    let trackingStarted = false;
-    let presenceConfirmed = false;
-    let confirmationTimer = null;
-
-    const updatePresence = () => {
-      if (publicMetricChannel !== channel) return;
-      const state = channel.presenceState() || {};
-      // The first sync can arrive before track() completes. Publishing that
-      // empty snapshot would flash a false zero and previously could leave the
-      // panel stuck there. Only publish after this client appears in state.
-      if (!trackingStarted || !(state[descriptor.key] || []).length) return;
-      presenceConfirmed = true;
-      if (confirmationTimer) global.clearTimeout(confirmationTimer);
-      confirmationTimer = null;
-      publicMetricRetryAttempt = 0;
-      let guests = 0;
-      let members = 0;
-      Object.keys(state).forEach((key) => {
-        const entries = state[key] || [];
-        if (!entries.length) return;
-        const entryKind = (entries[0] && entries[0].kind) || (key.indexOf("member:") === 0 ? "member" : "guest");
-        if (entryKind === "member") members += 1;
-        else guests += 1;
-      });
-      emitPublicMetrics({ online: guests + members, online_guests: guests, online_members: members });
-    };
-    channel
-      .on("presence", { event: "sync" }, updatePresence)
-      .on("presence", { event: "join" }, updatePresence)
-      .on("presence", { event: "leave" }, updatePresence)
-      .subscribe(async (status) => {
-        if (publicMetricChannel !== channel) return;
-        if (status === "SUBSCRIBED") {
-          publicMetricStarting = false;
-          try {
-            const result = await channel.track({
-              kind: descriptor.kind,
-              joined_at: new Date().toISOString(),
-            });
-            if (result !== "ok") throw new Error("track trả về " + result);
-            trackingStarted = true;
-            updatePresence();
-            confirmationTimer = global.setTimeout(() => {
-              if (publicMetricChannel !== channel || presenceConfirmed) return;
-              emitPublicMetrics({ online: null, online_guests: null, online_members: null });
-              schedulePublicPresenceRetry("không nhận được Presence sync");
-            }, 5000);
-          } catch (err) {
-            emitPublicMetrics({ online: null, online_guests: null, online_members: null });
-            schedulePublicPresenceRetry(err && err.message);
-          }
-          return;
-        }
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
-          publicMetricStarting = false;
-          emitPublicMetrics({ online: null, online_guests: null, online_members: null });
-          schedulePublicPresenceRetry(status);
-        }
-      });
+    if (!sb || publicPresenceInFlight || publicPresenceTimer) return;
+    schedulePublicPresence(0);
   }
 
   function restartPublicPresenceForIdentityChange() {
-    const nextIdentity = publicPresenceDescriptor().key;
-    if (publicPresenceIdentity === nextIdentity && publicMetricChannel) return;
-    publicMetricRetryAttempt = 0;
-    stopPublicPresence({ untrack: true });
+    publicPresenceFailures = 0;
+    stopPublicPresence();
     startPublicPresence();
   }
 

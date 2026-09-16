@@ -189,6 +189,7 @@
     if (parts[0] === "quen-mat-khau") return { name: "forgot", q };
     if (parts[0] === "tai-khoan") return { name: "account", q };
     if (parts[0] === "thong-bao") return { name: "notifs", q };
+    if (parts[0] === "hop-thu") return { name: "mailbox", q };
     if (parts[0] === "admin") return { name: "admin", parts, q };
     if (parts[0] === "truyen" && parts[1] && /^chuong-/.test(parts[2] || ""))
       return { name: "read", slug: parts[1], number: Number(String(parts[2]).replace("chuong-", "")), q };
@@ -447,6 +448,7 @@
       <a href="#/kham-pha">Khám phá</a>
       <a href="#/tu-truyen">Tủ truyện</a>
       ${admin}
+      ${u ? `<a href="#/hop-thu">Hộp thư</a>` : ""}
       ${u ? `<a href="#/tai-khoan">Tài khoản</a>` : `<a href="#/dang-nhap">Đăng nhập</a>`}
     </div>`;
   }
@@ -829,6 +831,10 @@
     if ($("#sigJoin")) $("#sigJoin").onclick = open;
     bindSignalActs();
     const openInbox = (type) => {
+      if (type === "message" && VCBG.currentUser()) {
+        go("/hop-thu");
+        return;
+      }
       const title = type === "report" ? "Báo lỗi nội dung" : "Gửi lời nhắn";
       const host = document.createElement("div");
       host.innerHTML = `<div class="drawer-bg" id="ibg"></div>
@@ -2378,6 +2384,7 @@
       `<main class="wrap" style="max-width:32rem;padding:1.4rem 1rem">
         <h1 class="hero-title" style="font-size:1.8rem">${esc(u.profile.display_name)}</h1>
         <p>${esc(u.email)} · ${VCBG.isAdmin() ? "Quản trị viên" : "Người đọc"}</p>
+        <p><a class="btn btn-ghost" href="${VCBG.isAdmin() ? "#/admin/hop-thu" : "#/hop-thu"}">✉ Mở hộp thư</a></p>
         <form id="pForm">
           <div class="field"><label>Tên hiển thị</label><input name="display_name" value="${esc(u.profile.display_name)}"></div>
           <div class="field"><label>Giới thiệu</label><textarea name="bio">${esc(u.profile.bio || "")}</textarea></div>
@@ -2415,6 +2422,20 @@
       `<main class="wrap vc-notification-page">
         <section id="vcNotificationCenter" aria-live="polite">
           <div class="vc-notif-empty"><span>◇</span><b>Đang tải thông báo…</b></div>
+        </section>
+      </main>` +
+      footer();
+    bindChrome();
+  }
+
+  function pageMailbox() {
+    if (!needUser()) return;
+    setMeta("Hộp thư — ViCamBachGiai", "Trao đổi riêng giữa thành viên và quản trị viên.");
+    app().innerHTML =
+      header() +
+      `<main class="wrap vc-mailbox-page">
+        <section id="vcMailbox" aria-live="polite">
+          <div class="vc-notif-empty"><span>✉</span><b>Đang mở hộp thư…</b></div>
         </section>
       </main>` +
       footer();
@@ -2681,18 +2702,11 @@
         </form>`;
     } else if (sub === "hop-thu") {
       const box = VCBG.adminInbox();
-      body = box.length
-        ? box
-            .map(
-              (m) => `<article class="comment">
-              <b>${esc(m.type === "report" ? "Báo lỗi" : "Lời nhắn")}</b> · ${esc(m.name)} · ${esc(m.email)}
-              ${m.story ? `<p class="sub">${esc(m.story)}</p>` : ""}
-              <p>${esc(m.body)}</p>
-              <small>${fmtDate(m.at)}</small>
-            </article>`
-            )
-            .join("")
-        : `<div class="empty">Hộp thư trống.</div>`;
+      const legacy = box.length ? `<section class="section"><h2>Lời nhắn và báo lỗi cũ</h2>${box.map((m) => `<article class="comment">
+        <b>${esc(m.type === "report" ? "Báo lỗi" : "Lời nhắn")}</b> · ${esc(m.name)} · ${esc(m.email)}
+        ${m.story ? `<p class="sub">${esc(m.story)}</p>` : ""}<p>${esc(m.body)}</p><small>${fmtDate(m.at)}</small>
+      </article>`).join("")}</section>` : "";
+      body = `<section id="vcAdminMailbox" aria-live="polite"><div class="vc-notif-empty"><span>✉</span><b>Đang mở hộp thư…</b></div></section>${legacy}`;
     } else if (sub === "van-hanh") {
       const st = VCBG.settings();
       const effective = effectiveSiteMode(st);
@@ -3486,6 +3500,7 @@
       else if (route.name === "library") pageLibrary();
       else if (route.name === "account") pageAccount();
       else if (route.name === "notifs") pageNotifs();
+      else if (route.name === "mailbox") pageMailbox();
       else if (route.name === "admin") await pageAdmin(route);
       else pageHome();
     } catch (err) {

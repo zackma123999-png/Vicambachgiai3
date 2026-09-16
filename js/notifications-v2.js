@@ -125,9 +125,12 @@
 
   function itemHtml(n, compact) {
     const cls = "vc-notif-card vc-kind-" + kind(n.notification_type) + (!n.read ? " is-unread" : "") + (compact ? " is-compact" : "");
+    const targetHref = n.conversation_id
+      ? (window.VCBG && VCBG.isAdmin && VCBG.isAdmin() ? "#/admin/hop-thu?thread=" : "#/hop-thu?thread=") + n.conversation_id
+      : (n.notification_type === "manual" && (!n.href || n.href === "#/") ? "#/hop-thu" : (n.href || "#/thong-bao"));
     return '<article class="' + cls + '" data-notif-id="' + esc(n.id) + '">' +
       '<span class="vc-notif-icon" aria-hidden="true">' + esc(icon(n.notification_type)) + '</span>' +
-      '<a class="vc-notif-copy" href="' + esc(n.href || "#/") + '" data-notif-open="' + esc(n.id) + '">' +
+      '<a class="vc-notif-copy" href="' + esc(targetHref) + '" data-notif-open="' + esc(n.id) + '">' +
         '<span class="vc-notif-line"><b>' + esc(n.title || "Thông báo") + '</b>' + (!n.read ? '<i class="vc-notif-new">Mới</i>' : "") + '</span>' +
         '<p>' + esc(n.body || "") + '</p>' +
         '<time datetime="' + esc(n.created_at || "") + '">' + esc(relative(n.created_at)) + '</time>' +
@@ -319,11 +322,11 @@
     const users = VCBG.adminUsers ? VCBG.adminUsers() : [];
     const stories = VCBG.adminListStories ? VCBG.adminListStories() : [];
     host.innerHTML = '<section class="vc-admin-notification" id="vcAdminNotif"><h1>Gửi thông báo</h1><p class="sub">Gửi thông báo thủ công đến tất cả thành viên, một thành viên hoặc độc giả theo dõi một truyện.</p><form>' +
-      '<div class="field"><label>Người nhận</label><select name="audience"><option value="all">Tất cả thành viên và Admin</option><option value="user">Một thành viên</option><option value="story">Người theo dõi một truyện</option></select></div>' +
-      '<div class="field vc-target-user" hidden><label>Thành viên</label><select name="user_id">' + users.map((u) => '<option value="' + esc(u.id) + '">' + esc(u.profile.display_name) + ' · ' + esc(u.email) + '</option>').join("") + '</select></div>' +
+      '<div class="field"><label>Người nhận</label><select name="audience"><option value="all">Tất cả thành viên</option><option value="user">Một thành viên</option><option value="story">Người theo dõi một truyện</option></select></div>' +
+      '<div class="field vc-target-user" hidden><label>Thành viên</label><select name="user_id">' + users.filter((u) => u.role !== "admin").map((u) => '<option value="' + esc(u.id) + '">' + esc(u.profile.display_name) + ' · ' + esc(u.email) + '</option>').join("") + '</select></div>' +
       '<div class="field vc-target-story" hidden><label>Truyện</label><select name="story_id">' + stories.map((s) => '<option value="' + esc(s.id) + '">' + esc(s.title) + '</option>').join("") + '</select></div>' +
       '<div class="field"><label>Tiêu đề</label><input name="title" maxlength="100" required></div><div class="field"><label>Nội dung</label><textarea name="body" maxlength="500" required></textarea></div>' +
-      '<div class="field"><label>Đường dẫn khi bấm</label><input name="href" placeholder="#/truyen/..."></div><button class="btn btn-primary" type="submit">Gửi thông báo</button></form></section>';
+      '<p class="sub">Thông báo sẽ mở thành một cuộc trò chuyện riêng để thành viên có thể trả lời.</p><button class="btn btn-primary" type="submit">Gửi và mở hội thoại</button></form></section>';
     const form = $("form", host), audience = form.audience;
     const toggle = () => { $(".vc-target-user", form).hidden = audience.value !== "user"; $(".vc-target-story", form).hidden = audience.value !== "story"; };
     audience.onchange = toggle; toggle();
@@ -338,17 +341,22 @@
           const q = await client().from("follows").select("user_id").eq("story_id", fd.get("story_id"));
           if (q.error) throw q.error;
           ids = (q.data || []).map((x) => x.user_id);
-        } else ids = users.filter((u) => u.status === "active").map((u) => u.id);
+        } else ids = users.filter((u) => u.status === "active" && u.role !== "admin").map((u) => u.id);
         ids = Array.from(new Set(ids.filter(Boolean)));
         if (!ids.length) throw new Error("Không có thành viên phù hợp.");
-        const rows = ids.map((user_id) => ({
-          id: crypto.randomUUID(), user_id, notification_type: "manual",
-          title: String(fd.get("title") || "").trim(), body: String(fd.get("body") || "").trim(),
-          href: String(fd.get("href") || "#/").trim() || "#/", read: false
-        }));
-        const out = await client().from("notifications").insert(rows);
-        if (out.error) throw out.error;
-        if (window.toast) toast("Đã gửi đến " + rows.length + " tài khoản.");
+        const title = String(fd.get("title") || "").trim();
+        const body = String(fd.get("body") || "").trim();
+        const session = await client().auth.getSession();
+        const adminId = session.data && session.data.session && session.data.session.user.id;
+        if (!adminId) throw new Error("Phiên đăng nhập đã hết hạn.");
+        const created = await client().from("conversation_threads")
+          .insert(ids.map((member_id) => ({ member_id, created_by: adminId, subject: title })))
+          .select("id,member_id");
+        if (created.error) throw created.error;
+        const messages = (created.data || []).map((thread) => ({ thread_id: thread.id, sender_id: adminId, body }));
+        const sent = await client().from("conversation_messages").insert(messages);
+        if (sent.error) throw sent.error;
+        if (window.toast) toast("Đã gửi đến " + messages.length + " tài khoản.");
         form.reset(); toggle();
       } catch (err) {
         if (window.toast) toast(err.message || "Không gửi được thông báo.");

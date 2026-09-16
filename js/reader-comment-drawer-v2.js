@@ -5,6 +5,8 @@
   ];
   const PAGE_SIZE = 20;
   let drawerView = { key:'', sort:'latest', visible:PAGE_SIZE, quoteOpen:false, expandedReplies:new Set() };
+  let linkedCommentHandled = '';
+  let linkedCommentTimer = 0;
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = (s) => String(s == null ? '' : s)
@@ -170,6 +172,12 @@
     const state = await reactionState(list.map(c => c.id));
     const count = list.length + list.reduce((n,c)=>n+(c.replies||[]).length,0);
     const sorted = sortComments(list,state,view.sort);
+    const targetCommentId = options && options.targetCommentId ? String(options.targetCommentId) : '';
+    if (targetCommentId) {
+      const targetIndex = sorted.findIndex(c => String(c.id) === targetCommentId);
+      if (targetIndex >= 0) view.visible = Math.max(view.visible, targetIndex + 1);
+      view.expandedReplies.add(targetCommentId);
+    }
     const visible = sorted.slice(0,view.visible);
     syncBubbleCount(paraKey, count);
     host.innerHTML = `<div class="vc-comment-backdrop" data-vc-close></div>
@@ -219,6 +227,15 @@
       if(options && Number.isFinite(options.scrollTop)) requestAnimationFrame(()=>{threadList.scrollTop=options.scrollTop;});
       threadList.addEventListener('scroll',()=>{if(threadList.scrollHeight-threadList.scrollTop-threadList.clientHeight<180) loadMore();},{passive:true});
     }
+    if (targetCommentId) {
+      requestAnimationFrame(() => {
+        const target = $(`.vc-comment[data-comment-id="${CSS.escape(targetCommentId)}"]`, host);
+        if (!target) return;
+        target.classList.add('is-notification-target');
+        target.scrollIntoView({ behavior:'smooth', block:'center' });
+        setTimeout(() => target.classList.remove('is-notification-target'), 3200);
+      });
+    }
 
     $$('.vc-react-open',host).forEach(b => b.onclick = () => {
       const pop = $(`.vc-reaction-pop[data-pop="${b.dataset.cid}"]`,host);
@@ -256,6 +273,31 @@
     clearTimeout(bubbleTimer);
     bubbleTimer=setTimeout(()=>p.classList.remove('is-comment-target'),2200);
   }
+  function tryOpenLinkedComment() {
+    clearTimeout(linkedCommentTimer);
+    linkedCommentTimer = setTimeout(() => {
+      const raw = (location.hash || '').replace(/^#/, '');
+      const query = raw.split('?')[1] || '';
+      const commentId = new URLSearchParams(query).get('comment') || '';
+      if (!commentId) {
+        linkedCommentHandled = '';
+        return;
+      }
+      const key = raw.split('?')[0] + ':' + commentId;
+      if (linkedCommentHandled === key) return;
+      const ctx = readerContext();
+      if (!ctx) return;
+      const exists = (VCBG.listComments(ctx.ch.id) || []).some(c => String(c.id) === String(commentId));
+      if (!exists) return;
+      linkedCommentHandled = key;
+      openDrawer(ctx, '', '', { targetCommentId:commentId });
+    }, 80);
+  }
+  window.addEventListener('hashchange', tryOpenLinkedComment);
+  window.addEventListener('DOMContentLoaded', tryOpenLinkedComment, { once:true });
+  const appRoot = document.getElementById('app');
+  if (appRoot) new MutationObserver(tryOpenLinkedComment).observe(appRoot, { childList:true, subtree:true });
+  tryOpenLinkedComment();
   document.addEventListener('click', function(e){
     const ctx = readerContext(); if (!ctx) return;
     const bubble = e.target.closest && e.target.closest('.p-bubble');

@@ -420,8 +420,10 @@
     const modeBanner = mode === "readonly" ? `<div class="site-readonly-banner" role="status">Website đang ở chế độ chỉ đọc — bạn vẫn có thể đọc truyện, nhưng các thao tác gửi dữ liệu đang tạm dừng.</div>` : "";
     const unread = u ? VCBG.unreadCount() : 0;
     const admin = u && VCBG.isAdmin() ? `<a href="#/admin">Quản trị</a>` : "";
+    const mailboxHref = u && VCBG.isAdmin() ? "#/admin/hop-thu" : "#/hop-thu";
     const acc = u
       ? `<a class="icon-btn" href="#/thong-bao" aria-label="Thông báo">${unread ? "●" : "○"}</a>
+         <a class="icon-btn vc-mailbox-button" href="${mailboxHref}" aria-label="Hộp thư" title="Hộp thư"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg></a>
          <a class="avatar-chip" href="#/tai-khoan" title="${esc(u.profile.display_name)}">${esc(u.profile.avatar)}</a>`
       : `<a class="btn btn-login" href="#/dang-nhap">Đăng nhập</a>`;
     return `${modeBanner}<header class="site-header">

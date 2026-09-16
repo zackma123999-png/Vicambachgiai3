@@ -111,6 +111,12 @@
     if (a.dataset.vcBound) return;
     a.dataset.vcBound = "1";
     a.addEventListener("click", function (event) {
+      if (/^#\/thong-bao(?:\?|$)/.test(location.hash)) {
+        event.preventDefault();
+        event.stopPropagation();
+        closePopover();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       togglePopover(a);
@@ -148,8 +154,9 @@
     pop.setAttribute("role", "dialog");
     pop.setAttribute("aria-label", "Thông báo gần đây");
     const recent = items.slice(0, 5);
-    pop.innerHTML = '<header><div><small>TRUNG TÂM TÍN HIỆU</small><h3>Thông báo</h3></div>' +
-      (unreadCount() ? '<button type="button" data-notif-read-all>Đánh dấu đã đọc</button>' : "") + '</header>' +
+    pop.innerHTML = '<header><div><small>TRUNG TÂM TÍN HIỆU</small><h3>Thông báo</h3></div><div class="vc-notif-pop-actions">' +
+      (unreadCount() ? '<button type="button" data-notif-read-all>Đánh dấu đã đọc</button>' : "") +
+      '<button type="button" class="vc-notif-pop-close" data-notif-close aria-label="Đóng thông báo">×</button></div></header>' +
       '<div class="vc-notif-pop-list">' + (recent.length ? recent.map((n) => itemHtml(n, true)).join("") : '<div class="vc-notif-empty"><span>◇</span><b>Chưa có thông báo</b><p>Các cập nhật mới sẽ xuất hiện tại đây.</p></div>') + '</div>' +
       '<a class="vc-notif-view-all" href="#/thong-bao">Xem tất cả thông báo <span>→</span></a>';
     document.body.appendChild(pop);
@@ -236,9 +243,9 @@
 
     try {
       const hadItems = items.length > 0;
-      const out = await client().from("notifications").delete().eq("user_id", userId).select("id");
+      const out = await client().from("notifications").delete({ count: "exact" }).eq("user_id", userId);
       if (out.error) throw out.error;
-      if (hadItems && (!out.data || !out.data.length)) throw new Error("No notifications were deleted");
+      if (hadItems && Number(out.count) === 0) throw new Error("No notifications were deleted");
       items = [];
       closePopover(); renderBell(); renderCenter();
       showToast("Đã xóa tất cả thông báo.");
@@ -258,6 +265,8 @@
     $$('[data-notif-delete]', root).forEach((b) => b.addEventListener("click", () => removeOne(b.dataset.notifDelete)));
     $$('[data-notif-read-all]', root).forEach((b) => b.addEventListener("click", markAll));
     $$('[data-notif-clear]', root).forEach((b) => b.addEventListener("click", clearAll));
+    $$('[data-notif-close]', root).forEach((b) => b.addEventListener("click", closePopover));
+    $$('.vc-notif-view-all', root).forEach((a) => a.addEventListener("click", closePopover));
     $$('[data-notif-filter]', root).forEach((b) => b.addEventListener("click", () => { filter = b.dataset.notifFilter; renderCenter(); }));
   }
 

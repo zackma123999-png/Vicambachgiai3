@@ -6,6 +6,10 @@
   let realtimeChannel = null;
   let busy = false;
   let filter = "all";
+  let realtimeRefreshTimer = 0;
+  let realtimePaused = false;
+  let clearConfirmUntil = 0;
+  let clearConfirmTimer = 0;
 
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
@@ -57,6 +61,37 @@
 
   function unreadCount() {
     return items.filter((n) => !n.read).length;
+  }
+
+  function showToast(message) {
+    let wrap = $("#toasts");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = "toasts";
+      wrap.className = "toast-wrap";
+      document.body.appendChild(wrap);
+    }
+    const el = document.createElement("div");
+    el.className = "toast";
+    el.setAttribute("role", "status");
+    el.textContent = message;
+    wrap.appendChild(el);
+    setTimeout(() => el.remove(), 3200);
+  }
+
+  function scheduleRefresh() {
+    if (realtimePaused) return;
+    clearTimeout(realtimeRefreshTimer);
+    realtimeRefreshTimer = setTimeout(() => refresh(), 180);
+  }
+
+  function resetClearConfirmation() {
+    clearConfirmUntil = 0;
+    clearTimeout(clearConfirmTimer);
+    $$('[data-notif-clear]').forEach((button) => {
+      button.disabled = false;
+      button.textContent = "Xóa tất cả";
+    });
   }
 
   function bellSvg() {
@@ -170,14 +205,49 @@
     if (!out.error) {
       items = items.filter((n) => n.id !== id);
       closePopover(); renderBell(); renderCenter();
+    } else {
+      showToast("Không thể xóa thông báo. Vui lòng thử lại.");
     }
   }
 
   async function clearAll() {
-    if (!userId || !confirm("Xóa toàn bộ thông báo?")) return;
-    const out = await client().from("notifications").delete().eq("user_id", userId);
-    if (!out.error) {
-      items = []; closePopover(); renderBell(); renderCenter();
+    if (!userId || busy) return;
+    if (Date.now() > clearConfirmUntil) {
+      clearConfirmUntil = Date.now() + 4000;
+      $$('[data-notif-clear]').forEach((button) => {
+        button.textContent = "Chạm lần nữa để xác nhận";
+      });
+      clearConfirmTimer = setTimeout(resetClearConfirmation, 4000);
+      return;
+    }
+
+    clearTimeout(clearConfirmTimer);
+    clearConfirmUntil = 0;
+    busy = true;
+    realtimePaused = true;
+    clearTimeout(realtimeRefreshTimer);
+    $$('[data-notif-clear]').forEach((button) => {
+      button.disabled = true;
+      button.textContent = "Đang xóa…";
+    });
+    unsubscribe();
+
+    try {
+      const hadItems = items.length > 0;
+      const out = await client().from("notifications").delete().eq("user_id", userId).select("id");
+      if (out.error) throw out.error;
+      if (hadItems && (!out.data || !out.data.length)) throw new Error("No notifications were deleted");
+      items = [];
+      closePopover(); renderBell(); renderCenter();
+      showToast("Đã xóa tất cả thông báo.");
+    } catch (error) {
+      console.error("Could not clear notifications", error);
+      showToast("Không thể xóa thông báo. Vui lòng thử lại.");
+      await refresh();
+    } finally {
+      busy = false;
+      realtimePaused = false;
+      if (userId) subscribe();
     }
   }
 
@@ -208,6 +278,7 @@
   }
 
   function unsubscribe() {
+    clearTimeout(realtimeRefreshTimer);
     if (realtimeChannel && sb) sb.removeChannel(realtimeChannel);
     realtimeChannel = null;
   }
@@ -216,7 +287,7 @@
     unsubscribe();
     if (!userId || !client()) return;
     realtimeChannel = client().channel("vc-notifications-" + userId)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: "user_id=eq." + userId }, () => refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: "user_id=eq." + userId }, scheduleRefresh)
       .subscribe();
   }
 

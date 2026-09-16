@@ -4,7 +4,8 @@
   let userId = "";
   let items = [];
   let realtimeChannel = null;
-  let busy = false;
+  let deletingAll = false;
+  let renderScheduled = false;
   let filter = "all";
   let realtimeRefreshTimer = 0;
   let realtimePaused = false;
@@ -168,6 +169,7 @@
   function renderCenter() {
     const host = $("#vcNotificationCenter");
     if (!host) return;
+    host.dataset.vcNotifReady = "1";
     const shown = filteredItems();
     host.innerHTML = '<section class="vc-notif-hero">' +
       '<div class="vc-notif-hero-icon">' + bellSvg() + (unreadCount() ? '<span>' + unreadCount() + '</span>' : "") + '</div>' +
@@ -211,7 +213,7 @@
   }
 
   async function clearAll() {
-    if (!userId || busy) return;
+    if (!userId || deletingAll) return;
     if (Date.now() > clearConfirmUntil) {
       clearConfirmUntil = Date.now() + 4000;
       $$('[data-notif-clear]').forEach((button) => {
@@ -223,7 +225,7 @@
 
     clearTimeout(clearConfirmTimer);
     clearConfirmUntil = 0;
-    busy = true;
+    deletingAll = true;
     realtimePaused = true;
     clearTimeout(realtimeRefreshTimer);
     $$('[data-notif-clear]').forEach((button) => {
@@ -245,7 +247,7 @@
       showToast("Không thể xóa thông báo. Vui lòng thử lại.");
       await refresh();
     } finally {
-      busy = false;
+      deletingAll = false;
       realtimePaused = false;
       if (userId) subscribe();
     }
@@ -366,12 +368,21 @@
   }
 
   function run() {
-    if (busy) return;
-    busy = true;
+    if (renderScheduled) return;
+    renderScheduled = true;
     requestAnimationFrame(() => {
-      busy = false;
+      renderScheduled = false;
       renderBell(); renderCenter(); adminNav(); adminPage(); bindReportButtons();
     });
+  }
+
+  function needsRun() {
+    if ($('a[href="#/thong-bao"]:not([data-vc-bound])')) return true;
+    const center = $("#vcNotificationCenter");
+    if (center && !center.dataset.vcNotifReady) return true;
+    if ($(".admin-nav") && !$('.admin-nav [href="#/admin/thong-bao"]')) return true;
+    if (/^#\/admin\/thong-bao(?:\?|$)/.test(location.hash) && !$("#vcAdminNotif")) return true;
+    return !!$('[data-report-comment]:not([data-report-bound])');
   }
 
   document.addEventListener("click", (e) => {
@@ -379,7 +390,7 @@
   });
   window.addEventListener("resize", closePopover);
   window.addEventListener("hashchange", () => { closePopover(); setTimeout(run, 40); });
-  new MutationObserver(run).observe(document.documentElement, { childList: true, subtree: true });
+  new MutationObserver(() => { if (needsRun()) run(); }).observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("load", () => { run(); refresh(); });
   setTimeout(() => { run(); refresh(); }, 100);
   setInterval(refresh, 60000);

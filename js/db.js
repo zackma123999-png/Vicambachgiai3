@@ -1314,6 +1314,9 @@
       if (typeof listener !== "function") return () => {};
       communityListeners.add(listener);
       startCommunityRealtime();
+      /* Refresh once on subscription so cached anonymous placeholders are
+         replaced as soon as the public profile projection is available. */
+      scheduleCommunityRefresh();
       return () => {
         communityListeners.delete(listener);
         if (!communityListeners.size && communityChannel) {

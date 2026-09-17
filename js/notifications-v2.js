@@ -104,6 +104,7 @@
     if (!a) return;
     const count = unreadCount();
     a.classList.add("vc-notification-bell");
+    a.classList.toggle("has-unread", count > 0);
     a.setAttribute("aria-label", count ? count + " thông báo chưa đọc" : "Thông báo");
     a.setAttribute("aria-haspopup", "dialog");
     a.setAttribute("aria-expanded", $("#vcNotifPopover") ? "true" : "false");

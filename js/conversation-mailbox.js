@@ -190,7 +190,7 @@
         '<div class="vc-mail-layout ' + (showChatOnMobile ? 'is-chat-view' : 'is-list-view') + '">' +
           '<aside class="vc-mail-threads-pane"><div class="vc-mail-tools"><label class="vc-mail-search"><span>⌕</span><input type="search" data-mail-search placeholder="Tìm người hoặc nội dung" aria-label="Tìm cuộc trò chuyện"></label>' +
           '<div class="vc-mail-filters"><button type="button" class="on" data-mail-filter="all">Tất cả</button><button type="button" data-mail-filter="unread">Chưa đọc</button><button type="button" data-mail-filter="answered">Đã trả lời</button></div></div>' +
-          '<div class="vc-mail-threads">' + (threads.length ? threads.map((thread) => threadCard(thread, messages, unread, adminView, activeId, me)).join('') : '<div class="vc-mail-empty">Chưa có cuộc trò chuyện.</div>') +
+          '<div class="vc-mail-threads">' + (threads.length ? threads.map((thread) => threadCard(thread, messages, unread, adminView, (showChatOnMobile || wideScreen) ? activeId : "", me)).join('') : '<div class="vc-mail-empty">Chưa có cuộc trò chuyện.</div>') +
           '<div class="vc-mail-empty" data-mail-filter-empty hidden>Không tìm thấy cuộc trò chuyện phù hợp.</div></div></aside>' +
           '<section class="vc-mail-conversation">' + (active ?
             '<header><a class="vc-mail-back" href="' + baseRoute(adminView) + '" aria-label="Quay lại hộp thư">‹</a>' + avatarHtml(activeProfile, !adminView) + '<div><b>' + esc(peerName) + '</b><span>' + esc(active.subject) + '</span></div></header>' +

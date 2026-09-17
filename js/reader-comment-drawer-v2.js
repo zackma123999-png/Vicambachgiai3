@@ -287,10 +287,18 @@
       if (linkedCommentHandled === key) return;
       const ctx = readerContext();
       if (!ctx) return;
-      const exists = (VCBG.listComments(ctx.ch.id) || []).some(c => String(c.id) === String(commentId));
-      if (!exists) return;
+      const linkedComment = (VCBG.listComments(ctx.ch.id) || []).find(c => String(c.id) === String(commentId));
+      if (!linkedComment) return;
+      const requestedParaKey = new URLSearchParams(query).get('para') || '';
+      const paraKey = requestedParaKey || String(linkedComment.para_key || '');
+      const paragraph = paraKey ? $(`.reader-page .r-p[data-pk="${CSS.escape(paraKey)}"]`) : null;
+      const quote = paragraph ? paragraphQuote(paragraph) : String(linkedComment.quote || '');
       linkedCommentHandled = key;
-      openDrawer(ctx, '', '', { targetCommentId:commentId });
+      if (paragraph) {
+        showBubble(paragraph);
+        paragraph.scrollIntoView({ behavior:'smooth', block:'center' });
+      }
+      openDrawer(ctx, quote, paraKey, { targetCommentId:commentId });
     }, 80);
   }
   window.addEventListener('hashchange', tryOpenLinkedComment);

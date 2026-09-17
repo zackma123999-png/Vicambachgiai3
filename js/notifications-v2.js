@@ -146,6 +146,39 @@
     if (bell) bell.setAttribute("aria-expanded", "false");
   }
 
+  function closeDetail() {
+    const detail = $("#vcNotifDetail");
+    if (detail) detail.remove();
+  }
+
+  function openDetail(notification) {
+    if (!notification) return;
+    closePopover();
+    closeDetail();
+    const targetHref = notification.conversation_id
+      ? (window.VCBG && VCBG.isAdmin && VCBG.isAdmin() ? "#/admin/hop-thu?thread=" : "#/hop-thu?thread=") + notification.conversation_id
+      : "";
+    const contentHref = notification.href && notification.href !== "#/" ? notification.href : "";
+    const canReply = notification.notification_type === "manual" || !!notification.conversation_id;
+    const modal = document.createElement("div");
+    modal.id = "vcNotifDetail";
+    modal.className = "vc-notif-detail-bg";
+    modal.innerHTML = '<section class="vc-notif-detail" role="dialog" aria-modal="true" aria-labelledby="vcNotifDetailTitle">' +
+      '<header><span class="vc-notif-icon vc-kind-' + kind(notification.notification_type) + '">' + esc(icon(notification.notification_type)) + '</span>' +
+      '<button type="button" data-notif-detail-close aria-label="Đóng">×</button></header>' +
+      '<small>THÔNG BÁO</small><h2 id="vcNotifDetailTitle">' + esc(notification.title || "Thông báo") + '</h2>' +
+      '<div class="vc-notif-detail-body">' + esc(notification.body || "Không có nội dung.") + '</div>' +
+      '<time datetime="' + esc(notification.created_at || "") + '">' + esc(relative(notification.created_at)) + '</time>' +
+      '<footer>' +
+        (contentHref ? '<a class="btn btn-ghost" href="' + esc(contentHref) + '" data-notif-detail-link>Đi đến nội dung</a>' : '') +
+        (canReply ? '<a class="btn btn-primary" href="' + esc(targetHref || "#/hop-thu") + '" data-notif-detail-link>Trả lời</a>' : '') +
+      '</footer></section>';
+    document.body.appendChild(modal);
+    $('[data-notif-detail-close]', modal).onclick = closeDetail;
+    modal.addEventListener("click", (event) => { if (event.target === modal) closeDetail(); });
+    $$('[data-notif-detail-link]', modal).forEach((link) => link.addEventListener("click", closeDetail));
+  }
+
   function togglePopover(anchor) {
     if ($("#vcNotifPopover")) {
       closePopover();
@@ -264,7 +297,13 @@
   }
 
   function bindActions(root) {
-    $$('[data-notif-open]', root).forEach((a) => a.addEventListener("click", () => markOne(a.dataset.notifOpen)));
+    $$('[data-notif-open]', root).forEach((a) => a.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const notification = items.find((n) => String(n.id) === String(a.dataset.notifOpen));
+      markOne(a.dataset.notifOpen);
+      openDetail(notification);
+    }));
     $$('[data-notif-delete]', root).forEach((b) => b.addEventListener("click", () => removeOne(b.dataset.notifDelete)));
     $$('[data-notif-read-all]', root).forEach((b) => b.addEventListener("click", markAll));
     $$('[data-notif-clear]', root).forEach((b) => b.addEventListener("click", clearAll));
@@ -406,7 +445,7 @@
     if (!e.target.closest("#vcNotifPopover") && !e.target.closest(".vc-notification-bell")) closePopover();
   });
   window.addEventListener("resize", closePopover);
-  window.addEventListener("hashchange", () => { closePopover(); setTimeout(run, 40); });
+  window.addEventListener("hashchange", () => { closePopover(); closeDetail(); setTimeout(run, 40); });
   new MutationObserver(() => { if (needsRun()) run(); }).observe(document.documentElement, { childList: true, subtree: true });
   window.addEventListener("load", () => { run(); refresh(); });
   setTimeout(() => { run(); refresh(); }, 100);

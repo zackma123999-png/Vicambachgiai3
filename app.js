@@ -1025,7 +1025,7 @@
     });
   }
   function previewStation(stories) {
-    const list = (stories || []).slice(0, 8);
+    const list = (stories || []).filter(Boolean);
     if (!list.length) return "";
     const playableLead = list.find((story) => tiktokPostId(story.tiktok_intro_url));
     const lead = playableLead || list[0];
@@ -1042,7 +1042,7 @@
     return `<section class="wrap preview-station" id="tram-preview" aria-labelledby="previewStationTitle">
       <header class="preview-station-head">
         <span class="preview-station-signal" aria-hidden="true"><i></i><i></i><i></i></span>
-        <div><small>STORY TEASER</small><h2 id="previewStationTitle">TRẠM PREVIEW</h2><p>Những câu chuyện sắp được edit</p></div>
+        <div><small>STORY TEASER</small><h2 id="previewStationTitle">TRẠM PREVIEW</h2><p>Teaser TikTok phát ngay trong khung</p></div>
         <span class="preview-station-count">${list.length} tín hiệu</span>
       </header>
       <div class="preview-station-stage" data-preview-stage ${previewAttrs(lead)}>
@@ -1056,7 +1056,7 @@
           <span class="preview-station-now"><i aria-hidden="true"></i>${leadPost ? "Sẵn sàng phát" : "Đang chuẩn bị"}</span>
           <h3>${esc(lead.title)}</h3>
           <p class="preview-station-author">${esc(lead.author || "Chưa cập nhật tác giả")}</p>
-          <div class="preview-station-pills"><span>Sắp edit</span><span>${esc(leadLabel)}</span></div>
+          <div class="preview-station-pills"><span>${esc(storyStatusLabel(lead))}</span><span>${esc(leadLabel)}</span></div>
           <p class="preview-station-teaser">${esc(leadTeaser || "Một câu chuyện mới đang được chuẩn bị tại ViCamBachGiai.")}</p>
         </div>
       </div>
@@ -1066,7 +1066,7 @@
           const label = ((story.genres || [])[0] || (story.tags || [])[0] || {}).name || "Truyện mới";
           return `<button class="preview-station-card${story.id === lead.id ? " is-active" : ""}${postId ? "" : " is-pending"}" type="button" ${previewAttrs(story)} aria-label="${postId ? "Phát teaser" : "Xem thông tin"} ${esc(story.title)}">
             <span class="preview-station-thumb">${story.cover ? `<img src="${esc(story.cover)}" alt="">` : `<b aria-hidden="true">V</b>`}<i aria-hidden="true">${postId ? "▶" : "…"}</i></span>
-            <span class="preview-station-card-copy"><small>${String(index + 1).padStart(2, "0")} · ${esc(label)}</small><b>${esc(story.title)}</b><em>${postId ? "Chạm để phát" : "Đang chuẩn bị"}</em></span>
+            <span class="preview-station-card-copy"><small>${String(index + 1).padStart(2, "0")} · ${esc(storyStatusLabel(story))}</small><b>${esc(story.title)}</b><em>${postId ? "Chạm để phát" : "Đang chuẩn bị"}</em></span>
           </button>`;
         }).join("")}
       </div>
@@ -1079,6 +1079,7 @@
     const updated = VCBG.listStories({ sort: "updated" }).filter((s) => !s.upcoming);
     const done = homePrioritySort(VCBG.listStories({ status: "completed" }).filter((s) => !s.upcoming));
     const soon = homePrioritySort(VCBG.listStories({ upcoming: true }));
+    const previewStories = homePrioritySort(VCBG.listStories({ sort: "updated" }).filter((story) => tiktokPostId(story.tiktok_intro_url)));
     const slideMap = new Map();
     featured.concat(ongoing, updated, done, soon).forEach((s) => {
       if (s && s.id && !slideMap.has(s.id)) slideMap.set(s.id, s);
@@ -1132,7 +1133,7 @@
         ${rail("Đã hoàn thành", done, "violet")}
         ${rail("Sắp ra mắt", soon, "blue")}
       </div>
-      ${previewStation(soon)}
+      ${previewStation(previewStories)}
       ${recommendationPanel()}
       ${homeLower()}
       ${resonancePanel()}` +
@@ -3098,7 +3099,7 @@
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
           <div class="field"><label>Video TikTok cho TRẠM PREVIEW</label>
             <input name="tiktok_intro_url" type="url" inputmode="url" value="${esc(s.tiktok_intro_url || "")}" placeholder="https://www.tiktok.com/@ten/video/1234567890123456789">
-            <p class="editor-hint">Với truyện ở trạng thái <b>Sắp ra mắt</b>, video sẽ xuất hiện trong TRẠM PREVIEW và phát ngay tại đó. Chấp nhận link TikTok công khai hoặc link chia sẻ rút gọn <b>vt.tiktok.com/…</b>.</p>
+            <p class="editor-hint">Mọi truyện đang hiển thị trên website có link TikTok hợp lệ sẽ xuất hiện trong TRẠM PREVIEW và phát ngay tại đó. Chấp nhận link TikTok công khai hoặc link chia sẻ rút gọn <b>vt.tiktok.com/…</b>.</p>
           </div>
           <div class="field"><label>Màu chủ đạo banner</label><input name="accent" value="${esc(s.accent || "#8a6a4a")}"></div>
           <div class="field"><label>Bìa</label><input type="file" id="coverFile" accept="image/*">

@@ -1989,7 +1989,7 @@
       const u = requireUser();
       body = String(body || "").trim();
       if (body.length < 1) throw new Error("Nội dung trống.");
-      if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("B���n bình luận quá nhanh.");
+      if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
       const parent = cache.comments.find((c) => c.id === commentId);
       if (!parent) throw new Error("Không tìm thấy bình luận.");
       const rec = { id: uid(), comment_id: commentId, user_id: u.id, body, status: "visible", created_at: now() };

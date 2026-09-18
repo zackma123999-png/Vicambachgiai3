@@ -1989,7 +1989,7 @@
       const u = requireUser();
       body = String(body || "").trim();
       if (body.length < 1) throw new Error("Nội dung trống.");
-      if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
+      if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("B���n bình luận quá nhanh.");
       const parent = cache.comments.find((c) => c.id === commentId);
       if (!parent) throw new Error("Không tìm thấy bình luận.");
       const rec = { id: uid(), comment_id: commentId, user_id: u.id, body, status: "visible", created_at: now() };
@@ -2736,39 +2736,6 @@
         if (error) throw error;
       });
       return this.pollState();
-    },
-
-    sendInbox({ type, body, name, email, story }) {
-      body = String(body || "").trim();
-      if (body.length < 4) throw new Error("Nội dung quá ngắn.");
-      const u = currentUser();
-      const rec = {
-        id: uid(),
-        type: type === "report" ? "report" : "message",
-        body,
-        name: String(name || (u && u.profile && u.profile.display_name) || "Khách").slice(0, 80),
-        email: String(email || (u && u.email) || "").slice(0, 120),
-        story: String(story || "").slice(0, 160),
-        user_id: u ? u.id : null,
-        read: false,
-        at: now(),
-      };
-      cache.inbox.unshift(rec);
-      cache.inbox = cache.inbox.slice(0, 300);
-      persist(async () => {
-        const { error } = await sb.from("inbox").insert({
-          id: rec.id,
-          type: rec.type,
-          body: rec.body,
-          name: rec.name,
-          email: rec.email,
-          story: rec.story,
-          user_id: rec.user_id,
-          read: rec.read,
-        });
-        if (error) throw error;
-      });
-      return { ok: true };
     },
 
     adminInbox() {

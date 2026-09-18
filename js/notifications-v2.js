@@ -520,22 +520,23 @@
     loadAdminAnnouncements(host);
   }
 
+  // Content reports continue as private two-way mailbox conversations.
   function bindReportButtons() {
     $$('[data-report-comment]:not([data-report-bound])').forEach((b) => {
       b.dataset.reportBound = "1";
       b.addEventListener("click", (event) => {
         event.preventDefault(); event.stopPropagation();
+        const source = location.hash.replace(/^#/, "") || "/";
+        const baseTarget = "/hop-thu?compose=report&source=" + encodeURIComponent(source);
         if (!window.VCBG || !VCBG.currentUser()) {
-          location.hash = "#/dang-nhap"; return;
+          if (window.VCBGGoToLogin) window.VCBGGoToLogin(baseTarget);
+          else location.hash = "#/dang-nhap";
+          return;
         }
         const reason = prompt("Lý do báo cáo bình luận:");
         if (!reason || !reason.trim()) return;
-        try {
-          VCBG.sendInbox({ type: "report", body: "Báo cáo " + b.dataset.reportComment + ": " + reason.trim(), story: b.dataset.storyTitle || "Bình luận" });
-          if (window.toast) toast("Đã gửi báo cáo đến quản trị viên.");
-        } catch (err) {
-          if (window.toast) toast(err.message || "Không gửi được báo cáo.");
-        }
+        const draft = "Báo cáo bình luận " + b.dataset.reportComment + " trong “" + (b.dataset.storyTitle || "Bình luận") + "”: " + reason.trim();
+        location.hash = "#" + baseTarget + "&draft=" + encodeURIComponent(draft);
       });
     });
   }

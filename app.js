@@ -2683,10 +2683,19 @@
         </form>`;
     } else if (sub === "hop-thu") {
       const box = VCBG.adminInbox();
+      const gmailReplyUrl = (message) => {
+        const recipient = String(message.email || "").trim();
+        const subject = "ViCamBachGiai phản hồi: " + (message.type === "report" ? "Báo lỗi nội dung" : "Lời nhắn");
+        const greeting = "Chào " + (String(message.name || "").trim() || "bạn") + ",";
+        const original = String(message.body || "").trim();
+        const replyBody = greeting + "\n\n\n\n---\nTin nhắn đã gửi tới ViCamBachGiai:\n" + original;
+        return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(recipient) +
+          "&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(replyBody);
+      };
       const legacy = box.length ? `<section class="section"><h2>Lời nhắn và báo lỗi cũ</h2><p class="sub">Đây là dữ liệu một chiều từng nhận từ khách chưa đăng nhập. Không thể trả lời trong website vì không có tài khoản người nhận.</p>${box.map((m) => `<article class="comment">
         <b>${esc(m.type === "report" ? "Báo lỗi" : "Lời nhắn")}</b> · ${esc(m.name)} · ${esc(m.email)}
         ${m.story ? `<p class="sub">${esc(m.story)}</p>` : ""}<p>${esc(m.body)}</p><small>${fmtDate(m.at)}</small>
-        ${m.email ? `<p><a class="btn btn-ghost" href="mailto:${encodeURIComponent(m.email)}">Trả lời qua email</a></p>` : ""}
+        ${m.email ? `<p><a class="btn btn-ghost" href="${esc(gmailReplyUrl(m))}" target="_blank" rel="noopener noreferrer">Trả lời bằng Gmail</a></p>` : ""}
       </article>`).join("")}</section>` : "";
       body = `<section id="vcAdminMailbox" aria-live="polite"><div class="vc-notif-empty"><span>✉</span><b>Đang mở hộp thư…</b></div></section>${legacy}`;
     } else if (sub === "van-hanh") {

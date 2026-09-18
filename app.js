@@ -831,36 +831,17 @@
     if ($("#sigJoin")) $("#sigJoin").onclick = open;
     bindSignalActs();
     const openInbox = (type) => {
-      if (type === "message" && VCBG.currentUser()) {
-        go("/hop-thu");
+      const mode = type === "report" ? "report" : "message";
+      const query = new URLSearchParams({ compose: mode });
+      const source = safeInternalPath(readLocationPath());
+      if (mode === "report" && source && source !== "/") query.set("source", source);
+      const target = "/hop-thu?" + query.toString();
+      if (!VCBG.currentUser()) {
+        toast("Vui lòng đăng nhập để gửi và nhận phản hồi trong hộp thư.");
+        goToLogin(target);
         return;
       }
-      const title = type === "report" ? "Báo lỗi nội dung" : "Gửi lời nhắn";
-      const host = document.createElement("div");
-      host.innerHTML = `<div class="drawer-bg" id="ibg"></div>
-        <aside class="drawer bottom" role="dialog"><div class="drawer-pad">
-          <h3>${title}</h3>
-          <form id="inForm">
-            <div class="field"><label>Tên</label><input name="name"></div>
-            <div class="field"><label>Email</label><input name="email" type="email"></div>
-            ${type === "report" ? `<div class="field"><label>Truyện / chương</label><input name="story"></div>` : ""}
-            <div class="field"><label>Nội dung</label><textarea name="body" required></textarea></div>
-            <button class="btn btn-cyan" type="submit">Gửi</button>
-          </form>
-        </div></aside>`;
-      document.body.appendChild(host);
-      $("#ibg").onclick = () => host.remove();
-      $("#inForm").onsubmit = (e) => {
-        e.preventDefault();
-        const fd = Object.fromEntries(new FormData(e.target));
-        try {
-          VCBG.sendInbox({ type, ...fd });
-          toast(type === "report" ? "Đã gửi báo lỗi." : "Đã gửi lời nhắn.");
-          host.remove();
-        } catch (err) {
-          toast(err.message);
-        }
-      };
+      go(target);
     };
     const bm = $("#btnMsg");
     const br = $("#btnReport");
@@ -2702,9 +2683,10 @@
         </form>`;
     } else if (sub === "hop-thu") {
       const box = VCBG.adminInbox();
-      const legacy = box.length ? `<section class="section"><h2>Lời nhắn và báo lỗi cũ</h2>${box.map((m) => `<article class="comment">
+      const legacy = box.length ? `<section class="section"><h2>Lời nhắn và báo lỗi cũ</h2><p class="sub">Đây là dữ liệu một chiều từng nhận từ khách chưa đăng nhập. Không thể trả lời trong website vì không có tài khoản người nhận.</p>${box.map((m) => `<article class="comment">
         <b>${esc(m.type === "report" ? "Báo lỗi" : "Lời nhắn")}</b> · ${esc(m.name)} · ${esc(m.email)}
         ${m.story ? `<p class="sub">${esc(m.story)}</p>` : ""}<p>${esc(m.body)}</p><small>${fmtDate(m.at)}</small>
+        ${m.email ? `<p><a class="btn btn-ghost" href="mailto:${encodeURIComponent(m.email)}">Trả lời qua email</a></p>` : ""}
       </article>`).join("")}</section>` : "";
       body = `<section id="vcAdminMailbox" aria-live="polite"><div class="vc-notif-empty"><span>✉</span><b>Đang mở hộp thư…</b></div></section>${legacy}`;
     } else if (sub === "van-hanh") {

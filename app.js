@@ -1024,6 +1024,55 @@
       return (b.updated_at || 0) - (a.updated_at || 0);
     });
   }
+  function previewStation(stories) {
+    const list = (stories || []).slice(0, 8);
+    if (!list.length) return "";
+    const playableLead = list.find((story) => tiktokPostId(story.tiktok_intro_url));
+    const lead = playableLead || list[0];
+    const ordered = [lead].concat(list.filter((story) => story.id !== lead.id));
+    const previewAttrs = (story) => {
+      const postId = tiktokPostId(story.tiktok_intro_url);
+      const teaser = String(story.synopsis || "").replace(/\s+/g, " ").trim().slice(0, 220);
+      const label = ((story.genres || [])[0] || (story.tags || [])[0] || {}).name || "Truyện mới";
+      return `data-preview-post="${esc(postId)}" data-preview-title="${esc(story.title)}" data-preview-author="${esc(story.author || "")}" data-preview-cover="${esc(story.cover || "")}" data-preview-label="${esc(label)}" data-preview-teaser="${esc(teaser)}"`;
+    };
+    const leadPost = tiktokPostId(lead.tiktok_intro_url);
+    const leadTeaser = String(lead.synopsis || "").replace(/\s+/g, " ").trim();
+    const leadLabel = ((lead.genres || [])[0] || (lead.tags || [])[0] || {}).name || "Truyện mới";
+    return `<section class="wrap preview-station" id="tram-preview" aria-labelledby="previewStationTitle">
+      <header class="preview-station-head">
+        <span class="preview-station-signal" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div><small>STORY TEASER</small><h2 id="previewStationTitle">TRẠM PREVIEW</h2><p>Những câu chuyện sắp được edit</p></div>
+        <span class="preview-station-count">${list.length} tín hiệu</span>
+      </header>
+      <div class="preview-station-stage" data-preview-stage ${previewAttrs(lead)}>
+        <div class="preview-station-media">
+          ${lead.cover ? `<img class="preview-station-backdrop" src="${esc(lead.cover)}" alt="" aria-hidden="true"><img class="preview-station-poster" src="${esc(lead.cover)}" alt="Bìa ${esc(lead.title)}">` : `<span class="preview-station-no-cover" aria-hidden="true">V</span>`}
+          ${leadPost
+            ? `<button class="preview-station-play" type="button" ${previewAttrs(lead)} aria-label="Phát teaser ${esc(lead.title)} ngay tại đây"><span aria-hidden="true">▶</span><small>Phát tại đây</small></button>`
+            : `<span class="preview-station-pending"><i aria-hidden="true"></i>Teaser đang chuẩn bị</span>`}
+        </div>
+        <div class="preview-station-copy">
+          <span class="preview-station-now"><i aria-hidden="true"></i>${leadPost ? "Sẵn sàng phát" : "Đang chuẩn bị"}</span>
+          <h3>${esc(lead.title)}</h3>
+          <p class="preview-station-author">${esc(lead.author || "Chưa cập nhật tác giả")}</p>
+          <div class="preview-station-pills"><span>Sắp edit</span><span>${esc(leadLabel)}</span></div>
+          <p class="preview-station-teaser">${esc(leadTeaser || "Một câu chuyện mới đang được chuẩn bị tại ViCamBachGiai.")}</p>
+        </div>
+      </div>
+      <div class="preview-station-rail" aria-label="Danh sách teaser">
+        ${ordered.map((story, index) => {
+          const postId = tiktokPostId(story.tiktok_intro_url);
+          const label = ((story.genres || [])[0] || (story.tags || [])[0] || {}).name || "Truyện mới";
+          return `<button class="preview-station-card${story.id === lead.id ? " is-active" : ""}${postId ? "" : " is-pending"}" type="button" ${previewAttrs(story)} aria-label="${postId ? "Phát teaser" : "Xem thông tin"} ${esc(story.title)}">
+            <span class="preview-station-thumb">${story.cover ? `<img src="${esc(story.cover)}" alt="">` : `<b aria-hidden="true">V</b>`}<i aria-hidden="true">${postId ? "▶" : "…"}</i></span>
+            <span class="preview-station-card-copy"><small>${String(index + 1).padStart(2, "0")} · ${esc(label)}</small><b>${esc(story.title)}</b><em>${postId ? "Chạm để phát" : "Đang chuẩn bị"}</em></span>
+          </button>`;
+        }).join("")}
+      </div>
+      <div class="preview-station-progress" aria-hidden="true"><i></i><span></span><span></span></div>
+    </section>`;
+  }
   function pageHome() {
     const featured = VCBG.listStories({ featured: true });
     const ongoing = homePrioritySort(VCBG.listStories({ status: "ongoing" }).filter((s) => !s.upcoming));
@@ -1083,6 +1132,7 @@
         ${rail("Đã hoàn thành", done, "violet")}
         ${rail("Sắp ra mắt", soon, "blue")}
       </div>
+      ${previewStation(soon)}
       ${recommendationPanel()}
       ${homeLower()}
       ${resonancePanel()}` +
@@ -3046,9 +3096,9 @@
             <p class="editor-hint">Số càng nhỏ càng đứng trước trong dãy thẻ của đúng trạng thái. Không ảnh hưởng banner hoặc Kim Bài Đề Cử.</p>
           </div>
           <label><input type="checkbox" name="featured" ${s.featured ? "checked" : ""}> Nổi bật (banner)</label>
-          <div class="field"><label>Video TikTok giới thiệu truyện</label>
+          <div class="field"><label>Video TikTok cho TRẠM PREVIEW</label>
             <input name="tiktok_intro_url" type="url" inputmode="url" value="${esc(s.tiktok_intro_url || "")}" placeholder="https://www.tiktok.com/@ten/video/1234567890123456789">
-            <p class="editor-hint">Dán link video TikTok công khai; chấp nhận cả link chia sẻ rút gọn <b>vt.tiktok.com/…</b>. Để trống nếu truyện chưa có audio giới thiệu.</p>
+            <p class="editor-hint">Với truyện ở trạng thái <b>Sắp ra mắt</b>, video sẽ xuất hiện trong TRẠM PREVIEW và phát ngay tại đó. Chấp nhận link TikTok công khai hoặc link chia sẻ rút gọn <b>vt.tiktok.com/…</b>.</p>
           </div>
           <div class="field"><label>Màu chủ đạo banner</label><input name="accent" value="${esc(s.accent || "#8a6a4a")}"></div>
           <div class="field"><label>Bìa</label><input type="file" id="coverFile" accept="image/*">

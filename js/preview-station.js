@@ -6,6 +6,26 @@
     return node.innerHTML;
   };
 
+  function notify(message) {
+    if (typeof window.toast === "function") {
+      window.toast(message);
+      return;
+    }
+    let wrap = document.getElementById("toasts");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = "toasts";
+      wrap.className = "toast-wrap";
+      wrap.setAttribute("aria-live", "polite");
+      document.body.appendChild(wrap);
+    }
+    const item = document.createElement("div");
+    item.className = "toast";
+    item.textContent = message;
+    wrap.appendChild(item);
+    window.setTimeout(() => item.remove(), 3200);
+  }
+
   function dataFrom(node) {
     return {
       post: String(node?.dataset.previewPost || "").replace(/\D/g, ""),
@@ -56,7 +76,7 @@
   function play(station, data) {
     if (!data.post) {
       showPoster(station, data);
-      if (window.toast) window.toast("Teaser của truyện này đang được chuẩn bị.");
+      notify("Teaser của truyện này đang được chuẩn bị.");
       return;
     }
     const stage = station.querySelector("[data-preview-stage]");

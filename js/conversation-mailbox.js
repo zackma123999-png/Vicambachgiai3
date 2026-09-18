@@ -184,6 +184,15 @@
       }
       const activeProfile = (active && active.profiles) || {};
       const peerName = active ? (adminView ? (activeProfile.display_name || activeProfile.email || "Thành viên") : "Quản trị viên") : "";
+      const composeMode = !adminView ? params().get("compose") : "";
+      const composeSource = composeMode === "report" ? String(params().get("source") || "").slice(0, 500) : "";
+      const composeDraft = composeMode ? String(params().get("draft") || "").slice(0, 1500) : "";
+      const composeTitle = composeMode === "report" ? "Báo lỗi nội dung" : "Gửi lời nhắn";
+      const composePlaceholder = composeMode === "report"
+        ? "Mô tả lỗi bạn gặp phải…"
+        : "Viết nội dung bạn muốn gửi đến quản trị viên…";
+      const composeSourceSuffix = composeSource ? "\n\nTrang gặp lỗi: " + composeSource : "";
+      const composeBodyLimit = Math.max(100, 2000 - composeSourceSuffix.length);
 
       host.innerHTML = '<div class="vc-mail-head"><div><small>TRAO ĐỔI RIÊNG</small><h1>Hộp thư</h1></div>' +
         (!adminView ? '<button type="button" class="btn btn-primary" data-mail-new>+ Tin nhắn mới</button>' : '') + '</div>' +
@@ -197,13 +206,23 @@
             '<div class="vc-mail-messages">' + (activeMessages.length ? activeMessages.map((message) => '<article class="vc-mail-message ' + (message.sender_id === me.id ? 'mine' : '') + '"><p>' + esc(message.body) + '</p><time>' + esc(fullDate(message.created_at)) + '</time></article>').join('') : '<div class="vc-mail-empty vc-mail-no-message"><b>Chưa có nội dung</b><span>Bạn có thể bắt đầu cuộc trò chuyện ở bên dưới.</span></div>') + '</div>' +
             (active.status === 'open' ? '<form class="vc-mail-compose"><textarea name="body" rows="1" maxlength="2000" required placeholder="Nhập tin nhắn…" aria-label="Nội dung tin nhắn"></textarea><button type="submit" aria-label="Gửi tin nhắn">↑</button></form>' : '<p class="vc-mail-closed">Cuộc trò chuyện đã đóng.</p>')
             : '<div class="vc-mail-empty vc-mail-welcome"><span>✦</span><b>' + (adminView ? 'Chưa có thư cần trả lời' : 'Chưa có cuộc trò chuyện') + '</b><p>' + (adminView ? 'Thư mới của thành viên sẽ xuất hiện tại đây.' : 'Chọn “Tin nhắn mới” để liên hệ quản trị viên.') + '</p></div>') + '</section></div>' +
-        (!adminView ? '<div class="vc-mail-dialog" data-mail-dialog hidden><button type="button" class="vc-mail-dialog-bg" data-mail-dialog-close aria-label="Đóng"></button><section role="dialog" aria-modal="true" aria-labelledby="vcMailNewTitle"><header><h2 id="vcMailNewTitle">Tin nhắn mới</h2><button type="button" data-mail-dialog-close aria-label="Đóng">×</button></header><form><label>Chủ đề<input name="subject" maxlength="120" required placeholder="Bạn muốn trao đổi về việc gì?"></label><label>Nội dung<textarea name="body" maxlength="2000" rows="5" required placeholder="Viết nội dung cần gửi…"></textarea></label><button class="btn btn-primary" type="submit">Gửi tin nhắn</button></form></section></div>' : '');
+        (!adminView ? '<div class="vc-mail-dialog" data-mail-dialog hidden><button type="button" class="vc-mail-dialog-bg" data-mail-dialog-close aria-label="Đóng"></button><section role="dialog" aria-modal="true" aria-labelledby="vcMailNewTitle"><header><h2 id="vcMailNewTitle">' + esc(composeMode ? composeTitle : "Tin nhắn mới") + '</h2><button type="button" data-mail-dialog-close aria-label="Đóng">×</button></header><form>' +
+          (composeSource ? '<p class="vc-mail-source"><b>Trang đang báo lỗi:</b> ' + esc(composeSource) + '</p><input type="hidden" name="source" value="' + esc(composeSource) + '">' : '') +
+          '<label>Chủ đề<input name="subject" maxlength="120" required placeholder="Bạn muốn trao đổi về việc gì?" value="' + esc(composeMode ? composeTitle : "") + '"></label><label>Nội dung<textarea name="body" maxlength="' + composeBodyLimit + '" rows="5" required placeholder="' + esc(composeMode ? composePlaceholder : "Viết nội dung cần gửi…") + '">' + esc(composeDraft) + '</textarea></label><button class="btn btn-primary" type="submit">Gửi và mở hội thoại</button></form></section></div>' : '');
 
       const shell = host.closest(".admin-shell");
       if (shell) shell.classList.add("vc-mail-admin-shell");
       const newButton = $("[data-mail-new]", host);
       const dialog = $("[data-mail-dialog]", host);
-      if (newButton && dialog) newButton.onclick = () => { dialog.hidden = false; $("input", dialog).focus(); };
+      const openComposer = () => {
+        if (!dialog) return;
+        dialog.hidden = false;
+        const subject = $('[name="subject"]', dialog);
+        const body = $('[name="body"]', dialog);
+        if (composeMode && subject && !subject.value) subject.value = composeTitle;
+        (composeMode && body ? body : subject || body)?.focus();
+      };
+      if (newButton && dialog) newButton.onclick = openComposer;
       $$("[data-mail-dialog-close]", host).forEach((button) => button.onclick = () => { if (dialog) dialog.hidden = true; });
       const newForm = $(".vc-mail-dialog form", host);
       if (newForm) newForm.onsubmit = async (event) => {
@@ -212,7 +231,8 @@
         button.disabled = true;
         try {
           const data = new FormData(newForm);
-          await createThread(String(data.get("subject") || ""), String(data.get("body") || ""));
+          const body = String(data.get("body") || "").trim() + composeSourceSuffix;
+          await createThread(String(data.get("subject") || ""), body);
         } catch (error) {
           toast(error.message || "Không gửi được tin nhắn.");
           button.disabled = false;
@@ -235,6 +255,10 @@
       });
       const list = $(".vc-mail-messages", host);
       if (list) requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
+      if (composeMode && dialog && host.dataset.mailComposeOpened !== location.hash) {
+        host.dataset.mailComposeOpened = location.hash;
+        openComposer();
+      }
       host.dataset.mailReady = paintKey;
       subscribe(me.id);
     } catch (error) {

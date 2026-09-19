@@ -566,17 +566,17 @@
   border-radius: 1.35rem !important;
 }
 #tram-preview.preview-station .preview-station-media {
-  min-height: 15.4rem !important;
-  height: 15.4rem !important;
+  min-height: 12.8rem !important;
+  height: 12.8rem !important;
 }
 #tram-preview.preview-station .preview-station-poster {
-  width: min(56%, 10.8rem) !important;
-  height: 14rem !important;
-  max-height: 14rem !important;
+  width: min(46%, 8.3rem) !important;
+  height: 11.55rem !important;
+  max-height: 11.55rem !important;
   border-radius: 1rem !important;
 }
 #tram-preview.preview-station .preview-station-play {
-  bottom: .72rem !important;
+  bottom: .52rem !important;
   min-height: 2.75rem !important;
   padding: .28rem .92rem .28rem .31rem !important;
 }
@@ -585,12 +585,12 @@
   height: 2.15rem !important;
 }
 #tram-preview.preview-station .preview-station-copy {
-  min-height: 10.8rem !important;
-  padding: 1rem 1.15rem 1.1rem !important;
+  min-height: 9.35rem !important;
+  padding: .88rem 1.05rem .96rem !important;
 }
 #tram-preview.preview-station .preview-station-copy h3 {
   margin: .55rem 0 .16rem !important;
-  font-size: clamp(1.55rem, 7vw, 1.95rem) !important;
+  font-size: clamp(1.45rem, 6.4vw, 1.78rem) !important;
   line-height: 1.08 !important;
 }
 #tram-preview.preview-station .preview-station-author {

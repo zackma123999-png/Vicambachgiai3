@@ -1072,7 +1072,6 @@
       <div class="preview-station-progress" aria-label="Vị trí truyện">
         ${ordered.map((story, index) => `<button type="button" class="${story.id === lead.id ? "is-active" : ""}" data-preview-progress="${index}" aria-label="Chọn truyện ${index + 1}" aria-current="${story.id === lead.id ? "true" : "false"}"></button>`).join("")}
       </div>
-      <p class="preview-station-swipe"><span aria-hidden="true">↔</span> Vuốt ngang để khám phá truyện khác</p>
     </section>`;
   }
   function pageHome() {

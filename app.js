@@ -2270,7 +2270,7 @@
           <div class="auth-google-block">
             <div class="auth-google-choice">
               <div class="auth-google-copy"><strong>Chọn tài khoản Google</strong><span>Chạm biểu tượng G để tiếp tục</span></div>
-              <div class="auth-google-direct" id="googleAuth" aria-live="polite">Đang tải…</div>
+              <div class="auth-google-direct" id="googleAuth" role="button" tabindex="0" aria-live="polite">Đăng nhập bằng Google</div>
             </div>
             <button type="button" class="auth-google-retry" id="googleRetry" hidden>Tải lại trang</button>
           </div>

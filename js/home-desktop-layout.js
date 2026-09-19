@@ -7,19 +7,31 @@
   const isLandscapeDesktop = () =>
     window.matchMedia("(min-width: 900px) and (orientation: landscape)").matches;
 
+  function placePreviewAfterMedal(root) {
+    const grid = root?.querySelector(".home-desktop-grid");
+    const side = grid?.querySelector(".home-desktop-side");
+    const medal = side?.querySelector(".medal-picks") || root?.querySelector(".medal-picks");
+    const preview = root?.querySelector(".preview-station");
+    if (!side || !medal || !preview) return;
+    if (preview.parentElement !== side || preview.previousElementSibling !== medal) {
+      medal.after(preview);
+    }
+  }
+
   function syncSidebarOffset() {
-    const grid = document.querySelector("#app .home-desktop-grid");
+    const app = document.getElementById("app");
+    const grid = app?.querySelector(".home-desktop-grid");
     const side = grid?.querySelector(".home-desktop-side");
     const firstRail = grid?.querySelector(".home-desktop-main .rail-panel");
     if (!grid || !side || !firstRail) return;
+
+    placePreviewAfterMedal(app);
 
     if (!isLandscapeDesktop()) {
       side.style.removeProperty("--home-side-offset");
       return;
     }
 
-    /* Measure from the grid itself. The sidebar is moved only at paint time;
-       no padding, margin or grid-row sizing is changed. */
     side.style.setProperty("--home-side-offset", "0px");
     const gridTop = grid.getBoundingClientRect().top;
     const railTop = firstRail.getBoundingClientRect().top;
@@ -32,6 +44,7 @@
 
     const existing = app.querySelector(".home-desktop-grid");
     if (existing) {
+      placePreviewAfterMedal(app);
       syncSidebarOffset();
       return false;
     }
@@ -40,9 +53,10 @@
     const label = direct(".home-signal-label");
     const rails = direct(".rails");
     const medal = direct(".medal-picks");
+    const preview = direct(".preview-station");
     const signal = direct("#tin-hieu");
     const resonance = direct("#mat-do-cong-huong");
-    if (!label || !rails || !medal || !signal || !resonance) return false;
+    if (!label || !rails || !medal || !preview || !signal || !resonance) return false;
 
     const grid = document.createElement("div");
     grid.className = "home-desktop-grid";
@@ -55,7 +69,7 @@
     label.before(grid);
     grid.append(main, side);
     main.append(label, rails);
-    side.append(medal, signal, resonance);
+    side.append(medal, preview, signal, resonance);
     requestAnimationFrame(syncSidebarOffset);
     return true;
   }

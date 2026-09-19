@@ -1251,6 +1251,41 @@
     return sessionUser;
   }
 
+  const AUTH_URL_KEYS = new Set([
+    "access_token",
+    "refresh_token",
+    "provider_token",
+    "provider_refresh_token",
+    "token",
+    "token_hash",
+    "code",
+  ]);
+
+  function scrubAuthSecretsFromUrl() {
+    try {
+      const url = new URL(global.location.href);
+      let changed = false;
+
+      [...url.searchParams.keys()].forEach((key) => {
+        if (AUTH_URL_KEYS.has(String(key).toLowerCase())) {
+          url.searchParams.delete(key);
+          changed = true;
+        }
+      });
+
+      const rawHash = String(url.hash || "").replace(/^#/, "");
+      const hashParams = new URLSearchParams(rawHash.startsWith("/") ? "" : rawHash);
+      const hashHasSecret = [...hashParams.keys()].some((key) => AUTH_URL_KEYS.has(String(key).toLowerCase()));
+      if (hashHasSecret) {
+        // Old/shared OAuth links must never be accepted as a browser session.
+        url.hash = "#/";
+        changed = true;
+      }
+
+      if (changed) global.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    } catch (_) {}
+  }
+
   function client() {
     if (sb) return sb;
     const url = cfg().supabaseUrl;
@@ -1258,8 +1293,9 @@
     if (!url || !key || !global.supabase) {
       throw new Error("Thiếu cấu hình Supabase. Điền js/config.js rồi deploy lại.");
     }
+    scrubAuthSecretsFromUrl();
     sb = global.supabase.createClient(url, key, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
     });
     startAuthSubscription();
     return sb;
@@ -1276,6 +1312,21 @@
 
     whenReady() {
       return bootPromise || Promise.resolve();
+    },
+
+    async verifyAdminAccess() {
+      client();
+      try {
+        // getUser() validates the token with the Auth server; getSession() only
+        // reads the locally cached session and is insufficient for admin access.
+        const { data, error } = await sb.auth.getUser();
+        if (error || !data || !data.user) return false;
+        sessionUser = data.user;
+        await loadOwnProfile();
+        return isAdmin();
+      } catch (_) {
+        return false;
+      }
     },
 
     async syncPublicContent({ maxAge = 5000 } = {}) {

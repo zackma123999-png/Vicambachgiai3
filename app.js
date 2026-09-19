@@ -1540,15 +1540,19 @@
     if ($("#btnFav")) $("#btnFav").onclick = toggleFav;
     if ($("#btnShareStory")) {
       $("#btnShareStory").onclick = async () => {
+        // Never share the current address verbatim: OAuth providers may put
+        // short-lived credentials in the query/hash during sign-in.
+        const publicPath = location.pathname.replace(/\/index\.html$/i, "/") || "/";
+        const shareUrl = location.origin + publicPath + "#/truyen/" + encodeURIComponent(String(s.slug || ""));
         const shareData = {
           title: s.title + " — ViCamBachGiai",
           text: "Đọc " + s.title + " trên ViCamBachGiai",
-          url: location.href,
+          url: shareUrl,
         };
         try {
           if (navigator.share) await navigator.share(shareData);
           else {
-            await navigator.clipboard.writeText(location.href);
+            await navigator.clipboard.writeText(shareUrl);
             toast("Đã sao chép liên kết truyện.");
           }
         } catch (e) {
@@ -2471,14 +2475,17 @@
     bindChrome();
   }
 
-  function needAdmin() {
+  async function needAdmin() {
     const u = VCBG.currentUser();
     if (!u) {
       goToLogin();
       return false;
     }
-    if (!VCBG.isAdmin()) {
-      toast("Khu vực quản trị chỉ dành cho quản trị viên.");
+    // A cached browser session is not enough for the admin screen. Revalidate
+    // the signed-in user with Supabase before rendering any management UI.
+    const allowed = await VCBG.verifyAdminAccess();
+    if (!allowed) {
+      toast("Phiên quản trị không hợp lệ hoặc đã hết hạn.");
       go("/");
       return false;
     }
@@ -2503,7 +2510,7 @@
       .join("")}</nav>`;
   }
   async function pageAdmin(route) {
-    if (!needAdmin()) return;
+    if (!(await needAdmin())) return;
     const sub = route.parts[1] || "";
     setMeta("Quản trị — ViCamBachGiai", "Bảng điều khiển.");
     if (sub === "truyen" && route.parts[2] === "moi") return adminStoryForm(null);

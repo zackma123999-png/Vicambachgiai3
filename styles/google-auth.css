@@ -28,14 +28,37 @@
 }
 
 .auth-google-direct {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 44px;
-  width: 44px;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 44px;
   min-height: 44px;
-  color: var(--muted);
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(171, 143, 245, 0.35);
+  border-radius: 0.8rem;
+  background: rgba(20, 24, 42, 0.72);
+  color: var(--text);
   font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.1;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.google-g-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 1.35rem;
+  border-radius: 50%;
+  background: #fff;
+  color: #4285f4;
+  font: 800 1.05rem/1 Arial, sans-serif;
 }
 
 .auth-google-direct.is-busy {

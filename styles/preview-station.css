@@ -611,17 +611,23 @@
   -webkit-line-clamp: 2 !important;
 }
 #tram-preview.preview-station .preview-station-rail {
-  display: grid !important;
+  --preview-card-width: calc((100% - 1.3rem) / 3);
+  display: flex !important;
   width: 100% !important;
   gap: .65rem !important;
   margin: .85rem 0 0 !important;
-  padding: .72rem .42rem .9rem !important;
+  padding: .72rem 0 .9rem !important;
   overflow-x: auto !important;
   overflow-y: visible !important;
-  grid-auto-columns: calc((100% - 1.3rem) / 3) !important;
-  grid-auto-flow: column !important;
-  scroll-padding-inline: calc((100% - ((100% - 1.3rem) / 3)) / 2) !important;
+  scroll-padding-inline: 0 !important;
   scroll-snap-type: x mandatory !important;
+}
+#tram-preview.preview-station .preview-station-rail::before,
+#tram-preview.preview-station .preview-station-rail::after {
+  display: block;
+  min-width: 0;
+  flex: 0 0 max(0px, calc((100% - var(--preview-card-width)) / 2 - .65rem));
+  content: "";
 }
 #tram-preview.preview-station .preview-station-card {
   display: flex !important;
@@ -629,7 +635,7 @@
   min-width: 0 !important;
   max-width: none !important;
   padding: .38rem !important;
-  flex: none !important;
+  flex: 0 0 var(--preview-card-width) !important;
   flex-direction: column !important;
   border-radius: 1rem !important;
   scroll-snap-align: center !important;
@@ -685,6 +691,6 @@
     display: none;
   }
   .home-desktop-side > #tram-preview.preview-station .preview-station-rail {
-    grid-auto-columns: calc((100% - 1.1rem) / 2.35) !important;
+    --preview-card-width: calc((100% - 1.1rem) / 2.35);
   }
 }

@@ -2297,27 +2297,58 @@
     const retryBtn = $("#googleRetry");
     if (retryBtn) retryBtn.onclick = () => location.reload();
     if (googleBtn) {
-      googleBtn.innerHTML = '<span class="google-g-mark" aria-hidden="true">G</span><span>Đăng nhập bằng Google</span>';
-      googleBtn.setAttribute("role", "button");
-      googleBtn.setAttribute("tabindex", "0");
-      const startGoogleLogin = async () => {
-        googleBtn.classList.add("is-busy");
-        showErr("");
-        try {
-          rememberAuthReturn(returnTarget || "/");
-          await VCBG.loginWithGoogle({ redirectTo: location.origin + location.pathname });
-        } catch (err) {
-          googleBtn.classList.remove("is-busy");
-          showErr(err.message || "Không thể mở đăng nhập Google.");
+      let attempts = 0;
+      const mountGoogle = async () => {
+        if (!googleBtn.isConnected) return;
+        if (!(window.google && google.accounts && google.accounts.id)) {
+          attempts += 1;
+          if (attempts >= 50) {
+            googleBtn.textContent = "Google chưa tải được trên trình duyệt này.";
+            if (retryBtn) retryBtn.hidden = false;
+            showErr("Kiểm tra mạng hoặc mở trang bằng Safari rồi tải lại.");
+            return;
+          }
+          setTimeout(mountGoogle, 200);
+          return;
         }
+        const rawNonce = crypto.randomUUID
+          ? crypto.randomUUID()
+          : Array.from(crypto.getRandomValues(new Uint8Array(24)), (n) => n.toString(16).padStart(2, "0")).join("");
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawNonce));
+        const hashedNonce = Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, "0")).join("");
+        googleBtn.textContent = "";
+        google.accounts.id.disableAutoSelect();
+        google.accounts.id.initialize({
+          client_id: "726540465981-pg5i7fnr26ljb0cpi22su28b1lhc4f6b.apps.googleusercontent.com",
+          nonce: hashedNonce,
+          auto_select: false,
+          itp_support: true,
+          callback: async (response) => {
+            showErr("");
+            rememberAuthReturn(returnTarget || "/");
+            googleBtn.classList.add("is-busy");
+            try {
+              await VCBG.loginWithGoogleIdToken({ token: response.credential, nonce: rawNonce });
+              toast("Đăng nhập thành công.");
+              await returnFromAuth(returnTarget || "/");
+            } catch (err) {
+              googleBtn.classList.remove("is-busy");
+              showErr(err.message || "Không thể đăng nhập bằng Google.");
+            }
+          },
+        });
+        google.accounts.id.renderButton(googleBtn, {
+          type: "icon",
+          theme: "outline",
+          size: "large",
+          shape: "circle",
+        });
       };
-      googleBtn.onclick = startGoogleLogin;
-      googleBtn.onkeydown = (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          startGoogleLogin();
-        }
-      };
+      mountGoogle().catch((err) => {
+        googleBtn.textContent = "Google chưa tải được trên trình duyệt này.";
+        if (retryBtn) retryBtn.hidden = false;
+        showErr(err.message || "Không thể khởi tạo đăng nhập Google.");
+      });
     }
 
   }

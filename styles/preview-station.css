@@ -744,3 +744,147 @@
 #tram-preview.preview-station .preview-station-pending {
   z-index: 3 !important;
 }
+
+
+/* Final approved design: bright landscape poster + overlapping information ticket. */
+#tram-preview.preview-station .preview-station-stage:not(.is-playing) {
+  display: block !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+#tram-preview.preview-station .preview-station-stage:not(.is-playing)::after {
+  display: none !important;
+}
+#tram-preview.preview-station .preview-station-media {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  aspect-ratio: 16 / 9 !important;
+  border: 1px solid rgba(155,107,255,.62) !important;
+  border-radius: 1.5rem !important;
+  background: #11172a !important;
+  box-shadow: 0 18px 42px rgba(0,0,0,.28) !important;
+}
+#tram-preview.preview-station .preview-station-backdrop {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  opacity: .96 !important;
+  filter: brightness(.88) saturate(1.08) contrast(1.03) !important;
+  transform: none !important;
+}
+#tram-preview.preview-station .preview-station-media::before {
+  z-index: 1 !important;
+  background:
+    linear-gradient(90deg, rgba(4,7,17,.22), transparent 22%, transparent 78%, rgba(4,7,17,.22)),
+    linear-gradient(180deg, transparent 58%, rgba(5,9,20,.2) 100%) !important;
+  box-shadow: inset 0 0 34px rgba(3,5,13,.16) !important;
+}
+#tram-preview.preview-station .preview-station-media::after {
+  display: none !important;
+}
+#tram-preview.preview-station .preview-station-poster {
+  position: relative !important;
+  z-index: 2 !important;
+  width: auto !important;
+  height: 100% !important;
+  max-width: 58% !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 10%, #000 90%, transparent 100%);
+}
+#tram-preview.preview-station .preview-station-play {
+  bottom: 1.35rem !important;
+  min-height: 3rem !important;
+  padding: .3rem 1rem .3rem .34rem !important;
+  border-color: rgba(255,255,255,.32) !important;
+  background: rgba(18,29,56,.91) !important;
+  box-shadow: 0 12px 28px rgba(3,7,18,.5), 0 0 20px rgba(155,107,255,.28) !important;
+}
+#tram-preview.preview-station .preview-station-play span {
+  width: 2.35rem !important;
+  height: 2.35rem !important;
+}
+#tram-preview.preview-station .preview-station-copy {
+  position: relative !important;
+  z-index: 4 !important;
+  width: calc(100% - 3.2rem) !important;
+  min-height: 0 !important;
+  margin: -1.65rem auto 0 !important;
+  padding: 1rem 1.2rem 1.08rem !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(119,137,179,.3) !important;
+  border-radius: 1.25rem !important;
+  background:
+    radial-gradient(circle at 8% 0, rgba(155,107,255,.1), transparent 32%),
+    linear-gradient(145deg, rgba(12,21,43,.985), rgba(6,13,29,.99)) !important;
+  box-shadow: 0 16px 36px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+#tram-preview.preview-station .preview-station-copy::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--preview-magenta), #8d6cff 52%, var(--preview-cyan));
+  box-shadow: 0 0 16px rgba(105,230,243,.32);
+  content: "";
+}
+#tram-preview.preview-station .preview-station-copy h3 {
+  margin: .42rem 0 .08rem !important;
+  font-size: clamp(1.5rem, 6vw, 1.9rem) !important;
+  line-height: 1.02 !important;
+}
+#tram-preview.preview-station .preview-station-author {
+  font-size: .88rem !important;
+}
+#tram-preview.preview-station .preview-station-pills {
+  margin-top: .58rem !important;
+}
+#tram-preview.preview-station .preview-station-teaser {
+  margin-top: .65rem !important;
+  font-size: .8rem !important;
+  line-height: 1.45 !important;
+  -webkit-line-clamp: 2 !important;
+}
+#tram-preview.preview-station .preview-station-rail {
+  margin-top: .45rem !important;
+  padding-top: .88rem !important;
+}
+#tram-preview.preview-station .preview-station-swipe {
+  display: none !important;
+}
+#tram-preview.preview-station .preview-station-stage.is-playing {
+  overflow: hidden !important;
+  border: 1px solid rgba(155,107,255,.54) !important;
+  border-radius: 1.35rem !important;
+  background: #030612 !important;
+  box-shadow: 0 18px 48px rgba(0,0,0,.34) !important;
+}
+
+@media (max-width: 430px) {
+  #tram-preview.preview-station .preview-station-media {
+    aspect-ratio: 1.66 / 1 !important;
+    border-radius: 1.25rem !important;
+  }
+  #tram-preview.preview-station .preview-station-poster {
+    max-width: 64% !important;
+  }
+  #tram-preview.preview-station .preview-station-copy {
+    width: calc(100% - 1.9rem) !important;
+    margin-top: -1.35rem !important;
+    padding: .9rem 1rem .98rem !important;
+    border-radius: 1.12rem !important;
+  }
+}

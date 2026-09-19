@@ -545,3 +545,146 @@
   .preview-station-progress button,
   .preview-station-play { transition: none; }
 }
+
+
+/* Approved compact carousel layout — keep this block last to defeat legacy home overrides. */
+.home-desktop-side > #tram-preview.preview-station {
+  width: 100%;
+  margin: clamp(1.35rem, 4vw, 2.4rem) 0 clamp(2rem, 5vw, 3.2rem) !important;
+}
+#tram-preview.preview-station .preview-station-head {
+  margin-bottom: .8rem !important;
+}
+#tram-preview.preview-station .preview-station-head h2 {
+  font-size: clamp(1.72rem, 7vw, 2.2rem) !important;
+  line-height: 1 !important;
+}
+#tram-preview.preview-station .preview-station-stage {
+  display: block !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  border-radius: 1.35rem !important;
+}
+#tram-preview.preview-station .preview-station-media {
+  min-height: 15.4rem !important;
+  height: 15.4rem !important;
+}
+#tram-preview.preview-station .preview-station-poster {
+  width: min(56%, 10.8rem) !important;
+  height: 14rem !important;
+  max-height: 14rem !important;
+  border-radius: 1rem !important;
+}
+#tram-preview.preview-station .preview-station-play {
+  bottom: .72rem !important;
+  min-height: 2.75rem !important;
+  padding: .28rem .92rem .28rem .31rem !important;
+}
+#tram-preview.preview-station .preview-station-play span {
+  width: 2.15rem !important;
+  height: 2.15rem !important;
+}
+#tram-preview.preview-station .preview-station-copy {
+  min-height: 10.8rem !important;
+  padding: 1rem 1.15rem 1.1rem !important;
+}
+#tram-preview.preview-station .preview-station-copy h3 {
+  margin: .55rem 0 .16rem !important;
+  font-size: clamp(1.55rem, 7vw, 1.95rem) !important;
+  line-height: 1.08 !important;
+}
+#tram-preview.preview-station .preview-station-author {
+  font-size: .88rem !important;
+}
+#tram-preview.preview-station .preview-station-pills {
+  margin-top: .65rem !important;
+  gap: .45rem !important;
+}
+#tram-preview.preview-station .preview-station-pills span {
+  padding: .32rem .57rem !important;
+  font-size: .63rem !important;
+}
+#tram-preview.preview-station .preview-station-teaser {
+  margin-top: .72rem !important;
+  font-size: .82rem !important;
+  line-height: 1.5 !important;
+  -webkit-line-clamp: 2 !important;
+}
+#tram-preview.preview-station .preview-station-rail {
+  display: grid !important;
+  width: 100% !important;
+  gap: .65rem !important;
+  margin: .85rem 0 0 !important;
+  padding: .72rem .42rem .9rem !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  grid-auto-columns: calc((100% - 1.3rem) / 3) !important;
+  grid-auto-flow: column !important;
+  scroll-padding-inline: calc((100% - ((100% - 1.3rem) / 3)) / 2) !important;
+  scroll-snap-type: x mandatory !important;
+}
+#tram-preview.preview-station .preview-station-card {
+  display: flex !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  padding: .38rem !important;
+  flex: none !important;
+  flex-direction: column !important;
+  border-radius: 1rem !important;
+  scroll-snap-align: center !important;
+  transform: scale(.94) !important;
+}
+#tram-preview.preview-station .preview-station-card.is-active {
+  border-color: rgba(105,230,243,.95) !important;
+  box-shadow: 0 0 0 1px rgba(216,92,255,.88), 0 12px 32px rgba(91,61,204,.42), 0 0 22px rgba(105,230,243,.2) !important;
+  opacity: 1 !important;
+  transform: scale(1.045) translateY(-2px) !important;
+}
+#tram-preview.preview-station .preview-station-thumb {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: 2 / 3 !important;
+  border-radius: .78rem !important;
+}
+#tram-preview.preview-station .preview-station-card-copy {
+  display: flex !important;
+  padding: .58rem .16rem .24rem !important;
+}
+#tram-preview.preview-station .preview-station-card-copy small {
+  font-size: .57rem !important;
+}
+#tram-preview.preview-station .preview-station-card-copy b {
+  min-height: 2.35em !important;
+  font-size: .78rem !important;
+  line-height: 1.18 !important;
+}
+#tram-preview.preview-station .preview-station-card-copy em {
+  font-size: .6rem !important;
+}
+#tram-preview.preview-station .preview-station-progress {
+  margin-top: .1rem !important;
+}
+#tram-preview.preview-station .preview-station-swipe {
+  display: block !important;
+}
+#tram-preview.preview-station .preview-station-stage.is-playing {
+  display: grid !important;
+}
+#tram-preview.preview-station .preview-station-video,
+#tram-preview.preview-station .preview-station-video iframe {
+  height: 30rem !important;
+  min-height: 30rem !important;
+}
+@media (min-width: 900px) and (orientation: landscape) {
+  .home-desktop-side > #tram-preview.preview-station .preview-station-head p {
+    display: none;
+  }
+  .home-desktop-side > #tram-preview.preview-station .preview-station-count {
+    display: none;
+  }
+  .home-desktop-side > #tram-preview.preview-station .preview-station-rail {
+    grid-auto-columns: calc((100% - 1.1rem) / 2.35) !important;
+  }
+}

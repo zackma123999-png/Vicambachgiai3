@@ -2270,7 +2270,7 @@
           <div class="auth-google-block">
             <div class="auth-google-choice">
               <div class="auth-google-copy"><strong>Chọn tài khoản Google</strong><span>Chạm biểu tượng G để tiếp tục</span></div>
-              <div class="auth-google-direct" id="googleAuth" role="button" tabindex="0" aria-live="polite">Đăng nhập bằng Google</div>
+              <div class="auth-google-direct" id="googleAuth" role="button" tabindex="0" aria-live="polite"><span class="google-g-mark" aria-hidden="true">G</span><span>Đăng nhập bằng Google</span></div>
             </div>
             <button type="button" class="auth-google-retry" id="googleRetry" hidden>Tải lại trang</button>
           </div>
@@ -2297,7 +2297,7 @@
     const retryBtn = $("#googleRetry");
     if (retryBtn) retryBtn.onclick = () => location.reload();
     if (googleBtn) {
-      googleBtn.textContent = "Đăng nhập bằng Google";
+      googleBtn.innerHTML = '<span class="google-g-mark" aria-hidden="true">G</span><span>Đăng nhập bằng Google</span>';
       googleBtn.setAttribute("role", "button");
       googleBtn.setAttribute("tabindex", "0");
       const startGoogleLogin = async () => {

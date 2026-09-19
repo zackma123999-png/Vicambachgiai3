@@ -1033,7 +1033,7 @@
       const postId = tiktokPostId(story.tiktok_intro_url);
       const teaser = String(story.synopsis || "").replace(/\s+/g, " ").trim().slice(0, 220);
       const label = ((story.genres || [])[0] || (story.tags || [])[0] || {}).name || "Truyện mới";
-      return `data-preview-post="${esc(postId)}" data-preview-title="${esc(story.title)}" data-preview-author="${esc(story.author || "")}" data-preview-cover="${esc(story.cover || "")}" data-preview-label="${esc(label)}" data-preview-teaser="${esc(teaser)}"`;
+      return `data-preview-post="${esc(postId)}" data-preview-title="${esc(story.title)}" data-preview-author="${esc(story.author || "")}" data-preview-cover="${esc(story.cover || "")}" data-preview-label="${esc(label)}" data-preview-status="${esc(storyStatusLabel(story))}" data-preview-teaser="${esc(teaser)}"`;
     };
     const leadPost = tiktokPostId(lead.tiktok_intro_url);
     const leadTeaser = String(lead.synopsis || "").replace(/\s+/g, " ").trim();
@@ -1063,13 +1063,16 @@
         ${ordered.map((story, index) => {
           const postId = tiktokPostId(story.tiktok_intro_url);
           const label = ((story.genres || [])[0] || (story.tags || [])[0] || {}).name || "Truyện mới";
-          return `<button class="preview-station-card${story.id === lead.id ? " is-active" : ""}${postId ? "" : " is-pending"}" type="button" ${previewAttrs(story)} aria-label="${postId ? "Phát teaser" : "Xem thông tin"} ${esc(story.title)}">
+          return `<button class="preview-station-card${story.id === lead.id ? " is-active" : ""}${postId ? "" : " is-pending"}" type="button" data-preview-index="${index}" ${previewAttrs(story)} aria-current="${story.id === lead.id ? "true" : "false"}" aria-label="Chọn truyện ${esc(story.title)}">
             <span class="preview-station-thumb">${story.cover ? `<img src="${esc(story.cover)}" alt="">` : `<b aria-hidden="true">V</b>`}<i aria-hidden="true">${postId ? "▶" : "…"}</i></span>
-            <span class="preview-station-card-copy"><small>${String(index + 1).padStart(2, "0")} · ${esc(storyStatusLabel(story))}</small><b>${esc(story.title)}</b><em>${postId ? "Chạm để phát" : "Đang chuẩn bị"}</em></span>
+            <span class="preview-station-card-copy"><small>${String(index + 1).padStart(2, "0")} · ${esc(storyStatusLabel(story))}</small><b>${esc(story.title)}</b><em>${esc(story.author || (postId ? "Sẵn sàng phát" : "Đang chuẩn bị"))}</em></span>
           </button>`;
         }).join("")}
       </div>
-      <div class="preview-station-progress" aria-hidden="true"><i></i><span></span><span></span></div>
+      <div class="preview-station-progress" aria-label="Vị trí truyện">
+        ${ordered.map((story, index) => `<button type="button" class="${story.id === lead.id ? "is-active" : ""}" data-preview-progress="${index}" aria-label="Chọn truyện ${index + 1}" aria-current="${story.id === lead.id ? "true" : "false"}"></button>`).join("")}
+      </div>
+      <p class="preview-station-swipe"><span aria-hidden="true">↔</span> Vuốt ngang để khám phá truyện khác</p>
     </section>`;
   }
   function pageHome() {
@@ -1132,8 +1135,8 @@
         ${rail("Đã hoàn thành", done, "violet")}
         ${rail("Sắp ra mắt", soon, "blue")}
       </div>
-      ${previewStation(previewStories)}
       ${recommendationPanel()}
+      ${previewStation(previewStories)}
       ${homeLower()}
       ${resonancePanel()}` +
       footer();

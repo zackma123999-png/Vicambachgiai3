@@ -29,3 +29,20 @@
 
 /js/signal-feed-window.js
   Cache-Control: no-cache, must-revalidate
+
+
+/terms
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/terms.html
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/privacy
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/privacy.html
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store

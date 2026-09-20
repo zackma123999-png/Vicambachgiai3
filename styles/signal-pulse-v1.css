@@ -24,6 +24,16 @@
 
 #tin-hieu .sig-board.signal-window-ready { overflow: visible; }
 
+/* Override the legacy shared glass frame: this section is intentionally open. */
+#app #tin-hieu .sig-board,
+#app #tin-hieu .sig-board.signal-window-ready {
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 #tin-hieu .sig-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

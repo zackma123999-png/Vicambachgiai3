@@ -507,15 +507,15 @@
       <span class="res-line-icon" aria-hidden="true">${metricIcons[icon]}</span>
       <b data-res="${key}">${value(key)}</b>
     </div>`;
-    const gaugeTicks = Array.from({ length: 45 }, (_, index) => {
-      const angle = -108 + index * (216 / 44);
+    const gaugeTicks = Array.from({ length: 49 }, (_, index) => {
+      const angle = -90 + index * (180 / 48);
       const major = index % 4 === 0;
-      return `<line class="${major ? "is-major" : ""}" x1="320" y1="48" x2="320" y2="${major ? 77 : 66}" transform="rotate(${angle.toFixed(2)} 320 330)"/>`;
+      return `<line class="${major ? "is-major" : ""}" x1="320" y1="72" x2="320" y2="${major ? 103 : 91}" transform="rotate(${angle.toFixed(2)} 320 350)"/>`;
     }).join("");
     return `<section class="wrap resonance res-editorial-final" id="mat-do-cong-huong" aria-labelledby="resTitle">
       <header class="res-head">
         <div class="res-kicker"><i aria-hidden="true"></i><span>LIVE RESONANCE</span><b aria-hidden="true"></b></div>
-        <div class="res-title-line"><h2 id="resTitle">Mật độ cộng hưởng</h2><time id="resTime">vừa cập nhật</time></div>
+        <div class="res-title-line"><h2 id="resTitle">Mật độ cộng hưởng</h2><time id="resTime" class="res-updated">vừa cập nhật</time></div>
       </header>
       <div class="res-speedometer">
         <svg class="res-gauge" viewBox="0 0 640 470" aria-hidden="true">
@@ -523,11 +523,13 @@
             <linearGradient id="resArcGlow" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#43d8e6"/><stop offset=".55" stop-color="#8fc8ff"/><stop offset="1" stop-color="#43d8e6"/></linearGradient>
             <filter id="resGaugeGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
           </defs>
-          <path class="res-gauge-shadow" d="M54 382A270 270 0 0 1 586 382"/>
-          <path class="res-gauge-arc" d="M54 382A270 270 0 0 1 586 382"/>
+          <path class="res-gauge-shadow" d="M55 350A265 265 0 0 1 585 350"/>
+          <path class="res-gauge-arc" d="M55 350A265 265 0 0 1 585 350"/>
           <g class="res-gauge-ticks">${gaugeTicks}</g>
-          <path class="res-red-zone" d="M566 284A270 270 0 0 1 586 382"/>
-          <path class="res-inner-arc" d="M118 382A205 205 0 0 1 522 382"/>
+          <path class="res-red-zone" d="M572 268A265 265 0 0 1 585 350"/>
+          <path class="res-inner-arc" d="M118 350A202 202 0 0 1 522 350"/>
+          <path class="res-gauge-floor" d="M55 350L82 414L145 448H495L558 414L585 350"/>
+          <path class="res-gauge-floor-inner" d="M98 390L151 430H489L542 390"/>
         </svg>
         <div class="res-strip">
           ${metric("members", "Thành viên", "members")}
@@ -547,6 +549,7 @@
           <b data-res="visits_today">${value("visits_today")}</b>
           <small>LƯỢT GHÉ HÔM NAY</small>
         </div>
+        <time class="res-gauge-time res-updated" aria-hidden="true">vừa cập nhật</time>
         <div class="res-dash-floor" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       </div>
     </section>`;
@@ -595,10 +598,13 @@
       });
       const ratio = $("#resRatio");
       if (ratio) ratio.style.width = (stats.online ? Math.round((stats.online_members / stats.online) * 100) : 0) + "%";
-      const time = $("#resTime");
-      if (time && stats.updated_at) {
-        time.textContent = new Date(stats.updated_at).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) + " · vừa cập nhật";
-        time.dateTime = new Date(stats.updated_at).toISOString();
+      const times = $$(".res-updated", root);
+      if (times.length && stats.updated_at) {
+        const updated = new Date(stats.updated_at);
+        times.forEach((time) => {
+          time.textContent = updated.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) + " · vừa cập nhật";
+          time.dateTime = updated.toISOString();
+        });
       }
     });
   }

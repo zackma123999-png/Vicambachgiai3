@@ -1,4 +1,9 @@
 /* Kim Bài Đề Cử — racing board matched to the approved mobile reference. */
+@property --medal-beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 #app .medal-picks {
   position: relative; width: min(42rem, calc(100% - .25rem));
   margin: 2.8rem auto 5.7rem !important; padding: 0 !important;
@@ -87,6 +92,18 @@
   background: conic-gradient(from 90deg,var(--rank-tone) 0 25%,transparent 0 50%,var(--rank-tone) 0 75%,transparent 0) 0 0/.56rem .56rem;
   transform: skewX(-13deg); -webkit-mask-image: linear-gradient(transparent,#000 18%,#000 82%,transparent); mask-image: linear-gradient(transparent,#000 18%,#000 82%,transparent);
 }
+#app .medal-pick-border-beam {
+  --medal-beam-angle: 0deg;
+  position: absolute !important; z-index: 5; inset: 0; padding: 2px; opacity: 0; pointer-events: none;
+  background: conic-gradient(from var(--medal-beam-angle),transparent 0deg 265deg,
+    color-mix(in srgb,var(--rank-tone) 15%,transparent) 286deg,
+    #fff9df 308deg,var(--rank-tone) 324deg,transparent 346deg 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 .22rem var(--rank-tone)) drop-shadow(0 0 .48rem color-mix(in srgb,var(--rank-tone) 72%,transparent));
+}
 #app .medal-pick.is-race-active,#app .medal-pick:hover,#app .medal-pick:focus-visible,#app .medal-pick:focus-within {
   outline: 0; opacity: 1; border-color: color-mix(in srgb,var(--rank-tone) 92%,white) !important;
   box-shadow: inset 0 1px 0 color-mix(in srgb,var(--rank-tone) 74%,white),
@@ -97,22 +114,21 @@
 }
 #app .medal-pick.is-race-active {
   z-index: 3;
-  animation: medalRaceArrival .58s cubic-bezier(.16,1.34,.34,1) both;
+  animation: medalRaceArrival .48s cubic-bezier(.16,1.22,.34,1) both;
 }
 #app .medal-pick.is-touch-bounce {
   z-index: 4;
   animation: medalRaceTouch .38s cubic-bezier(.2,1.45,.35,1) both;
 }
-#app .medal-pick.is-race-active::before {
-  animation: medalRaceStripe .72s ease-out both;
-}
-#app .medal-pick.is-race-active::after {
-  animation: medalRaceLine .72s ease-out both;
+#app .medal-pick.is-race-active .medal-pick-border-beam,
+#app .medal-pick.is-touch-bounce .medal-pick-border-beam {
+  opacity: 1;
+  animation: medalRaceBorderRun 1.05s cubic-bezier(.3,.05,.18,1) both;
 }
 @keyframes medalRaceArrival {
   0% { transform: translate3d(0,0,0) scale(1); }
-  42% { transform: translate3d(0,-5px,0) scale(1.018); }
-  72% { transform: translate3d(0,2px,0) scale(.997); }
+  42% { transform: translate3d(0,-3px,0) scale(1.01); }
+  72% { transform: translate3d(0,1px,0) scale(.998); }
   100% { transform: translate3d(0,0,0) scale(1); }
 }
 @keyframes medalRaceTouch {
@@ -121,15 +137,11 @@
   72% { transform: translate3d(0,-4px,0) scale(1.022); }
   100% { transform: translate3d(0,0,0) scale(1); }
 }
-@keyframes medalRaceStripe {
-  0% { filter: brightness(.85); box-shadow: .1rem 0 .25rem transparent; }
-  48% { filter: brightness(1.65); box-shadow: .3rem 0 1.4rem var(--rank-tone); }
-  100% { filter: brightness(1.12); box-shadow: .2rem 0 .8rem color-mix(in srgb,var(--rank-tone) 75%,transparent); }
-}
-@keyframes medalRaceLine {
-  0% { opacity: .18; transform: scaleX(.15); transform-origin: left; }
-  55% { opacity: 1; transform: scaleX(1); transform-origin: left; }
-  100% { opacity: .7; transform: scaleX(1); transform-origin: left; }
+@keyframes medalRaceBorderRun {
+  0% { --medal-beam-angle: 0deg; opacity: 0; }
+  12% { opacity: 1; }
+  82% { opacity: 1; }
+  100% { --medal-beam-angle: 360deg; opacity: 0; }
 }
 #app .medal-pick.is-race-active .medal-pick-speed,#app .medal-pick.is-race-active .medal-pick-checker,
 #app .medal-pick:hover .medal-pick-speed,#app .medal-pick:hover .medal-pick-checker,
@@ -211,5 +223,6 @@
 @media (prefers-reduced-motion: reduce) {
   #app .medal-pick { transition: opacity .01ms linear,filter .01ms linear; }
   #app .medal-pick.is-race-active,#app .medal-pick.is-touch-bounce,
-  #app .medal-pick.is-race-active::before,#app .medal-pick.is-race-active::after { animation: none !important; }
+  #app .medal-pick.is-race-active .medal-pick-border-beam,
+  #app .medal-pick.is-touch-bounce .medal-pick-border-beam { animation: none !important; }
 }

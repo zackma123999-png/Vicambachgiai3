@@ -1,5 +1,5 @@
 /* Racing resonance gauge — approved mobile composition. */
-html,body{max-width:100%;overflow-x:hidden}
+html,body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
 #app #mat-do-cong-huong.resonance {
   --res-cyan:#48e4ef; --res-cyan-soft:#87dfff; --res-violet:#ba71f0;
   position:relative; isolation:isolate; width:min(47rem,calc(100% - 1.4rem));

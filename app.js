@@ -496,56 +496,36 @@
   function resonancePanel() {
     const stats = VCBG.publicSiteStats ? VCBG.publicSiteStats() : {};
     const value = (key) => (Number.isFinite(stats[key]) ? fmtCount(stats[key]) : "—");
-    const resonanceIcon = (name) => {
-      if (name === "visits") {
-        return `<img src="assets/resonance/visits-transparent.png?v=20260827-clean-cutout" alt="" decoding="async">`;
-      }
-      const originalArt = new Set(["members", "comments", "views", "hearts", "stories"]);
-      if (originalArt.has(name)) {
-        const asset = `assets/resonance/${name}.webp?v=20260827-illustrated`;
-        const filterId = `res-cut-${name}`;
-        return `<svg class="res-original-art" viewBox="0 0 100 100" aria-hidden="true">
-          <defs>
-            <filter id="${filterId}" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
-              <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  .72 .72 .72 0 -.22"/>
-            </filter>
-          </defs>
-          <image href="${asset}" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid meet" filter="url(#${filterId})"/>
-        </svg>`;
-      }
-      const icons = {
-        visits: `<svg viewBox="0 0 110 94" aria-hidden="true"><defs><radialGradient id="rv-gold"><stop stop-color="#ffe5a3"/><stop offset=".36" stop-color="#c98a32"/><stop offset=".78" stop-color="#7d431d"/><stop offset="1" stop-color="#3b1f12"/></radialGradient><filter id="rv-shine"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g filter="url(#rv-shine)" fill="url(#rv-gold)" stroke="#e8b55b" stroke-width="1.25"><path d="M35 24c9.4.5 15.2 8.5 14 20.5C48 57.8 41.2 70 33.1 69.4c-8.5-.6-13.7-14-12.5-27.2C21.7 30.4 26.2 23.5 35 24Z"/><circle cx="19" cy="21" r="4.8"/><circle cx="25.5" cy="14.7" r="4.45"/><circle cx="33" cy="11.3" r="4"/><circle cx="40.6" cy="12.8" r="3.55"/><circle cx="47.2" cy="18" r="3"/><path d="M76 36.5c8.6-.2 13.9 7 13.3 18.2-.7 12.2-6.8 23.7-14.5 23.4-8-.3-13-12.6-12.3-24.5.7-10.8 5-16.9 13.5-17.1Z"/><circle cx="63.6" cy="34" r="4.15"/><circle cx="69.7" cy="28.8" r="3.8"/><circle cx="76.4" cy="26.5" r="3.5"/><circle cx="83" cy="28.4" r="3.15"/><circle cx="88.4" cy="33.3" r="2.65"/></g><g fill="none" stroke="#f8dda0" stroke-linecap="round" opacity=".68"><path d="M30 34c7.7 4.4 10.5 13.4 7 25M26 43c6.7-2.6 12.8-.7 18 4M29 54c4.2-1.3 7.7-.6 10.8 1.8"/><path d="M71 46c7 4.2 9.4 12 6.5 21.5M68 55c5.6-2.2 10.7-.5 15.2 3.2M70 64c3.5-1 6.6-.4 9.2 1.6"/><path d="M34 29l2.5 35M76 42l1 31" stroke-width=".75" opacity=".55"/></g><g fill="#f7c75f"><circle cx="15" cy="31" r=".9"/><circle cx="54" cy="13" r="1"/><circle cx="94" cy="43" r=".8"/><circle cx="56" cy="72" r=".75"/></g><ellipse cx="55" cy="84" rx="43" ry="6" fill="#4a2918" opacity=".4"/></svg>`,
-        members: `<svg viewBox="0 0 78 62" aria-hidden="true"><defs><linearGradient id="rm-blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#85a3ff"/><stop offset=".48" stop-color="#405cc4"/><stop offset="1" stop-color="#17265f"/></linearGradient></defs><path fill="url(#rm-blue)" d="M4 53c2-12 9-19 20-21-4-3-6-7-6-12C18 11 24 5 32 5c8 0 14 6 14 15 0 5-2 9-6 12 11 2 18 9 20 21H4Z"/><path fill="#172454" d="M42 53c1.2-9 6.6-15 15-17-3-2.6-4.7-6-4.7-9.7 0-7.1 4.9-12 11.2-12 6.5 0 11.5 5 11.5 12.2 0 4-1.7 7.2-4.7 9.8 7 2 11.5 7.5 12.2 16.7H42Z"/><path d="M24 13c4.5-4.2 11.4-4.5 16.2-.6M59 20c3-2.7 7.7-2.7 10.8.1" fill="none" stroke="#a9bcff" stroke-width="1.25" opacity=".75"/><path d="M14 49c4.5-6 10-9 17-9M51 49c3-4.8 7-7 12-7" fill="none" stroke="#b7c8ff" stroke-width="1" opacity=".42"/><path d="M8 57c15 2 31 2 47 0" fill="none" stroke="#5474df" stroke-width="1" opacity=".5"/></svg>`,
-        comments: `<svg viewBox="0 0 76 64" aria-hidden="true"><defs><linearGradient id="rc-feather" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b4fff7"/><stop offset=".38" stop-color="#51c9cc"/><stop offset="1" stop-color="#155a78"/></linearGradient></defs><path fill="#173c51" opacity=".74" d="M14 45c11-7 24-8 38-4-8 4-15 8-22 14-8 1-14-2-16-10Z"/><path fill="url(#rc-feather)" d="M63 4C40 6 21 19 13 48c12-11 24-15 38-19-11 6-21 12-31 21 16-3 32-17 43-46Z"/><path d="M7 59c15-20 31-35 49-47" fill="none" stroke="#d7fffb" stroke-width="2.2" stroke-linecap="round"/><path d="M30 34l-2-12M41 26l1-11M23 42l-10-1M35 34l-12-3M48 22l4-9" fill="none" stroke="#e8ffff" stroke-width="1.25" opacity=".82"/><circle cx="58" cy="45" r="1.6" fill="#79e8e1"/><circle cx="64" cy="40" r="1" fill="#b6fff8"/></svg>`,
-        views: `<svg viewBox="0 0 104 72" aria-hidden="true"><defs><linearGradient id="rv-book" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c199ff"/><stop offset=".45" stop-color="#7450cf"/><stop offset="1" stop-color="#361b79"/></linearGradient><linearGradient id="rv-page" x1="1" y1="0" x2="0" y2="1"><stop stop-color="#7b5ace"/><stop offset="1" stop-color="#24135b"/></linearGradient></defs><path fill="#1b0b43" stroke="#7754c2" d="M4 17c20-5 34-1 48 10 14-11 29-15 48-10v46c-19-4-34 0-48 8C38 63 23 59 4 63Z"/><path fill="url(#rv-book)" d="M7 11c18-3 32 1 45 12v42C38 57 25 54 7 57Z"/><path fill="url(#rv-page)" d="M97 11c-18-3-32 1-45 12v42c14-8 27-11 45-8Z"/><path d="M52 23v42M13 18c14 0 25 3 35 11M91 18c-14 0-25 3-35 11" fill="none" stroke="#eadfff" stroke-width="1.1" opacity=".62"/><path d="M20 45c7-9 15-10 23-2M61 43c8-8 16-8 24 1" fill="none" stroke="#d1b7ff" stroke-width="1.45"/><path d="M19 27h18M68 27h17" stroke="#d8c6ff" opacity=".34"/><path d="M57 32c4-7 7-10 12-13-2 6-1 11 3 14-6-2-10-2-15-1Z" fill="#ffe7a0" opacity=".9"/><g fill="#fff3b8"><circle cx="77" cy="24" r="1.4"/><circle cx="84" cy="35" r="1"/><circle cx="67" cy="39" r=".9"/><path d="M29 22l1.2 2.6 2.8.4-2 2 .5 2.8-2.5-1.3-2.5 1.3.5-2.8-2-2 2.8-.4Z"/></g><circle cx="52" cy="29" r="4.5" fill="#fff0bd"/><path d="M52 24.5a4.5 4.5 0 1 0 3.6 7.2 4 4 0 0 1-3.6-7.2Z" fill="#9a75e5"/></svg>`,
-        hearts: `<svg viewBox="0 0 76 66" aria-hidden="true"><defs><linearGradient id="rh-pink" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffb0cb"/><stop offset=".46" stop-color="#e95e94"/><stop offset="1" stop-color="#8f245f"/></linearGradient></defs><path fill="url(#rh-pink)" stroke="#ffb5ce" stroke-width=".8" d="M38 53S10 38 10 20C10 8 24 4 33 15l5 7 5-7C52 4 66 8 66 20c0 18-28 33-28 33Z"/><g fill="none" stroke="#ffe0e9" stroke-width=".85" opacity=".62"><path d="M10 20h56M21 9l17 44L55 9M10 20l28 33 28-33M33 15h10M21 9l12 6-23 5M55 9l-12 6 23 5"/></g><path d="M14 59c8-10 14-13 23-14M62 59c-8-10-14-13-23-14" fill="none" stroke="#669b66" stroke-width="2"/><path d="M20 53c-6 0-10-3-12-8 6-.5 10 1.6 13 6M56 53c6 0 10-3 12-8-6-.5-10 1.6-13 6" fill="#82b971"/><path d="M27 48c-4 0-7-2-9-5 4-.4 8 .8 10 4M49 48c4 0 7-2 9-5-4-.4-8 .8-10 4" fill="#9bc887"/></svg>`,
-        stories: `<svg viewBox="0 0 78 66" aria-hidden="true"><defs><linearGradient id="rs-purple" x2="1" y2="1"><stop stop-color="#9b78e8"/><stop offset="1" stop-color="#4c2b87"/></linearGradient></defs><path d="M17 8h47v14H17z" fill="url(#rs-purple)" stroke="#c2a8ff"/><path d="M21 10h38v9H21z" fill="#e6dcff"/><path d="M11 25h50v14H11z" fill="#9f4da0" stroke="#ef8cdd"/><path d="M16 27h41v9H16z" fill="#ffe0f1"/><path d="M18 42h49v14H18z" fill="#75431f" stroke="#e1a153"/><path d="M22 44h41v9H22z" fill="#f9d7a5"/><path d="M25 8v14M20 25v14M28 42v14" stroke="#2c174c" stroke-width="2"/><path d="M14 6h48M8 23h51M15 40h50M21 58h43" stroke="#dfc8ff" stroke-width="1.15" opacity=".66"/><path d="M54 9l3 3-3 3M47 28l4 3-4 3M57 45l3 3-3 3" fill="none" stroke="#9a6a29" stroke-width=".9"/><path d="M13 60c13 2 31 2 50 0" fill="none" stroke="#6d4b8f" opacity=".42"/></svg>`,
-      };
-      return icons[name] || "";
+    const metricIcons = {
+      members: `<svg viewBox="0 0 32 32"><circle cx="11" cy="10" r="4"/><circle cx="22" cy="12" r="3.2"/><path d="M3.5 27c.5-6.2 3.2-9.3 7.5-9.3s7 3.1 7.5 9.3M17 27c.3-4.7 2.2-7 5.4-7 3.1 0 5.2 2.3 5.6 7"/></svg>`,
+      comments: `<svg viewBox="0 0 32 32"><path d="M5 6.5h22v16H14l-6.5 4v-4H5z"/></svg>`,
+      views: `<svg viewBox="0 0 32 32"><path d="M2.8 16s4.8-8 13.2-8 13.2 8 13.2 8-4.8 8-13.2 8S2.8 16 2.8 16Z"/><circle cx="16" cy="16" r="3.8"/></svg>`,
+      hearts: `<svg viewBox="0 0 32 32"><path d="M16 27S4.5 20.2 4.5 11.8c0-6.3 7.8-8.4 11.5-2.3 3.7-6.1 11.5-4 11.5 2.3C27.5 20.2 16 27 16 27Z"/></svg>`,
+      stories: `<svg viewBox="0 0 32 32"><path d="M4.5 5.5h10.3c2.2 0 4 1.8 4 4v17H8.5a4 4 0 0 1-4-4v-17Z"/><path d="M18.8 9.5c0-2.2 1.8-4 4-4h4.7v17a4 4 0 0 1-4 4h-4.7"/></svg>`
     };
-    const metric = (key, label, icon, cls = "") => `<div class="res-metric res-metric-${icon} ${cls}">
-      <span class="res-illustration" aria-hidden="true">${resonanceIcon(icon)}</span>
-      <span class="res-stat-copy"><b data-res="${key}">${value(key)}</b><small>${label}</small></span>
+    const metric = (key, label, icon) => `<div class="res-metric res-metric-${icon}" aria-label="${label}">
+      <b data-res="${key}">${value(key)}</b>
+      <span class="res-line-icon" aria-hidden="true">${metricIcons[icon]}</span>
     </div>`;
     return `<section class="wrap resonance res-editorial-final" id="mat-do-cong-huong" aria-labelledby="resTitle">
       <header class="res-head">
-        <div><i aria-hidden="true"></i><h2 id="resTitle">Mật độ cộng hưởng</h2></div>
-        <time id="resTime">vừa cập nhật</time>
+        <div class="res-kicker"><i aria-hidden="true"></i><span>LIVE RESONANCE</span><b aria-hidden="true"></b></div>
+        <div class="res-title-line"><h2 id="resTitle">Mật độ cộng hưởng</h2><time id="resTime">vừa cập nhật</time></div>
       </header>
       <div class="res-showcase">
         <div class="res-live">
           <span class="res-radar" aria-hidden="true">
-            <svg viewBox="0 0 180 180"><defs><radialGradient id="resRadarGlow"><stop stop-color="#35e487" stop-opacity=".32"/><stop offset=".48" stop-color="#1d8b55" stop-opacity=".12"/><stop offset="1" stop-color="#071b15" stop-opacity="0"/></radialGradient><filter id="resDotGlow"><feGaussianBlur stdDeviation="2" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="90" cy="90" r="86" fill="url(#resRadarGlow)"/><g fill="none" stroke="#4dd788" stroke-opacity=".38"><circle cx="90" cy="90" r="30"/><circle cx="90" cy="90" r="56"/><circle cx="90" cy="90" r="82"/><path d="M8 90h164M90 8v164" stroke-opacity=".25"/></g><path d="M90 90 147 37A78 78 0 0 1 168 90Z" fill="#4ee18a" opacity=".04"/><g fill="#72f3a8" filter="url(#resDotGlow)"><circle cx="49" cy="120" r="4.2"/><circle cx="126" cy="55" r="4.5"/><circle cx="143" cy="119" r="3"/><circle cx="78" cy="43" r="2.5"/></g><circle cx="90" cy="90" r="7" fill="none" stroke="#a7ffd0" stroke-opacity=".55"/></svg>
+            <svg viewBox="0 0 220 250"><path class="res-orbit-path" d="M111 20a103 103 0 0 1 0 206"/><g class="res-orbit-dots"><circle cx="157" cy="38" r="3"/><circle cx="205" cy="105" r="5"/><circle cx="180" cy="181" r="3.3"/><circle cx="116" cy="224" r="2.2"/></g></svg>
             <b data-res="online">${value("online")}</b>
           </span>
-          <strong>đang trực tuyến</strong>
-          <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai / <span data-res="online_members">${value("online_members")}</span> thành viên</small>
+          <div class="res-live-copy"><strong>đang trực tuyến</strong><small><span data-res="online_guests">${value("online_guests")}</span> vãng lai / <span data-res="online_members">${value("online_members")}</span> thành viên</small></div>
         </div>
+        <i class="res-divider" aria-hidden="true"></i>
         <div class="res-hero-visits">
-          <span class="res-visit-art" aria-hidden="true">${resonanceIcon("visits")}</span>
           <b data-res="visits_today">${value("visits_today")}</b>
           <small>lượt ghé hôm nay</small>
         </div>
+        <span class="res-ghost-arc" aria-hidden="true"></span>
       </div>
       <div class="res-strip">
         ${metric("members", "Thành viên", "members")}

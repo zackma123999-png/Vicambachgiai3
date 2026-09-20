@@ -112,7 +112,34 @@
   }
 
   function cards(station) {
+    return Array.from(station.querySelectorAll(".preview-station-card:not([data-preview-clone])"));
+  }
+
+  function railCards(station) {
     return Array.from(station.querySelectorAll(".preview-station-card"));
+  }
+
+  function prepareLoop(station) {
+    const rail = station.querySelector(".preview-station-rail");
+    const list = cards(station);
+    if (!rail || list.length < 3 || rail.querySelector("[data-preview-clone]")) return;
+    list.forEach((card, index) => { card.dataset.previewLoopIndex = String(index); });
+    const before = list[list.length - 1].cloneNode(true);
+    const after = list[0].cloneNode(true);
+    [[before, list.length - 1], [after, 0]].forEach(([clone, index]) => {
+      clone.dataset.previewClone = String(index);
+      clone.classList.remove("is-active");
+      clone.setAttribute("aria-hidden", "true");
+      clone.setAttribute("tabindex", "-1");
+      clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+    });
+    rail.insertBefore(before, list[0]);
+    rail.appendChild(after);
+  }
+
+  function realCard(station, card) {
+    if (!card?.hasAttribute("data-preview-clone")) return card;
+    return cards(station)[Number(card.dataset.previewClone)] || null;
   }
 
   function centerCard(station, card, behavior) {
@@ -149,7 +176,7 @@
 
   function nearestCard(station) {
     const rail = station.querySelector(".preview-station-rail");
-    const list = cards(station);
+    const list = railCards(station);
     if (!rail || !list.length) return null;
     const center = rail.scrollLeft + rail.clientWidth / 2;
     return list.reduce((best, card) => {
@@ -161,6 +188,7 @@
   function bindStation(station) {
     if (!station || station.dataset.previewBound === "true") return;
     station.dataset.previewBound = "true";
+    prepareLoop(station);
     const rail = station.querySelector(".preview-station-rail");
     const initial = station.querySelector(".preview-station-card.is-active") || cards(station)[0];
     if (initial) {
@@ -179,14 +207,20 @@
       settleTimer = window.setTimeout(() => {
         const next = nearestCard(station);
         const current = station.querySelector(".preview-station-card.is-active");
-        if (next && next !== current) selectCard(station, next, { center: false });
+        const target = realCard(station, next);
+        if (target && target !== current) selectCard(station, target, { center: false });
       }, 110);
     };
     rail.addEventListener("scroll", settle, { passive: true });
     rail.addEventListener("scrollend", () => {
       window.clearTimeout(settleTimer);
       const next = nearestCard(station);
-      if (next) selectCard(station, next, { center: true });
+      const target = realCard(station, next);
+      if (!target) return;
+      selectCard(station, target, { center: !next.hasAttribute("data-preview-clone") });
+      if (next.hasAttribute("data-preview-clone")) {
+        requestAnimationFrame(() => centerCard(station, target, "auto"));
+      }
     }, { passive: true });
   }
 
@@ -202,7 +236,7 @@
     const card = event.target.closest(".preview-station-card");
     if (card) {
       event.preventDefault();
-      selectCard(station, card, { center: true });
+      selectCard(station, realCard(station, card), { center: true });
       return;
     }
 

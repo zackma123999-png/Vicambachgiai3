@@ -631,7 +631,7 @@
           <p class="sig-to">Trả lời ${esc(parent)}</p>
           <p class="sig-text">${esc(r.body)}</p>
           <div class="sig-acts">
-            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">↩ Trả lời</button>
+            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">Trả lời</button>
           </div>
         </div>
       </article>`;
@@ -659,10 +659,10 @@
           }
           <p class="sig-text">${esc(c.body)}</p>
           <div class="sig-acts">
-            <button type="button" class="sig-chip${c.liked ? " on" : ""}" data-like="${esc(c.id)}" aria-pressed="${c.liked}">❤ ${c.like_count || 0}</button>
+            <button type="button" class="sig-chip${c.liked ? " on" : ""}" data-like="${esc(c.id)}" aria-pressed="${c.liked}">${c.like_count || 0}</button>
             <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">Trả lời</button>
             <button type="button" class="sig-act" data-quote="${esc(c.id)}">Trích dẫn</button>
-            ${me && me.id !== c.user_id ? `<button type="button" class="sig-act" data-report-comment="bình luận ${esc(c.id)}" data-story-title="${esc((c.story && c.story.title) || "Bình luận")}">⚑ Báo cáo</button>` : ""}
+            ${me && me.id !== c.user_id ? `<button type="button" class="sig-act" data-report-comment="bình luận ${esc(c.id)}" data-story-title="${esc((c.story && c.story.title) || "Bình luận")}">Báo cáo</button>` : ""}
           </div>
           ${firstR.map((r) => replyHTML(c, r, false)).join("")}
           ${rest.map((r) => replyHTML(c, r, true)).join("")}
@@ -678,7 +678,14 @@
       <article class="sig-board">
         <header class="sig-head">
           <div class="sig-brand">
-            <div><h2>Tín hiệu độc giả <i></i></h2><p>Những cảm xúc vừa được gửi lại.</p></div>
+            <div class="sig-brand-copy">
+              <span class="sig-eyebrow">READER PULSE</span>
+              <div class="sig-title-row">
+                <h2>Tín hiệu độc giả</h2>
+                <span class="sig-waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              </div>
+              <p>Những cảm xúc vừa được gửi lại.</p>
+            </div>
           </div>
           <span class="sig-live-count"><i></i>${feed.total || 0} bình luận gần đây</span>
         </header>
@@ -880,7 +887,7 @@
         b.onclick = () => {
           try {
             const r = VCBG.likeComment(b.dataset.like);
-            b.textContent = "❤ " + r.count;
+            b.textContent = r.count;
             b.classList.toggle("on", r.on);
             b.setAttribute("aria-pressed", r.on);
           } catch (e) {

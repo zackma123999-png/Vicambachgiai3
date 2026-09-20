@@ -39,7 +39,7 @@
 }
 
 /* Live waveform: five independent beats rather than scaling the whole icon. */
-#app .rail-panel.is-icon-visible .rail-status-icon-live .rail-wave {
+#app .rail-status-icon-live .rail-wave {
   transform-box: fill-box;
   transform-origin: center;
   animation: rail-wave-beat 1.18s ease-in-out infinite;
@@ -51,46 +51,46 @@
 #app .rail-panel.is-icon-visible .rail-status-icon-live .rail-wave-5 { animation-delay: -.48s; }
 
 /* Completed badge: a restrained notification-bell-style shake with a long rest. */
-#app .rail-panel.is-icon-visible .rail-status-icon-complete {
-  animation: rail-medal-ring 3.4s ease-in-out infinite;
+#app .rail-status-icon-complete {
+  animation: rail-medal-ring 2.8s ease-in-out infinite;
 }
 #app .rail-status-icon-complete .rail-icon-medal { fill: rgba(230,196,123,.045); }
 #app .rail-status-icon-complete .rail-icon-check { stroke-width: 1.8; }
 #app .rail-status-icon-complete .rail-icon-ribbon { opacity: .82; }
 
 /* Upcoming hourglass: sand drains, then the frame turns over and starts again. */
-#app .rail-panel.is-icon-visible .rail-status-icon-upcoming .rail-icon-hourglass {
+#app .rail-status-icon-upcoming .rail-icon-hourglass {
   transform-box: fill-box;
   transform-origin: center;
   animation: rail-hourglass-turn 3.8s cubic-bezier(.65,0,.35,1) infinite;
 }
-#app .rail-panel.is-icon-visible .rail-status-icon-upcoming .rail-icon-sand-top {
+#app .rail-status-icon-upcoming .rail-icon-sand-top {
   fill: currentColor;
   stroke: none;
   animation: rail-sand-top 3.8s linear infinite;
 }
-#app .rail-panel.is-icon-visible .rail-status-icon-upcoming .rail-icon-sand-bottom {
+#app .rail-status-icon-upcoming .rail-icon-sand-bottom {
   fill: currentColor;
   stroke: none;
   animation: rail-sand-bottom 3.8s linear infinite;
 }
-#app .rail-panel.is-icon-visible .rail-status-icon-upcoming .rail-icon-sand-stream {
+#app .rail-status-icon-upcoming .rail-icon-sand-stream {
   stroke-dasharray: 1.2 1.5;
   animation: rail-sand-stream .42s linear infinite;
 }
 
 @keyframes rail-wave-beat {
-  0%, 100% { transform: scaleY(.48); opacity: .58; }
-  45% { transform: scaleY(1); opacity: 1; }
+  0%, 100% { transform: scaleY(.3); opacity: .46; }
+  45% { transform: scaleY(1.12); opacity: 1; }
 }
 
 @keyframes rail-medal-ring {
-  0%, 68%, 100% { transform: rotate(0deg); }
-  73% { transform: rotate(-8deg); }
-  78% { transform: rotate(7deg); }
-  83% { transform: rotate(-5deg); }
-  88% { transform: rotate(3deg); }
-  93% { transform: rotate(0deg); }
+  0%, 60%, 100% { transform: rotate(0deg); filter: drop-shadow(0 0 3px rgba(230,196,123,.24)); }
+  67% { transform: rotate(-12deg); }
+  74% { transform: rotate(10deg); filter: drop-shadow(0 0 7px rgba(230,196,123,.48)); }
+  81% { transform: rotate(-7deg); }
+  88% { transform: rotate(4deg); }
+  94% { transform: rotate(0deg); filter: drop-shadow(0 0 3px rgba(230,196,123,.24)); }
 }
 
 @keyframes rail-hourglass-turn {

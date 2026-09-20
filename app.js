@@ -1002,11 +1002,43 @@
     });
     bindLowerHome();
   }
+  function railStatusIcon(tone) {
+    if (tone === "violet") {
+      return `<span class="rail-status-icon rail-status-icon-complete" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path class="rail-icon-medal" d="M12 2.8l2 1.15 2.3-.15.95 2.1 2 1.15-.35 2.3 1.25 1.95-1.55 1.75-.05 2.3-2.2.65-1.35 1.85-2.2-.65-2.2.65L9.25 16l-2.2-.65-.05-2.3L5.45 11.3 6.7 9.35l-.35-2.3 2-1.15.95-2.1 2.3.15L12 2.8Z"/>
+          <path class="rail-icon-check" d="m8.4 10.7 2.2 2.2 4.8-5"/>
+          <path class="rail-icon-ribbon" d="m9.2 16.1-.8 5 3.6-2 3.6 2-.8-5"/>
+        </svg>
+      </span>`;
+    }
+    if (tone === "blue") {
+      return `<span class="rail-status-icon rail-status-icon-upcoming" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <g class="rail-icon-hourglass">
+            <path class="rail-icon-hourglass-frame" d="M6 3h12M6 21h12M7.5 3c0 4.2 1.9 5.9 4.5 9-2.6 3.1-4.5 4.8-4.5 9m9-18c0 4.2-1.9 5.9-4.5 9 2.6 3.1 4.5 4.8 4.5 9"/>
+            <path class="rail-icon-sand-top" d="M9 6h6l-3 4Z"/>
+            <path class="rail-icon-sand-bottom" d="m9 18 3-4 3 4Z"/>
+            <path class="rail-icon-sand-stream" d="M12 9.5v5"/>
+          </g>
+        </svg>
+      </span>`;
+    }
+    return `<span class="rail-status-icon rail-status-icon-live" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path class="rail-wave rail-wave-1" d="M3 10v4"/>
+        <path class="rail-wave rail-wave-2" d="M7.5 7v10"/>
+        <path class="rail-wave rail-wave-3" d="M12 4v16"/>
+        <path class="rail-wave rail-wave-4" d="M16.5 7v10"/>
+        <path class="rail-wave rail-wave-5" d="M21 10v4"/>
+      </svg>
+    </span>`;
+  }
   function rail(title, list, tone) {
     if (!list || !list.length) return "";
     return `<section class="rail-panel tone-${tone || "cyan"}">
       <div class="rail-head">
-        <h2><i class="live-dot"></i> ${esc(title)}</h2>
+        <h2>${railStatusIcon(tone)}<span>${esc(title)}</span></h2>
         <span class="count">${list.length} truyện</span>
         <span class="rail-swipe-cue" aria-hidden="true"><i></i><i></i><i></i></span>
       </div>

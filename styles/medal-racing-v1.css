@@ -119,7 +119,7 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 .7rem 1.5rem rgba(0,0,0,.28) !important;
   clip-path: polygon(1.15rem 0, 100% 0, calc(100% - 1.15rem) 100%, 0 100%);
   opacity: .72;
-  transform: translateZ(0) scale(.986);
+  transform: translateZ(0);
   transform-origin: center;
   filter: saturate(.78);
   transition: opacity .28s ease, transform .28s ease, filter .32s ease, border-color .32s ease, box-shadow .32s ease;
@@ -164,7 +164,7 @@
 #app .medal-pick:focus-within {
   outline: 0;
   opacity: 1;
-  transform: translateZ(0) translateY(-2px) scale(1.012);
+  transform: translateZ(0) translateY(-2px);
   border-color: color-mix(in srgb, var(--rank-tone) 90%, white) !important;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.1),

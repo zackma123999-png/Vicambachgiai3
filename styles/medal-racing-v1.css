@@ -278,7 +278,67 @@
   #app .medal-pick-stats b { font-size: .61rem; }
 }
 
+/* Cột phụ màn hình ngang hẹp hơn màn hình điện thoại: giữ đội hình nhưng
+   rút metadata để các làn cuối không bị chồng chữ. */
+@media (min-width: 900px) and (orientation: landscape) {
+  #app .home-desktop-side .medal-picks {
+    width: 100%;
+    margin-top: 0 !important;
+  }
+  #app .home-desktop-side .medal-picks-head {
+    padding-right: 3.55rem;
+  }
+  #app .home-desktop-side .medal-picks-head::after {
+    right: 0;
+    width: 3rem;
+  }
+  #app .home-desktop-side .medal-picks-head h2 {
+    font-size: 1.75rem;
+  }
+  #app .home-desktop-side .medal-pick {
+    grid-template-columns: 2rem 2.55rem minmax(0, 1fr) !important;
+    min-height: 4.8rem !important;
+    column-gap: .42rem !important;
+    padding: .48rem .62rem .48rem .48rem !important;
+  }
+  #app .home-desktop-side .medal-pick-rank {
+    font-size: 1.18rem !important;
+  }
+  #app .home-desktop-side .medal-pick-cover {
+    --medal-cover-w: 2.55rem;
+  }
+  #app .home-desktop-side .medal-pick-copy {
+    padding-right: 0;
+  }
+  #app .home-desktop-side .medal-pick-copy > b {
+    display: block !important;
+    overflow: hidden !important;
+    font-size: .76rem !important;
+    line-height: 1.15 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap !important;
+  }
+  #app .home-desktop-side .medal-pick-copy > small {
+    overflow: hidden;
+    font-size: .58rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #app .home-desktop-side .medal-pick-status {
+    display: none !important;
+  }
+  #app .home-desktop-side .medal-pick-stats {
+    gap: .38rem !important;
+    overflow: hidden;
+  }
+  #app .home-desktop-side .medal-pick-stats > span {
+    gap: .16rem;
+  }
+  #app .home-desktop-side .medal-pick-stats b {
+    font-size: .55rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #app .medal-pick { transition: opacity .01ms linear, filter .01ms linear; }
 }
-

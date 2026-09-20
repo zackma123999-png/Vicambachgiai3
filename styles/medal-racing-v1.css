@@ -60,7 +60,7 @@
     inset 0 -1px 0 color-mix(in srgb,var(--rank-tone) 34%,transparent),0 .55rem 1rem rgba(0,0,0,.32) !important;
   clip-path: polygon(7.5% 0,100% 0,94.5% 100%,0 100%); opacity: .94; filter: saturate(.96);
   transform: translateZ(0); transform-origin: center;
-  transition: opacity .25s ease,filter .28s ease,border-color .28s ease,box-shadow .28s ease; scroll-margin-block: 30vh;
+  transition: opacity .25s ease,filter .28s ease,border-color .28s ease,box-shadow .28s ease,transform .2s cubic-bezier(.2,.8,.2,1); scroll-margin-block: 30vh;
 }
 #app .medal-pick:nth-child(odd) { margin-left: -1rem !important; margin-right: auto !important; }
 #app .medal-pick:nth-child(even) { margin-left: auto !important; margin-right: 0 !important; }
@@ -94,6 +94,42 @@
     0 0 .22rem color-mix(in srgb,var(--rank-tone) 88%,transparent),
     0 0 1.1rem color-mix(in srgb,var(--rank-tone) 48%,transparent),0 .75rem 1.4rem rgba(0,0,0,.4) !important;
   filter: saturate(1.18) drop-shadow(0 0 .42rem color-mix(in srgb,var(--rank-tone) 32%,transparent));
+}
+#app .medal-pick.is-race-active {
+  z-index: 3;
+  animation: medalRaceArrival .58s cubic-bezier(.16,1.34,.34,1) both;
+}
+#app .medal-pick.is-touch-bounce {
+  z-index: 4;
+  animation: medalRaceTouch .38s cubic-bezier(.2,1.45,.35,1) both;
+}
+#app .medal-pick.is-race-active::before {
+  animation: medalRaceStripe .72s ease-out both;
+}
+#app .medal-pick.is-race-active::after {
+  animation: medalRaceLine .72s ease-out both;
+}
+@keyframes medalRaceArrival {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  42% { transform: translate3d(0,-5px,0) scale(1.018); }
+  72% { transform: translate3d(0,2px,0) scale(.997); }
+  100% { transform: translate3d(0,0,0) scale(1); }
+}
+@keyframes medalRaceTouch {
+  0% { transform: translate3d(0,0,0) scale(1); }
+  35% { transform: translate3d(0,2px,0) scale(.975); }
+  72% { transform: translate3d(0,-4px,0) scale(1.022); }
+  100% { transform: translate3d(0,0,0) scale(1); }
+}
+@keyframes medalRaceStripe {
+  0% { filter: brightness(.85); box-shadow: .1rem 0 .25rem transparent; }
+  48% { filter: brightness(1.65); box-shadow: .3rem 0 1.4rem var(--rank-tone); }
+  100% { filter: brightness(1.12); box-shadow: .2rem 0 .8rem color-mix(in srgb,var(--rank-tone) 75%,transparent); }
+}
+@keyframes medalRaceLine {
+  0% { opacity: .18; transform: scaleX(.15); transform-origin: left; }
+  55% { opacity: 1; transform: scaleX(1); transform-origin: left; }
+  100% { opacity: .7; transform: scaleX(1); transform-origin: left; }
 }
 #app .medal-pick.is-race-active .medal-pick-speed,#app .medal-pick.is-race-active .medal-pick-checker,
 #app .medal-pick:hover .medal-pick-speed,#app .medal-pick:hover .medal-pick-checker,
@@ -172,4 +208,8 @@
   #app .home-desktop-side .medal-pick-stats b { font-size: .53rem; }
   #app .home-desktop-side .medal-pick-speed { left: 1.5rem; width: 1.7rem; }
 }
-@media (prefers-reduced-motion: reduce) { #app .medal-pick { transition: opacity .01ms linear,filter .01ms linear; } }
+@media (prefers-reduced-motion: reduce) {
+  #app .medal-pick { transition: opacity .01ms linear,filter .01ms linear; }
+  #app .medal-pick.is-race-active,#app .medal-pick.is-touch-bounce,
+  #app .medal-pick.is-race-active::before,#app .medal-pick.is-race-active::after { animation: none !important; }
+}

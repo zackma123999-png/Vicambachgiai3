@@ -1,0 +1,21 @@
+/* Homepage section typography aligned with the Trạm Preview heading. */
+#app .home-signal-label > span,
+#app .rail-panel .rail-head h2 {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-weight: 500 !important;
+}
+
+#app .home-signal-label > span {
+  letter-spacing: .14em !important;
+}
+
+#app .rail-panel .rail-head h2 {
+  letter-spacing: .015em !important;
+  line-height: 1.05 !important;
+}
+
+@media (max-width: 640px) {
+  #app .rail-panel .rail-head h2 {
+    font-size: clamp(1.45rem, 6.3vw, 1.72rem) !important;
+  }
+}

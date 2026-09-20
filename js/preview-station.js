@@ -245,11 +245,20 @@
     if ("IntersectionObserver" in window) {
       new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
+          if (entry.isIntersecting && entry.intersectionRatio >= .28) {
+            const arriving = !station.classList.contains("is-preview-engaged");
+            station.classList.add("is-preview-engaged");
+            if (arriving) {
+              station.classList.remove("is-preview-arriving");
+              void station.offsetWidth;
+              station.classList.add("is-preview-arriving");
+              window.setTimeout(() => station.classList.remove("is-preview-arriving"), 700);
+            }
+          } else if (!entry.isIntersecting) {
             station.classList.remove("is-preview-engaged", "is-preview-arriving");
           }
         });
-      }, { threshold: .08 }).observe(station);
+      }, { threshold: [0, .28, .55] }).observe(station);
     }
   }
 

@@ -582,6 +582,7 @@
             </span>
             <span class="medal-pick-speed" aria-hidden="true"></span>
             <span class="medal-pick-checker" aria-hidden="true"></span>
+            <span class="medal-pick-border-beam" aria-hidden="true"></span>
           </article>`;
         }).join("")}
       </div>

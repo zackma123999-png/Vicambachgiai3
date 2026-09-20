@@ -8,17 +8,30 @@
 }
 
 #tin-hieu .sig-board {
+  --signal-frame: polygon(
+    1.25rem 0,
+    46% 0,
+    calc(46% + 1.35rem) 1.2rem,
+    calc(100% - 1.35rem) 1.2rem,
+    100% 2.55rem,
+    100% 100%,
+    0 100%,
+    0 1.25rem
+  );
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  padding: 1.35rem 1rem 1rem;
+  padding: 1.65rem 1rem 1rem;
   border: 0;
-  border-radius: 1.55rem;
+  border-radius: 0;
   background:
-    radial-gradient(80% 30% at 8% 0%, rgba(154, 92, 236, .14), transparent 68%),
-    radial-gradient(60% 24% at 98% 8%, rgba(55, 213, 220, .09), transparent 70%),
-    linear-gradient(155deg, rgba(15, 23, 43, .98), rgba(6, 12, 25, .99) 62%, rgba(8, 16, 30, .98));
-  box-shadow: 0 1.3rem 3.4rem rgba(0, 0, 0, .3), inset 0 1px rgba(255, 255, 255, .035);
+    radial-gradient(70% 28% at 4% 0%, rgba(151, 91, 238, .13), transparent 72%),
+    radial-gradient(65% 26% at 100% 7%, rgba(55, 220, 229, .1), transparent 70%),
+    linear-gradient(155deg, rgba(14, 22, 41, .96), rgba(6, 12, 25, .985) 62%, rgba(7, 15, 29, .98));
+  clip-path: var(--signal-frame);
+  filter:
+    drop-shadow(0 0 .55rem rgba(116, 94, 255, .14))
+    drop-shadow(0 1.2rem 2.4rem rgba(0, 0, 0, .28));
 }
 
 #tin-hieu .sig-board::before {
@@ -27,25 +40,26 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  border-radius: inherit;
+  border-radius: 0;
   padding: 1px;
-  background: linear-gradient(125deg, rgba(188, 118, 255, .8), rgba(100, 112, 177, .24) 29%, rgba(65, 222, 213, .68) 72%, rgba(150, 93, 255, .5));
+  background: linear-gradient(120deg, #a76cff 0%, rgba(132, 115, 242, .7) 28%, rgba(91, 148, 223, .5) 53%, #42e4ec 84%, #7a8cff 100%);
+  clip-path: var(--signal-frame);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
+  filter: drop-shadow(0 0 .42rem rgba(81, 218, 234, .52));
 }
 
 #tin-hieu .sig-board::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 14%;
-  width: 34%;
-  height: .62rem;
-  border-right: 1px solid rgba(191, 127, 255, .72);
-  border-bottom: 1px solid rgba(191, 127, 255, .46);
-  transform: skewX(42deg);
-  opacity: .8;
+  top: 1.17rem;
+  right: 1.55rem;
+  width: 24%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(66, 228, 236, .72));
+  box-shadow: .9rem .9rem .8rem rgba(66, 228, 236, .28);
+  opacity: .72;
 }
 
 #tin-hieu .sig-head {
@@ -509,7 +523,20 @@
 
 @media (max-width: 640px) {
   #tin-hieu.sig-wrap { padding-left: .45rem; padding-right: .45rem; }
-  #tin-hieu .sig-board { padding: 1.08rem .72rem .8rem; border-radius: 1.25rem; }
+  #tin-hieu .sig-board {
+    --signal-frame: polygon(
+      1rem 0,
+      45% 0,
+      calc(45% + 1.1rem) 1rem,
+      calc(100% - 1rem) 1rem,
+      100% 2rem,
+      100% 100%,
+      0 100%,
+      0 1rem
+    );
+    padding: 1.38rem .72rem .8rem;
+    border-radius: 0;
+  }
   #tin-hieu .sig-head { grid-template-columns: 1fr; gap: .72rem; align-items: start; }
   #tin-hieu .sig-live-count { justify-self: start; }
   #tin-hieu .sig-waveform { min-width: 3.6rem; }

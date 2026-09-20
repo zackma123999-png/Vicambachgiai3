@@ -580,6 +580,8 @@
               <span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span>
               <span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span>
             </span>
+            <span class="medal-pick-speed" aria-hidden="true"></span>
+            <span class="medal-pick-checker" aria-hidden="true"></span>
           </article>`;
         }).join("")}
       </div>

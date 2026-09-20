@@ -504,35 +504,50 @@
       stories: `<svg viewBox="0 0 32 32"><path d="M4.5 5.5h10.3c2.2 0 4 1.8 4 4v17H8.5a4 4 0 0 1-4-4v-17Z"/><path d="M18.8 9.5c0-2.2 1.8-4 4-4h4.7v17a4 4 0 0 1-4 4h-4.7"/></svg>`
     };
     const metric = (key, label, icon) => `<div class="res-metric res-metric-${icon}" aria-label="${label}">
-      <b data-res="${key}">${value(key)}</b>
       <span class="res-line-icon" aria-hidden="true">${metricIcons[icon]}</span>
+      <b data-res="${key}">${value(key)}</b>
     </div>`;
+    const gaugeTicks = Array.from({ length: 45 }, (_, index) => {
+      const angle = -108 + index * (216 / 44);
+      const major = index % 4 === 0;
+      return `<line class="${major ? "is-major" : ""}" x1="320" y1="48" x2="320" y2="${major ? 77 : 66}" transform="rotate(${angle.toFixed(2)} 320 330)"/>`;
+    }).join("");
     return `<section class="wrap resonance res-editorial-final" id="mat-do-cong-huong" aria-labelledby="resTitle">
       <header class="res-head">
         <div class="res-kicker"><i aria-hidden="true"></i><span>LIVE RESONANCE</span><b aria-hidden="true"></b></div>
         <div class="res-title-line"><h2 id="resTitle">Mật độ cộng hưởng</h2><time id="resTime">vừa cập nhật</time></div>
       </header>
-      <div class="res-showcase">
-        <div class="res-live">
-          <span class="res-radar" aria-hidden="true">
-            <svg viewBox="0 0 220 250"><path class="res-orbit-path" d="M111 20a103 103 0 0 1 0 206"/><g class="res-orbit-dots"><circle cx="157" cy="38" r="3"/><circle cx="205" cy="105" r="5"/><circle cx="180" cy="181" r="3.3"/><circle cx="116" cy="224" r="2.2"/></g></svg>
-            <b data-res="online">${value("online")}</b>
-          </span>
-          <div class="res-live-copy"><strong>đang trực tuyến</strong><small><span data-res="online_guests">${value("online_guests")}</span> vãng lai / <span data-res="online_members">${value("online_members")}</span> thành viên</small></div>
+      <div class="res-speedometer">
+        <svg class="res-gauge" viewBox="0 0 640 470" aria-hidden="true">
+          <defs>
+            <linearGradient id="resArcGlow" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#43d8e6"/><stop offset=".55" stop-color="#8fc8ff"/><stop offset="1" stop-color="#43d8e6"/></linearGradient>
+            <filter id="resGaugeGlow"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <path class="res-gauge-shadow" d="M54 382A270 270 0 0 1 586 382"/>
+          <path class="res-gauge-arc" d="M54 382A270 270 0 0 1 586 382"/>
+          <g class="res-gauge-ticks">${gaugeTicks}</g>
+          <path class="res-red-zone" d="M566 284A270 270 0 0 1 586 382"/>
+          <path class="res-inner-arc" d="M118 382A205 205 0 0 1 522 382"/>
+        </svg>
+        <div class="res-strip">
+          ${metric("members", "Thành viên", "members")}
+          ${metric("comments", "Bình luận", "comments")}
+          ${metric("total_views", "Tổng lượt xem", "views")}
+          ${metric("hearts", "Lượt thả tim", "hearts")}
+          ${metric("published_stories", "Truyện đã đăng", "stories")}
         </div>
-        <i class="res-divider" aria-hidden="true"></i>
+        <div class="res-live">
+          <b data-res="online">${value("online")}</b>
+          <strong>ĐANG TRỰC TUYẾN</strong>
+          <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai / <span data-res="online_members">${value("online_members")}</span> thành viên</small>
+        </div>
+        <div class="res-needle" aria-hidden="true"><i></i></div>
+        <span class="res-hub" aria-hidden="true"><i></i></span>
         <div class="res-hero-visits">
           <b data-res="visits_today">${value("visits_today")}</b>
-          <small>lượt ghé hôm nay</small>
+          <small>LƯỢT GHÉ HÔM NAY</small>
         </div>
-        <span class="res-ghost-arc" aria-hidden="true"></span>
-      </div>
-      <div class="res-strip">
-        ${metric("members", "Thành viên", "members")}
-        ${metric("comments", "Bình luận", "comments")}
-        ${metric("total_views", "Tổng lượt xem", "views")}
-        ${metric("hearts", "Lượt thả tim", "hearts")}
-        ${metric("published_stories", "Truyện đã đăng", "stories")}
+        <div class="res-dash-floor" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       </div>
     </section>`;
   }

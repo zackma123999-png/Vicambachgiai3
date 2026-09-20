@@ -564,15 +564,14 @@
     return `<section class="wrap medal-picks" aria-labelledby="medalPicksTitle">
       <header class="medal-picks-head">
         <span class="medal-picks-emblem" aria-hidden="true">✦</span>
-        <div><small>BẢNG VINH DANH</small><h2 id="medalPicksTitle">Kim Bài Đề Cử</h2></div>
+        <div><small>BẢNG VINH DANH</small><h2 id="medalPicksTitle">Kim Bài Đề Cử</h2><p>STORIES · PEOPLE · MORE WORLDS</p></div>
       </header>
       <div class="medal-picks-list">
         ${ranked.map((row, i) => {
           const s = row.story;
           const visits = Number(row.week) || 0;
-          const postId = tiktokPostId(s.tiktok_intro_url);
           const storyHref = `#/truyen/${esc(s.slug)}`;
-          return `<article class="medal-pick medal-pick-${tones[i]}" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
+          return `<article class="medal-pick medal-pick-${tones[i]}" data-medal-index="${i}" tabindex="0" aria-label="Hạng ${i + 1}: ${esc(s.title)}">
             <strong class="medal-pick-rank">${String(i + 1).padStart(2, "0")}</strong>
             <a class="medal-pick-cover" href="${storyHref}" aria-label="Mở truyện ${esc(s.title)}">${coverImg(s.cover, "Bìa " + s.title)}</a>
             <a class="medal-pick-copy" href="${storyHref}"><b title="${esc(s.title)}">${esc(s.title)}</b><small>${esc(s.author || "—")}</small></a>
@@ -581,7 +580,6 @@
               <span><i class="stat-eye" aria-hidden="true"></i><b>${fmtCount(s.stats.views)}</b><small>lượt đọc</small></span>
               <span><i aria-hidden="true">♧</i><b>${fmtCount(visits)}</b><small>ghé thăm tuần này</small></span>
             </span>
-            <button class="medal-tiktok-button${postId ? "" : " is-unavailable"}" type="button" ${postId ? `data-tiktok-post="${postId}" data-story-title="${esc(s.title)}" data-story-author="${esc(s.author || "")}" data-story-cover="${esc(s.cover || "")}" aria-label="Xem và nghe giới thiệu ${esc(s.title)} trên TikTok"` : `disabled aria-disabled="true" aria-label="Truyện ${esc(s.title)} chưa có video giới thiệu"`}><span aria-hidden="true">♪</span><small>${postId ? "Xem & nghe giới thiệu" : "Chưa có giới thiệu"}</small></button>
           </article>`;
         }).join("")}
       </div>

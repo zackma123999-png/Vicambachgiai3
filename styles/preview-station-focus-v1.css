@@ -1,7 +1,7 @@
 /* Trạm Preview stays restrained until the visitor actively selects a story. */
 #tram-preview.preview-station {
-  --preview-rest-dim: .72;
-  --preview-rest-saturation: .76;
+  --preview-rest-dim: .9;
+  --preview-rest-saturation: .9;
 }
 
 #tram-preview.preview-station .preview-station-head,
@@ -23,55 +23,55 @@
 
 /* Initial/resting state: keep the station in the same dark visual hierarchy as nearby sections. */
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-head {
-  opacity: .78;
+  opacity: .94;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-signal {
-  filter: brightness(.72) saturate(.72);
-  box-shadow: 0 0 12px rgba(155,107,255,.14) !important;
+  filter: brightness(.9) saturate(.9);
+  box-shadow: 0 0 14px rgba(155,107,255,.2) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-media {
-  border-color: rgba(119,137,179,.28) !important;
+  border-color: rgba(137,151,190,.4) !important;
   box-shadow: 0 14px 34px rgba(0,0,0,.32) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-backdrop {
-  opacity: .82 !important;
-  filter: brightness(.58) saturate(.74) contrast(1.02) !important;
+  opacity: .9 !important;
+  filter: brightness(.72) saturate(.88) contrast(1.02) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-poster {
-  filter: brightness(.73) saturate(.78) contrast(.98) !important;
+  filter: brightness(.92) saturate(.92) contrast(1) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-play {
-  filter: brightness(.78) saturate(.72);
-  box-shadow: 0 10px 24px rgba(3,7,18,.46), 0 0 10px rgba(155,107,255,.1) !important;
+  filter: brightness(.92) saturate(.9);
+  box-shadow: 0 10px 24px rgba(3,7,18,.42), 0 0 14px rgba(155,107,255,.16) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-copy {
-  border-color: rgba(119,137,179,.2) !important;
-  filter: brightness(.82) saturate(.8);
+  border-color: rgba(119,137,179,.3) !important;
+  filter: brightness(.96) saturate(.94);
   box-shadow: 0 14px 32px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.025) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-copy::before {
-  opacity: .38;
+  opacity: .62;
   box-shadow: none !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-card {
-  opacity: .5 !important;
-  filter: brightness(.7) saturate(.66);
+  opacity: .72 !important;
+  filter: brightness(.86) saturate(.82);
   box-shadow: 0 10px 22px rgba(0,0,0,.2) !important;
 }
 
 #tram-preview.preview-station:not(.is-preview-engaged) .preview-station-card.is-active {
-  opacity: .76 !important;
-  border-color: rgba(119,137,179,.34) !important;
-  filter: brightness(.8) saturate(.76);
-  box-shadow: 0 12px 26px rgba(0,0,0,.24) !important;
+  opacity: .92 !important;
+  border-color: rgba(155,107,255,.46) !important;
+  filter: brightness(.95) saturate(.92);
+  box-shadow: 0 12px 28px rgba(0,0,0,.24), 0 0 12px rgba(155,107,255,.08) !important;
 }
 
 /* Selected-by-swipe state: only the centered story and its large preview light up. */
@@ -90,8 +90,8 @@
 }
 
 #tram-preview.preview-station.is-preview-engaged .preview-station-card:not(.is-active) {
-  opacity: .54 !important;
-  filter: brightness(.7) saturate(.68);
+  opacity: .7 !important;
+  filter: brightness(.84) saturate(.82);
 }
 
 #tram-preview.preview-station.is-preview-engaged .preview-station-card.is-active {

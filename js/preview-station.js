@@ -171,6 +171,13 @@
     });
     syncIndicators(station, card);
     if (changed) showPoster(station, dataFrom(card));
+    if (options?.activateGlow) {
+      station.classList.add("is-preview-engaged");
+      station.classList.remove("is-preview-arriving");
+      void station.offsetWidth;
+      station.classList.add("is-preview-arriving");
+      window.setTimeout(() => station.classList.remove("is-preview-arriving"), 700);
+    }
     if (options?.center !== false) centerCard(station, card, options?.behavior);
   }
 
@@ -202,13 +209,21 @@
     }
     if (!rail) return;
     let settleTimer = 0;
+    let hasUserIntent = false;
+    const markUserIntent = () => { hasUserIntent = true; };
+    rail.addEventListener("pointerdown", markUserIntent, { passive: true });
+    rail.addEventListener("touchstart", markUserIntent, { passive: true });
+    rail.addEventListener("wheel", markUserIntent, { passive: true });
     const settle = () => {
       window.clearTimeout(settleTimer);
       settleTimer = window.setTimeout(() => {
         const next = nearestCard(station);
         const current = station.querySelector(".preview-station-card.is-active");
         const target = realCard(station, next);
-        if (target && target !== current) selectCard(station, target, { center: false });
+        if (target && target !== current) {
+          selectCard(station, target, { center: false, activateGlow: hasUserIntent });
+          hasUserIntent = false;
+        }
       }, 110);
     };
     rail.addEventListener("scroll", settle, { passive: true });
@@ -217,11 +232,25 @@
       const next = nearestCard(station);
       const target = realCard(station, next);
       if (!target) return;
-      selectCard(station, target, { center: !next.hasAttribute("data-preview-clone") });
+      selectCard(station, target, {
+        center: !next.hasAttribute("data-preview-clone"),
+        activateGlow: hasUserIntent,
+      });
+      hasUserIntent = false;
       if (next.hasAttribute("data-preview-clone")) {
         requestAnimationFrame(() => centerCard(station, target, "auto"));
       }
     }, { passive: true });
+
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) {
+            station.classList.remove("is-preview-engaged", "is-preview-arriving");
+          }
+        });
+      }, { threshold: .08 }).observe(station);
+    }
   }
 
   function bindAll(root) {
@@ -236,14 +265,14 @@
     const card = event.target.closest(".preview-station-card");
     if (card) {
       event.preventDefault();
-      selectCard(station, realCard(station, card), { center: true });
+      selectCard(station, realCard(station, card), { center: true, activateGlow: true });
       return;
     }
 
     const dot = event.target.closest("[data-preview-progress]");
     if (dot) {
       event.preventDefault();
-      selectCard(station, cards(station)[Number(dot.dataset.previewProgress)], { center: true });
+      selectCard(station, cards(station)[Number(dot.dataset.previewProgress)], { center: true, activateGlow: true });
       return;
     }
 
@@ -269,7 +298,7 @@
     const next = list[index + (event.key === "ArrowRight" ? 1 : -1)];
     if (!next) return;
     event.preventDefault();
-    selectCard(station, next, { center: true });
+    selectCard(station, next, { center: true, activateGlow: true });
     next.focus({ preventScroll: true });
   });
 

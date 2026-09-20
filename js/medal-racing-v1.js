@@ -23,7 +23,10 @@
   function touchBounce(card) {
     if (!card) return;
     card.classList.remove("is-touch-bounce");
+    const beam = card.querySelector(".medal-pick-border-beam");
+    if (beam) beam.style.animation = "none";
     void card.offsetWidth;
+    if (beam) beam.style.animation = "";
     card.classList.add("is-touch-bounce");
     window.setTimeout(() => card.classList.remove("is-touch-bounce"), 420);
   }

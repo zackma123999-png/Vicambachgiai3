@@ -1,102 +1,146 @@
-/* Racing resonance gauge — approved mobile composition. */
+/* Racing resonance gauge — locked to the approved compact mobile mockup. */
 html,body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
-#app #mat-do-cong-huong.resonance {
-  --res-cyan:#48e4ef; --res-cyan-soft:#87dfff; --res-violet:#ba71f0;
-  position:relative; isolation:isolate; width:min(47rem,calc(100% - 1.4rem));
-  max-width:calc(100vw - 1rem); margin:3.2rem auto 3rem; padding:0!important;
-  overflow:hidden!important; contain:inline-size;
-  border:0!important; border-radius:0!important; background:transparent!important;
-  box-shadow:none!important; color:#f2f4fb;
+#app #mat-do-cong-huong.resonance{
+  --rg-cyan:#47e0ec;--rg-blue:#79c9ff;--rg-violet:#bd6fed;--rg-red:#e14779;
+  position:relative;isolation:isolate;display:block!important;width:min(46rem,calc(100% - 1rem));
+  max-width:calc(100vw - 1rem);margin:3rem auto 2.8rem;padding:0!important;overflow:hidden!important;
+  contain:inline-size;border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;color:#f4f5fa;
 }
 #app #mat-do-cong-huong::before,#app #mat-do-cong-huong::after{content:none!important}
-#mat-do-cong-huong .res-head{position:relative;z-index:5;min-width:0;margin:0 .45rem .2rem;overflow:hidden}
-#mat-do-cong-huong .res-kicker{display:flex;align-items:center;gap:.62rem;color:var(--res-cyan);font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:.67rem;font-weight:700;letter-spacing:.25em;line-height:1}
-#mat-do-cong-huong .res-kicker>i{width:.34rem;height:.34rem;background:var(--res-violet);transform:rotate(45deg);box-shadow:0 0 .55rem rgba(186,113,240,.62)}
-#mat-do-cong-huong .res-kicker>b{width:7.4rem;height:1px;background:linear-gradient(90deg,var(--res-cyan),transparent)}
-#mat-do-cong-huong .res-title-line{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:.8rem;min-width:0;margin-top:.7rem}
-#mat-do-cong-huong .res-title-line h2{min-width:0;margin:0;color:#f2f1f7;font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.7rem,5.6vw,2.5rem);font-weight:400;letter-spacing:.008em;line-height:1;text-transform:uppercase}
-#mat-do-cong-huong .res-title-line time{flex:0 0 auto;color:#8794ad;font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:.66rem;white-space:nowrap}
 
-#mat-do-cong-huong .res-speedometer{position:relative;width:100%;max-width:100%;aspect-ratio:1.28/1;min-height:31rem;margin-top:-.15rem;overflow:hidden;background:radial-gradient(circle at 50% 68%,rgba(28,96,139,.12),transparent 28%),radial-gradient(circle at 50% 48%,rgba(18,43,71,.16),transparent 55%)}
-#mat-do-cong-huong .res-gauge{position:absolute;inset:6.5% 0 auto;z-index:1;width:100%;height:auto;overflow:visible}
-#mat-do-cong-huong .res-gauge-shadow,#mat-do-cong-huong .res-gauge-arc,#mat-do-cong-huong .res-red-zone,#mat-do-cong-huong .res-inner-arc{fill:none;stroke-linecap:butt}
-#mat-do-cong-huong .res-gauge-shadow{stroke:rgba(44,94,137,.31);stroke-width:15}
-#mat-do-cong-huong .res-gauge-arc{stroke:url(#resArcGlow);stroke-width:3;filter:url(#resGaugeGlow)}
-#mat-do-cong-huong .res-gauge-ticks line{stroke:#64daef;stroke-width:2;opacity:.72}
-#mat-do-cong-huong .res-gauge-ticks line.is-major{stroke:#d9f8ff;stroke-width:5;opacity:.92;filter:url(#resGaugeGlow)}
-#mat-do-cong-huong .res-red-zone{stroke:#e44976;stroke-width:7;opacity:.9;filter:drop-shadow(0 0 5px rgba(228,73,118,.5))}
-#mat-do-cong-huong .res-inner-arc{stroke:rgba(74,169,214,.24);stroke-width:1.2}
+#mat-do-cong-huong .res-head{
+  position:relative;z-index:8;display:block!important;width:100%;min-width:0;margin:0 0 .4rem!important;
+  padding:0 .7rem!important;overflow:hidden;border:0!important;background:transparent!important;
+}
+#mat-do-cong-huong .res-kicker{
+  display:flex!important;flex-flow:row nowrap!important;align-items:center;gap:.58rem;width:100%;min-width:0;
+  color:var(--rg-cyan);font:700 .65rem/1 "Be Vietnam Pro",system-ui,sans-serif;letter-spacing:.24em;white-space:nowrap;
+}
+#mat-do-cong-huong .res-kicker>i{flex:0 0 auto;width:.34rem;height:.34rem;background:var(--rg-violet);transform:rotate(45deg);box-shadow:0 0 .55rem rgba(189,111,237,.65)}
+#mat-do-cong-huong .res-kicker>b{width:7rem;height:1px;background:linear-gradient(90deg,var(--rg-cyan),transparent)}
+#mat-do-cong-huong .res-title-line{
+  display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;
+  gap:.45rem;width:100%;min-width:0;margin-top:.72rem!important;
+}
+#mat-do-cong-huong .res-title-line h2{
+  min-width:0;margin:0!important;overflow:hidden;color:#f5f3f8;font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(1.1rem,5.3vw,2.35rem);font-weight:400;letter-spacing:-.015em;line-height:1.05;
+  text-overflow:clip;text-transform:uppercase;white-space:nowrap;
+}
+#mat-do-cong-huong .res-title-line time{
+  padding-bottom:.12rem;color:#8694ac;font:400 clamp(.5rem,1.7vw,.66rem)/1 "Be Vietnam Pro",system-ui,sans-serif;white-space:nowrap;
+}
 
-#mat-do-cong-huong .res-strip{position:absolute;inset:0;z-index:4;pointer-events:none}
-#mat-do-cong-huong .res-metric{position:absolute;display:grid;justify-items:center;gap:.18rem;min-width:3.5rem;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:var(--res-cyan);text-align:center}
-#mat-do-cong-huong .res-metric-members{top:47%;left:-1%}
-#mat-do-cong-huong .res-metric-comments{top:19%;left:16%;color:var(--res-violet)}
-#mat-do-cong-huong .res-metric-views{top:7%;left:50%;transform:translateX(-50%)}
-#mat-do-cong-huong .res-metric-hearts{top:19%;right:16%;color:var(--res-violet)}
-#mat-do-cong-huong .res-metric-stories{top:47%;right:-1%}
-#mat-do-cong-huong .res-metric>b{color:#f4f5f9;font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:clamp(1.15rem,4vw,1.7rem);font-weight:700;line-height:1;text-shadow:0 0 1rem rgba(72,228,239,.16);font-variant-numeric:tabular-nums}
-#mat-do-cong-huong .res-line-icon{display:grid;width:1.45rem;height:1.45rem;place-items:center;filter:drop-shadow(0 0 .35rem currentColor)}
+#mat-do-cong-huong .res-speedometer{
+  position:relative;width:100%;height:clamp(25.4rem,106vw,35rem);max-height:35rem;margin-top:-.1rem;overflow:hidden;
+  background:radial-gradient(circle at 50% 67%,rgba(19,94,133,.17),transparent 25%),radial-gradient(ellipse at 50% 54%,rgba(11,31,54,.25),transparent 62%);
+}
+#mat-do-cong-huong .res-gauge{position:absolute;z-index:1;top:1%;left:0;width:100%;height:auto;overflow:visible}
+#mat-do-cong-huong .res-gauge-shadow,#mat-do-cong-huong .res-gauge-arc,#mat-do-cong-huong .res-red-zone,
+#mat-do-cong-huong .res-inner-arc,#mat-do-cong-huong .res-gauge-floor,#mat-do-cong-huong .res-gauge-floor-inner{
+  fill:none;stroke-linecap:butt;vector-effect:non-scaling-stroke;
+}
+#mat-do-cong-huong .res-gauge-shadow{stroke:rgba(44,93,132,.42);stroke-width:12}
+#mat-do-cong-huong .res-gauge-arc{stroke:url(#resArcGlow);stroke-width:2.8;filter:url(#resGaugeGlow)}
+#mat-do-cong-huong .res-gauge-ticks line{stroke:#59d4e8;stroke-width:1.7;opacity:.78;vector-effect:non-scaling-stroke}
+#mat-do-cong-huong .res-gauge-ticks line.is-major{stroke:#d9f8ff;stroke-width:4.5;opacity:.96;filter:url(#resGaugeGlow)}
+#mat-do-cong-huong .res-red-zone{stroke:var(--rg-red);stroke-width:7;opacity:.95;filter:drop-shadow(0 0 5px rgba(225,71,121,.48))}
+#mat-do-cong-huong .res-inner-arc{stroke:rgba(68,154,199,.3);stroke-width:1.1}
+#mat-do-cong-huong .res-gauge-floor{stroke:rgba(60,160,204,.38);stroke-width:1.2}
+#mat-do-cong-huong .res-gauge-floor-inner{stroke:rgba(72,224,236,.28);stroke-width:1}
+
+#mat-do-cong-huong .res-strip{position:absolute;inset:0;z-index:5;pointer-events:none}
+#mat-do-cong-huong .res-metric{
+  position:absolute!important;display:grid!important;justify-items:center;gap:.14rem;min-width:3rem;padding:0!important;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+  color:var(--rg-cyan);text-align:center;
+}
+#mat-do-cong-huong .res-metric-members{top:45%;left:.5%}
+#mat-do-cong-huong .res-metric-comments{top:17%;left:16%}
+#mat-do-cong-huong .res-metric-views{top:5.5%;left:50%;transform:translateX(-50%)}
+#mat-do-cong-huong .res-metric-hearts{top:17%;right:16%;color:var(--rg-violet)}
+#mat-do-cong-huong .res-metric-stories{top:45%;right:.5%}
+#mat-do-cong-huong .res-metric-comments{color:var(--rg-violet)}
+#mat-do-cong-huong .res-metric>b{
+  color:#f6f7fb;font:700 clamp(1.05rem,4.3vw,1.65rem)/1 "Be Vietnam Pro",system-ui,sans-serif;
+  text-shadow:0 0 .85rem rgba(71,224,236,.2);font-variant-numeric:tabular-nums;
+}
+#mat-do-cong-huong .res-line-icon{display:grid;width:1.3rem;height:1.3rem;place-items:center;filter:drop-shadow(0 0 .32rem currentColor)}
 #mat-do-cong-huong .res-line-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
 
-#mat-do-cong-huong .res-live{position:absolute;top:33%;left:50%;z-index:5;display:grid;justify-items:center;width:49%;transform:translateX(-50%);text-align:center}
-#mat-do-cong-huong .res-live>b{color:#f6f5f8;font-family:Georgia,"Times New Roman",serif;font-size:clamp(6rem,19vw,9.5rem);font-weight:400;line-height:.75;text-shadow:0 0 2rem rgba(112,201,242,.08);font-variant-numeric:tabular-nums}
-#mat-do-cong-huong .res-live>strong{margin-top:.55rem;color:#f0eff4;font-family:Georgia,"Times New Roman",serif;font-size:clamp(.9rem,3.15vw,1.35rem);font-weight:700;white-space:nowrap}
-#mat-do-cong-huong .res-live>small{margin-top:.42rem;color:#8998b2;font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:clamp(.64rem,2vw,.82rem);white-space:nowrap}
+#mat-do-cong-huong .res-live{
+  position:absolute;z-index:5;top:31.5%;left:50%;display:grid!important;justify-items:center;width:52%;
+  padding:0!important;transform:translateX(-50%);border:0!important;background:transparent!important;text-align:center;
+}
+#mat-do-cong-huong .res-live>b{
+  color:#f7f6f9;font:400 clamp(5.6rem,21vw,9rem)/.72 Georgia,"Times New Roman",serif;
+  text-shadow:0 0 1.7rem rgba(121,201,255,.09);font-variant-numeric:tabular-nums;
+}
+#mat-do-cong-huong .res-live>strong{
+  margin-top:.48rem;color:#f2f0f5;font:700 clamp(.82rem,3vw,1.22rem)/1 Georgia,"Times New Roman",serif;white-space:nowrap;
+}
+#mat-do-cong-huong .res-live>small{
+  margin-top:.42rem;color:#8a98ae;font:400 clamp(.58rem,2vw,.78rem)/1 "Be Vietnam Pro",system-ui,sans-serif;white-space:nowrap;
+}
 
-#mat-do-cong-huong .res-needle{position:absolute;top:68.5%;left:50%;z-index:3;width:37%;height:.38rem;transform:rotate(-31deg);transform-origin:0 50%;filter:drop-shadow(0 0 .65rem rgba(72,228,239,.72))}
-#mat-do-cong-huong .res-needle::before{content:"";position:absolute;left:-2.1rem;top:50%;width:2.6rem;height:.16rem;background:linear-gradient(90deg,transparent,#63e8f2);transform:translateY(-50%)}
-#mat-do-cong-huong .res-needle i{display:block;width:100%;height:100%;clip-path:polygon(0 28%,100% 0,100% 100%,0 72%);background:linear-gradient(90deg,#49dce9,#c9fbff 72%,#51e5ef)}
-#mat-do-cong-huong .res-hub{position:absolute;top:68.5%;left:50%;z-index:6;display:grid;width:4.7rem;height:4.7rem;place-items:center;border:2px solid rgba(72,228,239,.85);border-radius:50%;background:radial-gradient(circle at 37% 30%,#597084,#101a28 40%,#020711 72%);box-shadow:0 0 0 .38rem rgba(2,8,17,.9),0 0 0 .5rem rgba(72,228,239,.34),0 0 1.5rem rgba(72,228,239,.28);transform:translate(-50%,-50%)}
-#mat-do-cong-huong .res-hub i{width:72%;height:72%;border:1px solid rgba(255,255,255,.22);border-radius:50%;box-shadow:inset 0 0 1rem #000}
+#mat-do-cong-huong .res-needle{
+  position:absolute;z-index:4;top:67.3%;left:50%;width:36%;height:.34rem;transform:rotate(-31deg);transform-origin:0 50%;
+  filter:drop-shadow(0 0 .55rem rgba(71,224,236,.72));
+}
+#mat-do-cong-huong .res-needle::before{content:"";position:absolute;right:100%;top:50%;width:2rem;height:.13rem;background:linear-gradient(90deg,transparent,#56e2ed);transform:translateY(-50%)}
+#mat-do-cong-huong .res-needle i{display:block;width:100%;height:100%;clip-path:polygon(0 28%,100% 0,100% 100%,0 72%);background:linear-gradient(90deg,#4fdbe7,#d4fdff 72%,#50e4ee)}
+#mat-do-cong-huong .res-hub{
+  position:absolute;z-index:7;top:67.3%;left:50%;display:grid!important;width:4.35rem;height:4.35rem;place-items:center;
+  border:2px solid rgba(71,224,236,.95)!important;border-radius:50%!important;
+  background:radial-gradient(circle at 36% 30%,#5d7286,#111b29 42%,#020711 73%)!important;
+  box-shadow:0 0 0 .28rem rgba(5,14,25,.96),0 0 0 .43rem rgba(71,224,236,.5),0 0 1.2rem rgba(71,224,236,.3)!important;
+  transform:translate(-50%,-50%);
+}
+#mat-do-cong-huong .res-hub i{width:72%;height:72%;border:1px solid rgba(255,255,255,.25);border-radius:50%;box-shadow:inset 0 0 1rem #000}
 
-#mat-do-cong-huong .res-hero-visits{position:absolute;right:7.5%;bottom:4.5%;z-index:5;display:grid;justify-items:center;min-width:31%;padding:.78rem 1.1rem .7rem;border:1px solid rgba(66,213,233,.72)!important;clip-path:polygon(12% 0,88% 0,100% 30%,100% 100%,0 100%,0 30%);background:linear-gradient(180deg,rgba(7,25,44,.94),rgba(3,12,25,.98))!important;box-shadow:inset 0 0 1rem rgba(55,146,208,.14),0 0 1rem rgba(28,126,183,.16)!important;text-align:center}
-#mat-do-cong-huong .res-hero-visits::before{content:"";position:absolute;inset:.35rem;border:1px solid rgba(69,139,190,.32);clip-path:inherit}
-#mat-do-cong-huong .res-hero-visits b{position:relative;z-index:1;color:#f5f6fb;font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:clamp(2rem,7vw,3rem);font-weight:700;line-height:1;text-shadow:0 0 .9rem rgba(100,188,255,.34);font-variant-numeric:tabular-nums}
-#mat-do-cong-huong .res-hero-visits small{position:relative;z-index:1;margin-top:.32rem;color:#66ccef;font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:clamp(.55rem,1.7vw,.72rem);font-weight:500;white-space:nowrap}
-#mat-do-cong-huong .res-dash-floor{position:absolute;right:34%;bottom:3.5%;z-index:2;display:flex;gap:.35rem;transform:skewX(-35deg)}
-#mat-do-cong-huong .res-dash-floor i{width:1.25rem;height:.22rem;background:linear-gradient(90deg,rgba(44,165,211,.2),rgba(67,217,234,.72))}
+#mat-do-cong-huong .res-hero-visits{
+  position:absolute!important;right:6%;bottom:5.5%;z-index:6;display:grid!important;justify-items:center;min-width:32%;
+  padding:.65rem .9rem .62rem!important;border:1px solid rgba(65,214,234,.8)!important;
+  clip-path:polygon(13% 0,87% 0,100% 31%,100% 100%,0 100%,0 31%);
+  background:linear-gradient(180deg,rgba(7,25,44,.97),rgba(3,12,25,.99))!important;
+  box-shadow:inset 0 0 1rem rgba(55,146,208,.15),0 0 1rem rgba(28,126,183,.16)!important;text-align:center;
+}
+#mat-do-cong-huong .res-hero-visits::before{content:"";position:absolute;inset:.3rem;border:1px solid rgba(78,166,215,.34);clip-path:inherit}
+#mat-do-cong-huong .res-hero-visits b{position:relative;z-index:1;color:#f6f7fb;font:700 clamp(1.9rem,7vw,2.85rem)/1 "Be Vietnam Pro",system-ui,sans-serif;text-shadow:0 0 .8rem rgba(121,201,255,.35);font-variant-numeric:tabular-nums}
+#mat-do-cong-huong .res-hero-visits small{position:relative;z-index:1;margin-top:.28rem;color:#67cdf0;font:500 clamp(.53rem,1.7vw,.7rem)/1 "Be Vietnam Pro",system-ui,sans-serif;white-space:nowrap}
+#mat-do-cong-huong .res-gauge-time{position:absolute;z-index:5;left:14%;bottom:8%;color:#7f8da5;font:400 .58rem/1 "Be Vietnam Pro",system-ui,sans-serif;white-space:nowrap}
+#mat-do-cong-huong .res-dash-floor{position:absolute;right:36%;bottom:4.2%;z-index:3;display:flex;gap:.3rem;transform:skewX(-35deg)}
+#mat-do-cong-huong .res-dash-floor i{width:.9rem;height:.18rem;background:linear-gradient(90deg,rgba(44,165,211,.18),rgba(67,217,234,.68))}
 
 @media(max-width:560px){
-  #app #mat-do-cong-huong.resonance{width:calc(100% - 1rem);margin-top:2.9rem}
-  #mat-do-cong-huong .res-head{margin-inline:.7rem}
-  #mat-do-cong-huong .res-kicker{font-size:.6rem}
-  #mat-do-cong-huong .res-kicker>b{width:4.6rem}
-  #mat-do-cong-huong .res-title-line{gap:.35rem}
-  #mat-do-cong-huong .res-title-line h2{font-size:clamp(1.08rem,5.45vw,1.35rem);letter-spacing:-.01em;white-space:nowrap}
-  #mat-do-cong-huong .res-title-line time{font-size:.52rem}
-  #mat-do-cong-huong .res-speedometer{min-height:29rem;aspect-ratio:auto}
-  #mat-do-cong-huong .res-gauge{top:10.5%}
-  #mat-do-cong-huong .res-metric-members{top:47%;left:.2%}
-  #mat-do-cong-huong .res-metric-comments{top:21%;left:15%}
-  #mat-do-cong-huong .res-metric-views{top:9%}
-  #mat-do-cong-huong .res-metric-hearts{top:21%;right:15%}
-  #mat-do-cong-huong .res-metric-stories{top:47%;right:.2%}
-  #mat-do-cong-huong .res-metric{min-width:2.9rem}
-  #mat-do-cong-huong .res-metric>b{font-size:1.08rem}
-  #mat-do-cong-huong .res-line-icon{width:1.18rem;height:1.18rem}
-  #mat-do-cong-huong .res-live{top:35%}
-  #mat-do-cong-huong .res-live>b{font-size:6rem}
-  #mat-do-cong-huong .res-needle,#mat-do-cong-huong .res-hub{top:68%}
-  #mat-do-cong-huong .res-hub{width:3.9rem;height:3.9rem}
-  #mat-do-cong-huong .res-hero-visits{right:4%;bottom:3%;min-width:35%;padding:.68rem .8rem .62rem}
-  #mat-do-cong-huong .res-dash-floor{right:36%;bottom:2.4%}
-  #mat-do-cong-huong .res-dash-floor i{width:.78rem}
+  #app #mat-do-cong-huong.resonance{width:calc(100% - .8rem);margin-top:2.8rem}
+  #mat-do-cong-huong .res-kicker{font-size:.58rem}
+  #mat-do-cong-huong .res-kicker>b{width:4.4rem}
+  #mat-do-cong-huong .res-title-line h2{font-size:clamp(1.02rem,5.25vw,1.28rem)}
+  #mat-do-cong-huong .res-speedometer{height:clamp(24.6rem,105vw,27rem)}
+  #mat-do-cong-huong .res-metric{min-width:2.75rem}
+  #mat-do-cong-huong .res-metric>b{font-size:1.04rem}
+  #mat-do-cong-huong .res-line-icon{width:1.12rem;height:1.12rem}
+  #mat-do-cong-huong .res-live>b{font-size:5.75rem}
+  #mat-do-cong-huong .res-hub{width:3.75rem;height:3.75rem}
+  #mat-do-cong-huong .res-hero-visits{right:4.5%;bottom:5%;min-width:35%;padding:.58rem .72rem .55rem!important}
+  #mat-do-cong-huong .res-gauge-time{left:13%;bottom:8.5%}
 }
 @media(min-width:900px) and (orientation:landscape){
   #app .home-desktop-side #mat-do-cong-huong.resonance{width:100%;padding:0!important}
-  #app .home-desktop-side #mat-do-cong-huong .res-title-line h2{font-size:1.25rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-title-line time{font-size:.52rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-speedometer{min-height:22rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-live>b{font-size:4.6rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-live>strong{font-size:.78rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-metric>b{font-size:.92rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-line-icon{width:.92rem;height:.92rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-hub{width:3rem;height:3rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-hero-visits b{font-size:1.65rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-title-line h2{font-size:1.2rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-speedometer{height:22rem;min-height:0}
+  #app .home-desktop-side #mat-do-cong-huong .res-live>b{font-size:4.35rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-live>strong{font-size:.75rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-metric>b{font-size:.86rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-line-icon{width:.88rem;height:.88rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-hub{width:2.8rem;height:2.8rem}
+  #app .home-desktop-side #mat-do-cong-huong .res-hero-visits b{font-size:1.55rem}
 }
 @media(prefers-reduced-motion:no-preference){
-  #mat-do-cong-huong .res-needle{animation:res-needle-arrive 1.25s cubic-bezier(.16,.85,.2,1) both}
+  #mat-do-cong-huong .res-needle{animation:res-needle-arrive 1.2s cubic-bezier(.16,.85,.2,1) both}
   #mat-do-cong-huong .res-gauge-arc{animation:res-gauge-breathe 3.2s ease-in-out infinite}
 }
-@keyframes res-needle-arrive{from{transform:rotate(-104deg)}72%{transform:rotate(-26deg)}to{transform:rotate(-31deg)}}
-@keyframes res-gauge-breathe{0%,100%{opacity:.72}50%{opacity:1}}
+@keyframes res-needle-arrive{from{transform:rotate(-103deg)}72%{transform:rotate(-27deg)}to{transform:rotate(-31deg)}}
+@keyframes res-gauge-breathe{0%,100%{opacity:.76}50%{opacity:1}}

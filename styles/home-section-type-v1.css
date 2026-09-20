@@ -6,7 +6,14 @@
 }
 
 #app .home-signal-label > span {
+  color: #69e6f3 !important;
   letter-spacing: .14em !important;
+  text-shadow: 0 0 12px rgba(105, 230, 243, .2) !important;
+}
+
+#app .rail-panel .rail-head .count {
+  color: #69e6f3 !important;
+  text-shadow: 0 0 10px rgba(105, 230, 243, .18) !important;
 }
 
 #app .rail-panel .rail-head h2 {

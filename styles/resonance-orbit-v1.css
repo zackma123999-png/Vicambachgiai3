@@ -1,21 +1,23 @@
 /* Racing resonance gauge — approved mobile composition. */
+html,body{max-width:100%;overflow-x:hidden}
 #app #mat-do-cong-huong.resonance {
   --res-cyan:#48e4ef; --res-cyan-soft:#87dfff; --res-violet:#ba71f0;
   position:relative; isolation:isolate; width:min(47rem,calc(100% - 1.4rem));
-  margin:3.2rem auto 3rem; padding:0!important; overflow:visible!important;
+  max-width:calc(100vw - 1rem); margin:3.2rem auto 3rem; padding:0!important;
+  overflow:hidden!important; contain:inline-size;
   border:0!important; border-radius:0!important; background:transparent!important;
   box-shadow:none!important; color:#f2f4fb;
 }
 #app #mat-do-cong-huong::before,#app #mat-do-cong-huong::after{content:none!important}
-#mat-do-cong-huong .res-head{position:relative;z-index:5;margin:0 .45rem .2rem}
+#mat-do-cong-huong .res-head{position:relative;z-index:5;min-width:0;margin:0 .45rem .2rem;overflow:hidden}
 #mat-do-cong-huong .res-kicker{display:flex;align-items:center;gap:.62rem;color:var(--res-cyan);font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:.67rem;font-weight:700;letter-spacing:.25em;line-height:1}
 #mat-do-cong-huong .res-kicker>i{width:.34rem;height:.34rem;background:var(--res-violet);transform:rotate(45deg);box-shadow:0 0 .55rem rgba(186,113,240,.62)}
 #mat-do-cong-huong .res-kicker>b{width:7.4rem;height:1px;background:linear-gradient(90deg,var(--res-cyan),transparent)}
-#mat-do-cong-huong .res-title-line{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;margin-top:.7rem}
-#mat-do-cong-huong .res-title-line h2{margin:0;color:#f2f1f7;font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.7rem,5.6vw,2.5rem);font-weight:400;letter-spacing:.008em;line-height:1;text-transform:uppercase}
+#mat-do-cong-huong .res-title-line{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:.8rem;min-width:0;margin-top:.7rem}
+#mat-do-cong-huong .res-title-line h2{min-width:0;margin:0;color:#f2f1f7;font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.7rem,5.6vw,2.5rem);font-weight:400;letter-spacing:.008em;line-height:1;text-transform:uppercase}
 #mat-do-cong-huong .res-title-line time{flex:0 0 auto;color:#8794ad;font-family:"Be Vietnam Pro",system-ui,sans-serif;font-size:.66rem;white-space:nowrap}
 
-#mat-do-cong-huong .res-speedometer{position:relative;width:100%;aspect-ratio:1.28/1;min-height:31rem;margin-top:-.15rem;overflow:visible;background:radial-gradient(circle at 50% 68%,rgba(28,96,139,.12),transparent 28%),radial-gradient(circle at 50% 48%,rgba(18,43,71,.16),transparent 55%)}
+#mat-do-cong-huong .res-speedometer{position:relative;width:100%;max-width:100%;aspect-ratio:1.28/1;min-height:31rem;margin-top:-.15rem;overflow:hidden;background:radial-gradient(circle at 50% 68%,rgba(28,96,139,.12),transparent 28%),radial-gradient(circle at 50% 48%,rgba(18,43,71,.16),transparent 55%)}
 #mat-do-cong-huong .res-gauge{position:absolute;inset:6.5% 0 auto;z-index:1;width:100%;height:auto;overflow:visible}
 #mat-do-cong-huong .res-gauge-shadow,#mat-do-cong-huong .res-gauge-arc,#mat-do-cong-huong .res-red-zone,#mat-do-cong-huong .res-inner-arc{fill:none;stroke-linecap:butt}
 #mat-do-cong-huong .res-gauge-shadow{stroke:rgba(44,94,137,.31);stroke-width:15}
@@ -59,16 +61,16 @@
   #mat-do-cong-huong .res-head{margin-inline:.7rem}
   #mat-do-cong-huong .res-kicker{font-size:.6rem}
   #mat-do-cong-huong .res-kicker>b{width:4.6rem}
-  #mat-do-cong-huong .res-title-line{gap:.45rem}
-  #mat-do-cong-huong .res-title-line h2{font-size:1.45rem;white-space:nowrap}
+  #mat-do-cong-huong .res-title-line{gap:.35rem}
+  #mat-do-cong-huong .res-title-line h2{font-size:clamp(1.08rem,5.45vw,1.35rem);letter-spacing:-.01em;white-space:nowrap}
   #mat-do-cong-huong .res-title-line time{font-size:.52rem}
   #mat-do-cong-huong .res-speedometer{min-height:29rem;aspect-ratio:auto}
   #mat-do-cong-huong .res-gauge{top:10.5%}
-  #mat-do-cong-huong .res-metric-members{top:47%;left:-1.5%}
+  #mat-do-cong-huong .res-metric-members{top:47%;left:.2%}
   #mat-do-cong-huong .res-metric-comments{top:21%;left:15%}
   #mat-do-cong-huong .res-metric-views{top:9%}
   #mat-do-cong-huong .res-metric-hearts{top:21%;right:15%}
-  #mat-do-cong-huong .res-metric-stories{top:47%;right:-1.5%}
+  #mat-do-cong-huong .res-metric-stories{top:47%;right:.2%}
   #mat-do-cong-huong .res-metric{min-width:2.9rem}
   #mat-do-cong-huong .res-metric>b{font-size:1.08rem}
   #mat-do-cong-huong .res-line-icon{width:1.18rem;height:1.18rem}

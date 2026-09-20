@@ -7,11 +7,25 @@
   }
 
   function activate(target) {
+    const previous = document.querySelector("#app .medal-picks .medal-pick.is-race-active");
     cards().forEach((card) => {
       const active = card === target;
       card.classList.toggle("is-race-active", active);
       card.setAttribute("aria-current", active ? "true" : "false");
     });
+    if (target && target !== previous) {
+      target.style.animation = "none";
+      void target.offsetWidth;
+      target.style.animation = "";
+    }
+  }
+
+  function touchBounce(card) {
+    if (!card) return;
+    card.classList.remove("is-touch-bounce");
+    void card.offsetWidth;
+    card.classList.add("is-touch-bounce");
+    window.setTimeout(() => card.classList.remove("is-touch-bounce"), 420);
   }
 
   function syncActiveCard() {
@@ -52,7 +66,10 @@
     });
     list.addEventListener("pointerdown", (event) => {
       const card = event.target.closest(".medal-pick");
-      if (card) activate(card);
+      if (card) {
+        activate(card);
+        touchBounce(card);
+      }
     }, { passive: true });
     queueSync();
   }
@@ -64,4 +81,3 @@
   new MutationObserver(bind).observe(document.documentElement, { childList: true, subtree: true });
   bind();
 })();
-

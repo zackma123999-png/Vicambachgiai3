@@ -481,6 +481,7 @@
       ["wattpad", "Wattpad"],
     ].filter(([k]) => social[k]);
     return `<footer class="site-footer foot2">
+      <div class="foot2-rule foot2-rule-top"></div>
       <div class="wrap foot2-body">
         ${logoHTML()}
         <p class="foot2-kicker">Thư viện Bách Hợp</p>

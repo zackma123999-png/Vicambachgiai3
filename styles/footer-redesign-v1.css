@@ -1,5 +1,5 @@
 /* Footer redesign: borderless, left-aligned, liquid-glass action buttons. */
-.foot2{text-align:left;overflow:hidden}
+.foot2{text-align:left;overflow:hidden;border-top:0!important}
 .foot2-body{position:relative;padding-top:.4rem}
 
 .foot2-body>.brand{margin:0;justify-content:flex-start;gap:.62rem}
@@ -48,4 +48,5 @@
 .foot2-social-wattpad{color:#ff7f91}
 
 .foot2-rule{width:100%;max-width:1180px;margin:2.2rem auto 0;height:1px;background:var(--line)}
+.foot2-rule-top{margin:0 auto 2.4rem;background:linear-gradient(90deg,transparent,rgba(149,137,230,.55) 15%,rgba(104,217,238,.5) 85%,transparent)}
 .foot2-copy{margin:1.25rem 1rem 0;text-align:center;color:#718198;font-size:.68rem;line-height:1.6}

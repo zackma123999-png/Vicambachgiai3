@@ -55,8 +55,7 @@
     const medal = direct(".medal-picks");
     const preview = direct(".preview-station");
     const signal = direct("#tin-hieu");
-    const resonance = direct("#mat-do-cong-huong");
-    if (!label || !rails || !medal || !preview || !signal || !resonance) return false;
+    if (!label || !rails || !medal || !preview || !signal) return false;
 
     const grid = document.createElement("div");
     grid.className = "home-desktop-grid";
@@ -69,7 +68,7 @@
     label.before(grid);
     grid.append(main, side);
     main.append(label, rails);
-    side.append(medal, preview, signal, resonance);
+    side.append(medal, preview, signal);
     requestAnimationFrame(syncSidebarOffset);
     return true;
   }

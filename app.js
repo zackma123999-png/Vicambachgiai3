@@ -567,19 +567,52 @@
       </div>
     </section>`;
   }
+  function resonanceTag() {
+    const stats = VCBG.publicSiteStats ? VCBG.publicSiteStats() : {};
+    const online = Number.isFinite(stats.online) ? fmtCount(stats.online) : "—";
+    return `<button type="button" class="res-tag" id="resTagBtn" aria-haspopup="dialog" aria-expanded="false">
+      <span class="res-tag-dot" aria-hidden="true"></span>
+      <span class="res-tag-label">Cộng hưởng</span>
+      <b data-res="online">${online}</b>
+    </button>`;
+  }
+  function openResonanceDrawer() {
+    if ($("#resDrawerHost")) return;
+    const tag = $("#resTagBtn");
+    const host = document.createElement("div");
+    host.id = "resDrawerHost";
+    host.innerHTML = `<div class="drawer-bg" id="resBg"></div>
+      <aside class="drawer bottom res-drawer" role="dialog" aria-labelledby="resTitle">
+        <div class="drawer-pad res-drawer-pad">
+          <button type="button" class="r-ico res-drawer-close" id="resDrawerClose" aria-label="Đóng">×</button>
+          ${resonancePanel()}
+        </div>
+      </aside>`;
+    document.body.appendChild(host);
+    if (tag) tag.setAttribute("aria-expanded", "true");
+    const close = () => {
+      host.remove();
+      window.removeEventListener("hashchange", close);
+      if (tag) tag.setAttribute("aria-expanded", "false");
+    };
+    $("#resBg").onclick = close;
+    $("#resDrawerClose").onclick = close;
+    window.addEventListener("hashchange", close, { once: true });
+    return close;
+  }
   function bindResonance() {
+    const tag = $("#resTagBtn");
+    if (tag) tag.onclick = () => openResonanceDrawer();
     if (!VCBG.watchPublicSiteStats) return;
     if (typeof window.__vcbgResonanceUnwatch === "function") window.__vcbgResonanceUnwatch();
     window.__vcbgResonanceUnwatch = VCBG.watchPublicSiteStats((stats) => {
-      const root = $("#mat-do-cong-huong");
-      if (!root) return;
-      $$('[data-res]', root).forEach((el) => {
+      $$('[data-res]').forEach((el) => {
         const n = stats[el.dataset.res];
         el.textContent = Number.isFinite(n) ? fmtCount(n) : "—";
       });
       const ratio = $("#resRatio");
       if (ratio) ratio.style.width = (stats.online ? Math.round((stats.online_members / stats.online) * 100) : 0) + "%";
-      const times = $$(".res-updated", root);
+      const times = $$(".res-updated");
       if (times.length && stats.updated_at) {
         const updated = new Date(stats.updated_at);
         times.forEach((time) => {
@@ -1159,7 +1192,7 @@
       ${recommendationPanel()}
       ${previewStation(previewStories)}
       ${homeLower()}
-      ${resonancePanel()}` +
+      ${resonanceTag()}` +
       footer();
     bindChrome();
     bindResonance();

@@ -1,13 +1,13 @@
 /* Compact resonance table — approved mobile layout. */
 html,body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
-#app #mat-do-cong-huong.resonance{
+#mat-do-cong-huong.resonance{
   --res-cyan:#43dfe9;--res-violet:#b965ed;--res-line:rgba(109,145,183,.22);
   position:relative;isolation:isolate;display:block!important;width:min(46rem,calc(100% - 1rem));
   max-width:calc(100vw - 1rem);margin:3.2rem auto 3rem;padding:0!important;overflow:hidden!important;
   contain:inline-size;border:0!important;border-radius:0!important;background:transparent!important;
   box-shadow:none!important;color:#f5f4f8;
 }
-#app #mat-do-cong-huong::before,#app #mat-do-cong-huong::after{content:none!important}
+#mat-do-cong-huong::before,#mat-do-cong-huong::after{content:none!important}
 #mat-do-cong-huong .res-head{position:relative;z-index:2;display:block!important;width:100%;min-width:0;margin:0 0 1.45rem!important;padding:0 .72rem!important;overflow:hidden;border:0!important;background:transparent!important}
 #mat-do-cong-huong .res-kicker{display:flex!important;align-items:center;gap:.58rem;width:100%;min-width:0;color:var(--res-cyan);font:700 .65rem/1 "Be Vietnam Pro",system-ui,sans-serif;letter-spacing:.24em;white-space:nowrap}
 #mat-do-cong-huong .res-kicker>i{flex:0 0 auto;width:.34rem;height:.34rem;background:var(--res-violet);transform:rotate(45deg);box-shadow:0 0 .5rem rgba(185,101,237,.55)}
@@ -36,7 +36,7 @@ html,body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
 #mat-do-cong-huong .res-table-row>b{color:#f6f7fb;font:700 clamp(1rem,4vw,1.3rem)/1 "Be Vietnam Pro",system-ui,sans-serif;font-variant-numeric:tabular-nums;text-align:right}
 
 @media(max-width:560px){
-  #app #mat-do-cong-huong.resonance{width:calc(100% - .8rem);margin-top:2.9rem;margin-bottom:2.7rem}
+  #mat-do-cong-huong.resonance{width:calc(100% - .8rem);margin-top:2.9rem;margin-bottom:2.7rem}
   #mat-do-cong-huong .res-head{margin-bottom:1.2rem!important;padding-inline:.45rem!important}
   #mat-do-cong-huong .res-kicker{font-size:.58rem}
   #mat-do-cong-huong .res-kicker>b{width:4.2rem}
@@ -52,11 +52,26 @@ html,body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
   #mat-do-cong-huong .res-metric-label{font-size:.88rem}
   #mat-do-cong-huong .res-table-row>b{font-size:1rem}
 }
-@media(min-width:900px) and (orientation:landscape){
-  #app .home-desktop-side #mat-do-cong-huong.resonance{width:100%;padding:0!important}
-  #app .home-desktop-side #mat-do-cong-huong .res-title-line h2{font-size:1.2rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-summary{min-height:7.1rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-summary-cell b{font-size:3.5rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-summary-cell strong{font-size:.65rem}
-  #app .home-desktop-side #mat-do-cong-huong .res-table-row{min-height:3.45rem}
+/* Floating launcher tag — sits on the homepage, opens the drawer below on click. */
+.res-tag{
+  position:fixed;z-index:30;right:calc(1rem + env(safe-area-inset-right,0px));bottom:calc(1.1rem + env(safe-area-inset-bottom,0px));
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.55rem .9rem .55rem .65rem;border-radius:99px;border:1px solid rgba(67,223,233,.35);
+  background:linear-gradient(150deg,rgba(10,24,43,.96),rgba(5,14,28,.98));
+  box-shadow:0 .6rem 1.6rem rgba(0,0,0,.4),0 0 0 1px rgba(67,223,233,.06);
+  color:#f5f4f8;font:600 .78rem/1 "Be Vietnam Pro",system-ui,sans-serif;letter-spacing:.01em;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
 }
+.res-tag-dot{position:relative;width:.5rem;height:.5rem;border-radius:50%;background:#43dfe9;flex:0 0 auto}
+.res-tag-dot::after{content:"";position:absolute;inset:-.32rem;border-radius:50%;border:1px solid #43dfe9;animation:resTagPulse 2.4s ease-out infinite}
+@keyframes resTagPulse{0%{transform:scale(.5);opacity:.8}100%{transform:scale(1.9);opacity:0}}
+.res-tag-label{color:#9fb3c9}
+.res-tag b{font-variant-numeric:tabular-nums;color:#43dfe9}
+.res-tag:focus-visible{outline:1px solid #43dfe9;outline-offset:3px}
+@media(max-width:480px){ .res-tag{padding:.5rem .8rem .5rem .6rem;font-size:.74rem} }
+@media(prefers-reduced-motion:reduce){ .res-tag-dot::after{animation:none} }
+
+/* Drawer opened from the tag — reuses the existing .drawer.bottom sheet. */
+.res-drawer-pad{position:relative;padding-top:2.6rem!important}
+.res-drawer-close{position:absolute;top:.55rem;right:.35rem;z-index:2}
+.res-drawer-pad #mat-do-cong-huong.resonance{margin:0 auto!important;width:100%!important;max-width:100%!important}

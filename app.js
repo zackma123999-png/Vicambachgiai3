@@ -480,18 +480,28 @@
       ["facebook", "Facebook"],
       ["wattpad", "Wattpad"],
     ].filter(([k]) => social[k]);
-    return `<footer class="site-footer">
-      <div class="wrap foot-card">
+    return `<footer class="site-footer foot2">
+      <div class="wrap foot2-body">
         ${logoHTML()}
-        <p class="foot-kicker">Thư viện Bách Hợp</p>
-        <p class="foot-desc">Nơi lưu giữ những câu chuyện tôi yêu thích và những bản dịch được thực hiện bằng tất cả sự trân trọng.</p>
-        <div class="foot-acts">
-          <button type="button" class="btn btn-ghost foot-action foot-action-message" id="btnMsg"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m4 7 8 6 8-6"></path></svg><span>Gửi lời nhắn</span></button>
-          <button type="button" class="btn btn-ghost foot-action foot-action-report" id="btnReport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4"></path><path d="M5 5c5-3 8 3 14 0v10c-6 3-9-3-14 0"></path></svg><span>Báo lỗi nội dung</span></button>
+        <p class="foot2-kicker">Thư viện Bách Hợp</p>
+        <p class="foot2-desc">Nơi lưu giữ những câu chuyện tôi yêu thích và những bản dịch được thực hiện bằng tất cả sự trân trọng.</p>
+        <div class="foot2-acts">
+          <button type="button" class="foot2-act foot2-act-msg" id="btnMsg"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg><span class="foot2-act-t"><small>Liên hệ</small><b>Gửi lời nhắn</b></span></button>
+          <button type="button" class="foot2-act foot2-act-report" id="btnReport"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="5" y1="3" x2="5" y2="21"></line><path d="M5 4 19 9.5 5 15Z"></path></svg><span class="foot2-act-t"><small>Hỗ trợ</small><b>Báo lỗi nội dung</b></span></button>
         </div>
-        ${links.length ? `<p class="foot-social">${links.map(([k, l]) => `<a class="foot-social-${k}" href="${esc(social[k])}" target="_blank" rel="noopener">${l}</a>`).join('<span aria-hidden="true">·</span>')}</p>` : ""}
-        <p class="foot-copy">© ${new Date().getFullYear()} ViCamBachGiai · Bản dịch thuộc về người thực hiện · Vui lòng không đăng lại.</p>
+        <div class="foot2-section">
+          <h4>Khám phá</h4>
+          <a href="#/">Trang chủ</a>
+          <a href="#/kham-pha">Khám phá</a>
+          <a href="#/tu-truyen">Tủ truyện</a>
+        </div>
+        ${links.length ? `<div class="foot2-section">
+          <h4>Cộng đồng</h4>
+          ${links.map(([k, l]) => `<a class="foot2-social-${k}" href="${esc(social[k])}" target="_blank" rel="noopener">${l}</a>`).join("")}
+        </div>` : ""}
       </div>
+      <div class="foot2-rule"></div>
+      <p class="foot2-copy">© ${new Date().getFullYear()} ViCamBachGiai · Bản dịch thuộc về người thực hiện · Vui lòng không đăng lại.</p>
     </footer>`;
   }
   function fmtRel(ts) {

@@ -14,10 +14,15 @@
 .foot2-body::after{width:200px;height:160px;right:0;top:10rem;background:radial-gradient(closest-side,rgba(255,140,190,.42),transparent 72%)}
 
 .foot2-kicker{
-  position:relative;z-index:1;margin:1.25rem 0 0;font-weight:600;font-size:.82rem;letter-spacing:.32em;text-transform:uppercase;
+  position:relative;z-index:1;margin:clamp(1.05rem,3.2vw,1.65rem) 0 0;font-weight:600;
+  font-size:clamp(.66rem,2.3vw,.82rem);letter-spacing:.48em;line-height:1.4;text-transform:uppercase;
   background:linear-gradient(90deg,#c57aff,#988cff 48%,#73d7f7);-webkit-background-clip:text;background-clip:text;color:transparent;
 }
-.foot2-desc{position:relative;z-index:1;margin:.6rem 0 0;max-width:26rem;color:#f0eadf;font-size:1rem;font-weight:400;line-height:1.52;text-wrap:balance}
+.foot2-desc{position:relative;z-index:1;margin:.58rem 0 0;max-width:39rem;color:#f0eadf;font-size:clamp(.86rem,2.8vw,1rem);font-weight:400;line-height:1.52;text-wrap:balance}
+@media(max-width:520px){
+  .foot2-kicker{letter-spacing:.34em}
+  .foot2-desc{max-width:21rem}
+}
 
 .foot2-acts{position:relative;z-index:1;display:flex;gap:.6rem;margin-top:1.4rem;flex-wrap:wrap}
 .foot2-act{
@@ -32,8 +37,8 @@
 .foot2-act:hover{transform:translateY(-1px)}
 .foot2-act:focus-visible{outline:1px solid #c9a8ff;outline-offset:2px}
 .foot2-act svg{width:19px;height:19px;flex:0 0 auto;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.foot2-act-msg svg{stroke:#bfe6ff}
-.foot2-act-report svg{stroke:#ffd0ac}
+.foot2-act-msg svg{stroke:#70d5ff}
+.foot2-act-report svg{stroke:#ff7c83}
 .foot2-act-t{display:block;text-align:left;min-width:0;overflow:hidden}
 .foot2-act-t small{display:block;font-size:.72rem;color:#8b9bb3;line-height:1}
 .foot2-act-t b{display:block;font-size:.82rem;font-weight:600;margin-top:.18rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

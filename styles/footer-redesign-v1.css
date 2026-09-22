@@ -22,7 +22,10 @@
 @media(min-width:521px){ .foot2-brk{display:none} }
 @media(max-width:520px){
   .foot2-kicker{letter-spacing:.34em}
-  .foot2-desc{max-width:21rem}
+  .foot2-desc{max-width:none;font-size:.8rem}
+}
+@media(max-width:380px){
+  .foot2-desc{font-size:.74rem}
 }
 
 .foot2-acts{position:relative;z-index:1;display:flex;gap:.6rem;margin-top:1.4rem;flex-wrap:wrap}

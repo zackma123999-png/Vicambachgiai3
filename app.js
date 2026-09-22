@@ -3582,15 +3582,28 @@
     }
     clearTimeout(watchdog);
     const route = parseHash();
-    /* The homepage must not stay on the bundled/local fallback catalog. This is
-       especially visible in in-app browsers (Facebook, Messenger), where the
-       initial Supabase request often finishes after the first paint. Wait for
-       the shared catalog on every direct homepage open as well as story pages. */
+    /* The homepage must not stay on the bundled/local fallback catalog forever.
+       But when a live catalog is already cached (returning visit), there is no
+       need to block the first paint on a fresh network round trip: paint now,
+       sync in the background, and re-render only if something actually changed.
+       Only a cold start with nothing cached still waits, since there is no
+       content to show otherwise. */
     if ((route.name === "home" || route.name === "story" || route.name === "read") && VCBG.syncPublicContent) {
-      try {
-        await VCBG.syncPublicContent({ maxAge: 5000 });
-      } catch (error) {
-        console.warn("[VCBG content sync]", error && error.message);
+      const hasCachedStories = !!(VCBG.listStories && VCBG.listStories().length);
+      if (hasCachedStories) {
+        VCBG.syncPublicContent({ maxAge: 5000 })
+          .then((changed) => {
+            if (changed) render();
+          })
+          .catch((error) => {
+            console.warn("[VCBG content sync]", error && error.message);
+          });
+      } else {
+        try {
+          await VCBG.syncPublicContent({ maxAge: 5000 });
+        } catch (error) {
+          console.warn("[VCBG content sync]", error && error.message);
+        }
       }
     }
     const pendingAuthReturn = authReturnSnapshot();

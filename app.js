@@ -485,7 +485,7 @@
       <div class="wrap foot2-body">
         ${logoHTML()}
         <p class="foot2-kicker">Thư viện Bách Hợp</p>
-        <p class="foot2-desc">Nơi lưu giữ những câu chuyện tôi yêu thích và những<br class="foot2-brk">bản dịch được thực hiện bằng tất cả sự trân trọng.</p>
+        <p class="foot2-desc">Nơi lưu giữ những câu chuyện tôi yêu thích và những <br class="foot2-brk">bản dịch được thực hiện bằng tất cả sự trân trọng.</p>
         <div class="foot2-acts">
           <button type="button" class="foot2-act foot2-act-msg" id="btnMsg"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg><span class="foot2-act-t"><small>Liên hệ</small><b>Gửi lời nhắn</b></span></button>
           <button type="button" class="foot2-act foot2-act-report" id="btnReport"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="5" y1="3" x2="5" y2="21"></line><path d="M5 4 19 9.5 5 15Z"></path></svg><span class="foot2-act-t"><small>Hỗ trợ</small><b>Báo lỗi nội dung</b></span></button>

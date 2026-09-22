@@ -19,7 +19,6 @@
   background:linear-gradient(90deg,#c57aff,#988cff 48%,#73d7f7);-webkit-background-clip:text;background-clip:text;color:transparent;
 }
 .foot2-desc{position:relative;z-index:1;margin:.58rem 0 0;max-width:39rem;color:#f0eadf;font-size:clamp(.86rem,2.8vw,1rem);font-weight:400;line-height:1.52}
-@media(min-width:521px){ .foot2-brk{display:none} }
 @media(max-width:520px){
   .foot2-kicker{letter-spacing:.34em}
   .foot2-desc{max-width:none;font-size:.8rem}
@@ -31,7 +30,7 @@
 .foot2-acts{position:relative;z-index:1;display:flex;gap:.6rem;margin-top:1.4rem;flex-wrap:wrap}
 .foot2-act{
   appearance:none;-webkit-appearance:none;
-  flex:1;min-width:9rem;display:flex;align-items:center;gap:.65rem;
+  flex:0 0 auto;width:12rem;display:flex;align-items:center;gap:.65rem;
   background:rgba(255,255,255,.09);
   -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
   border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:.8rem 1.1rem .8rem 1rem;

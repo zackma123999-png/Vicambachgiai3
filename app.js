@@ -517,40 +517,35 @@
     const value = (key) => (Number.isFinite(stats[key]) ? fmtCount(stats[key]) : "—");
     const metricIcons = {
       members: `<svg viewBox="0 0 32 32"><circle cx="11" cy="10" r="4"/><circle cx="22" cy="12" r="3.2"/><path d="M3.5 27c.5-6.2 3.2-9.3 7.5-9.3s7 3.1 7.5 9.3M17 27c.3-4.7 2.2-7 5.4-7 3.1 0 5.2 2.3 5.6 7"/></svg>`,
-      comments: `<svg viewBox="0 0 32 32"><path d="M5 6.5h22v16H14l-6.5 4v-4H5z"/></svg>`,
-      views: `<svg viewBox="0 0 32 32"><path d="M2.8 16s4.8-8 13.2-8 13.2 8 13.2 8-4.8 8-13.2 8S2.8 16 2.8 16Z"/><circle cx="16" cy="16" r="3.8"/></svg>`,
-      hearts: `<svg viewBox="0 0 32 32"><path d="M16 27S4.5 20.2 4.5 11.8c0-6.3 7.8-8.4 11.5-2.3 3.7-6.1 11.5-4 11.5 2.3C27.5 20.2 16 27 16 27Z"/></svg>`,
-      stories: `<svg viewBox="0 0 32 32"><path d="M4.5 5.5h10.3c2.2 0 4 1.8 4 4v17H8.5a4 4 0 0 1-4-4v-17Z"/><path d="M18.8 9.5c0-2.2 1.8-4 4-4h4.7v17a4 4 0 0 1-4 4h-4.7"/></svg>`
+      views: `<svg viewBox="0 0 32 32"><path d="M2.8 16s4.8-8 13.2-8 13.2 8 13.2 8-4.8 8-13.2 8S2.8 16 2.8 16Z"/><circle cx="16" cy="16" r="3.8"/></svg>`
     };
     const metric = (key, label, icon) => `<div class="res-table-row res-metric-${icon}">
       <span class="res-line-icon" aria-hidden="true">${metricIcons[icon]}</span>
       <span class="res-metric-label">${label}</span>
       <b data-res="${key}">${value(key)}</b>
     </div>`;
+    const online = Number(stats.online) || 0;
+    const ratio = online ? Math.round(((Number(stats.online_members) || 0) / online) * 100) : 0;
     return `<section class="wrap resonance res-editorial-final" id="mat-do-cong-huong" aria-labelledby="resTitle">
       <header class="res-head">
         <div class="res-kicker"><i aria-hidden="true"></i><span>LIVE RESONANCE</span><b aria-hidden="true"></b></div>
         <div class="res-title-line"><h2 id="resTitle">Mật độ cộng hưởng</h2><time id="resTime" class="res-updated">vừa cập nhật</time></div>
       </header>
-      <div class="res-table">
-        <div class="res-summary">
-          <div class="res-summary-cell res-live">
-            <b data-res="online">${value("online")}</b>
-            <strong>ĐANG TRỰC TUYẾN</strong>
-            <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai / <span data-res="online_members">${value("online_members")}</span> thành viên</small>
-          </div>
-          <div class="res-summary-cell res-visits">
-            <b data-res="visits_today">${value("visits_today")}</b>
-            <strong>LƯỢT GHÉ HÔM NAY</strong>
-          </div>
+      <div class="res-summary">
+        <div class="res-summary-cell res-live">
+          <b data-res="online">${value("online")}</b>
+          <strong>ĐANG TRỰC TUYẾN</strong>
+          <small><span data-res="online_guests">${value("online_guests")}</span> vãng lai / <span data-res="online_members">${value("online_members")}</span> thành viên</small>
+          <div class="res-ratio-bar"><div class="res-ratio-fill" id="resRatio" style="width:${ratio}%"></div></div>
         </div>
-        <div class="res-table-body">
-          ${metric("members", "Thành viên", "members")}
-          ${metric("comments", "Bình luận", "comments")}
-          ${metric("total_views", "Tổng lượt xem", "views")}
-          ${metric("hearts", "Lượt thả tim", "hearts")}
-          ${metric("published_stories", "Truyện đã đăng", "stories")}
+        <div class="res-summary-cell res-visits">
+          <b data-res="visits_today">${value("visits_today")}</b>
+          <strong>LƯỢT GHÉ HÔM NAY</strong>
         </div>
+      </div>
+      <div class="res-table-body">
+        ${metric("members", "Thành viên", "members")}
+        ${metric("total_views", "Tổng lượt xem", "views")}
       </div>
     </section>`;
   }

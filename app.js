@@ -414,16 +414,28 @@
       </div>
     </article>`;
   }
+  const mmIcons = {
+    home: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 4l8.5 6.5"/><path d="M5.5 9.3V19a1 1 0 0 0 1 1H10v-5a2 2 0 0 1 2-2 2 2 0 0 1 2 2v5h3.5a1 1 0 0 0 1-1V9.3"/></svg>`,
+    compass: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.3"/><path d="M14.6 9.4 13 13l-3.6 1.6L11 11z"/></svg>`,
+    shelf: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5v15M20 4.5v15M4 9.5h16M4 15.5h16"/></svg>`,
+    shield: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.4 19 6v6c0 4.3-3 7.1-7 8.6-4-1.5-7-4.3-7-8.6V6z"/></svg>`,
+    mail: `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.2" y="5.5" width="17.6" height="13" rx="2.2"/><path d="m4 7 8 6 8-6"/></svg>`,
+    user: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.3"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg>`,
+    login: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5"/><path d="M9 8l4 4-4 4M3 12h9.5"/></svg>`,
+    pulse: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h3.6l2.1-6.2 4 12.4L15 12h6"/></svg>`
+  };
   function header(active) {
     const u = VCBG.currentUser();
     const mode = effectiveSiteMode(VCBG.settings());
     const modeBanner = mode === "readonly" ? `<div class="site-readonly-banner" role="status">Website đang ở chế độ chỉ đọc — bạn vẫn có thể đọc truyện, nhưng các thao tác gửi dữ liệu đang tạm dừng.</div>` : "";
     const unread = u ? VCBG.unreadCount() : 0;
-    const admin = u && VCBG.isAdmin() ? `<a href="#/admin">Quản trị</a>` : "";
+    const isAdmin = !!(u && VCBG.isAdmin());
+    const admin = isAdmin ? `<a href="#/admin">Quản trị</a>` : "";
     const acc = u
       ? `<a class="icon-btn" href="#/thong-bao" aria-label="Thông báo">${unread ? "●" : "○"}</a>
          <a class="avatar-chip" href="#/tai-khoan" title="${esc(u.profile.display_name)}">${esc(u.profile.avatar)}</a>`
       : `<a class="btn btn-login" href="#/dang-nhap">Đăng nhập</a>`;
+    const mmLink = (href, icon, label) => `<a class="mm-item" href="${href}">${mmIcons[icon]}<span>${label}</span></a>`;
     return `${modeBanner}<header class="site-header">
       <div class="header-inner">
         ${logoHTML()}
@@ -439,17 +451,24 @@
           <input id="qLive" type="search" placeholder="Tìm truyện..." autocomplete="off">
         </form>
         ${acc}
-        <button class="icon-btn menu-btn" id="btnMenu" aria-label="Menu" aria-expanded="false">☰</button>
+        <button class="icon-btn menu-btn" id="btnMenu" aria-label="Menu" aria-expanded="false"><span class="menu-btn-bars" aria-hidden="true"><i></i><i></i><i></i></span></button>
       </div>
       <div id="searchBox" class="search-panel" hidden></div>
     </header>
     <div id="mobileMenu" class="mobile-menu" hidden>
-      <a href="#/">Trang chủ</a>
-      <a href="#/kham-pha">Khám phá</a>
-      <a href="#/tu-truyen">Tủ truyện</a>
-      ${admin}
-      ${u ? `<a href="#/hop-thu">Hộp thư</a>` : ""}
-      ${u ? `<a href="#/tai-khoan">Tài khoản</a>` : `<a href="#/dang-nhap">Đăng nhập</a>`}
+      <div class="mm-group">
+        ${mmLink("#/", "home", "Trang chủ")}
+        ${mmLink("#/kham-pha", "compass", "Khám phá")}
+        ${mmLink("#/tu-truyen", "shelf", "Tủ truyện")}
+        <button type="button" class="mm-item" id="menuResonanceBtn">${mmIcons.pulse}<span>Cộng hưởng</span><i class="mm-item-dot" aria-hidden="true"></i></button>
+      </div>
+      ${isAdmin || u ? `<div class="mm-group">
+        ${isAdmin ? mmLink("#/admin", "shield", "Quản trị") : ""}
+        ${u ? mmLink("#/hop-thu", "mail", "Hộp thư") : ""}
+      </div>` : ""}
+      <div class="mm-group">
+        ${u ? mmLink("#/tai-khoan", "user", "Tài khoản") : mmLink("#/dang-nhap", "login", "Đăng nhập")}
+      </div>
     </div>`;
   }
   function footer() {
@@ -567,45 +586,32 @@
       </div>
     </section>`;
   }
-  function resonanceTag() {
-    const stats = VCBG.publicSiteStats ? VCBG.publicSiteStats() : {};
-    const online = Number.isFinite(stats.online) ? fmtCount(stats.online) : "—";
-    return `<button type="button" class="res-tag" id="resTagBtn" aria-haspopup="dialog" aria-expanded="false">
-      <span class="res-tag-dot" aria-hidden="true"></span>
-      <span class="res-tag-label">Cộng hưởng</span>
-      <b data-res="online">${online}</b>
-    </button>`;
-  }
-  function openResonanceDrawer() {
-    if ($("#resDrawerHost")) return;
-    const tag = $("#resTagBtn");
+  function openResonanceModal() {
+    if ($("#resModalHost")) return;
     const host = document.createElement("div");
-    host.id = "resDrawerHost";
-    host.innerHTML = `<div class="drawer-bg" id="resBg"></div>
-      <aside class="drawer bottom res-drawer" role="dialog" aria-labelledby="resTitle">
-        <div class="drawer-pad res-drawer-pad">
-          <button type="button" class="r-ico res-drawer-close" id="resDrawerClose" aria-label="Đóng">×</button>
-          ${resonancePanel()}
-        </div>
-      </aside>`;
+    host.id = "resModalHost";
+    host.innerHTML = `<div class="res-modal-bg" id="resModalBg"></div>
+      <div class="res-modal" id="resModalBox" role="dialog" aria-modal="true" aria-labelledby="resTitle">
+        <button type="button" class="r-ico res-modal-close" id="resModalClose" aria-label="Đóng">×</button>
+        ${resonancePanel()}
+      </div>`;
     document.body.appendChild(host);
-    if (tag) tag.setAttribute("aria-expanded", "true");
+    const onKey = (e) => { if (e.key === "Escape") close(); };
     const close = () => {
       host.remove();
       window.removeEventListener("hashchange", close);
-      if (tag) tag.setAttribute("aria-expanded", "false");
+      document.removeEventListener("keydown", onKey);
     };
-    $("#resBg").onclick = close;
-    $("#resDrawerClose").onclick = close;
+    $("#resModalBg").onclick = close;
+    $("#resModalClose").onclick = close;
+    document.addEventListener("keydown", onKey);
     window.addEventListener("hashchange", close, { once: true });
     return close;
   }
-  function bindResonance() {
-    const tag = $("#resTagBtn");
-    if (tag) tag.onclick = () => openResonanceDrawer();
-    if (!VCBG.watchPublicSiteStats) return;
-    if (typeof window.__vcbgResonanceUnwatch === "function") window.__vcbgResonanceUnwatch();
-    window.__vcbgResonanceUnwatch = VCBG.watchPublicSiteStats((stats) => {
+  function watchResonanceStats() {
+    if (!VCBG.watchPublicSiteStats || window.__vcbgResonanceWatching) return;
+    window.__vcbgResonanceWatching = true;
+    VCBG.watchPublicSiteStats((stats) => {
       $$('[data-res]').forEach((el) => {
         const n = stats[el.dataset.res];
         el.textContent = Number.isFinite(n) ? fmtCount(n) : "—";
@@ -932,6 +938,7 @@
     });
   }
   function bindChrome() {
+    watchResonanceStats();
     const menu = $("#btnMenu");
     const drawer = $("#mobileMenu");
     if (menu && drawer) {
@@ -953,6 +960,8 @@
         else openMenu();
       };
       $$("a", drawer).forEach((a) => (a.onclick = () => closeMenu()));
+      const menuRes = $("#menuResonanceBtn", drawer);
+      if (menuRes) menuRes.onclick = () => { closeMenu(); openResonanceModal(); };
     }
     const searchForm = $("#headSearch");
     const searchBtn = $("#btnSearch");
@@ -1191,11 +1200,9 @@
       </div>
       ${recommendationPanel()}
       ${previewStation(previewStories)}
-      ${homeLower()}
-      ${resonanceTag()}` +
+      ${homeLower()}` +
       footer();
     bindChrome();
-    bindResonance();
     const deck = banner;
     const n = deck.length;
     const heroEl = $("#hero");

@@ -1,5 +1,7 @@
 /* Resonance panel — sized to its own modal box (container query), never the viewport. */
-html,body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
+/* Only `body` gets overflow-x here, never `html` too — Safari/iOS breaks `position: sticky`
+   (e.g. the site header) when both html and body have an explicit overflow value. */
+body{max-width:100%;overflow-x:hidden;touch-action:pan-x pan-y}
 #mat-do-cong-huong.resonance{
   --res-cyan:#43dfe9;--res-violet:#b965ed;--res-line:rgba(109,145,183,.22);
   position:relative;isolation:isolate;display:block!important;width:100%;

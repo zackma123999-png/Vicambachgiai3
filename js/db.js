@@ -1286,6 +1286,15 @@
     } catch (_) {}
   }
 
+  // Mobile Safari (in particular its pull-to-refresh reload) can serve a
+  // stale cached response for a GET request that was already made with the
+  // same URL, even after a fresh page load — Supabase's REST reads never
+  // set Cache-Control themselves, so without this, a just-reloaded page can
+  // show data (e.g. notifications) that's already out of date.
+  function noStoreFetch(input, init) {
+    return global.fetch(input, Object.assign({}, init, { cache: "no-store" }));
+  }
+
   function client() {
     if (sb) return sb;
     const url = cfg().supabaseUrl;
@@ -1296,6 +1305,7 @@
     scrubAuthSecretsFromUrl();
     sb = global.supabase.createClient(url, key, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+      global: { fetch: noStoreFetch },
     });
     startAuthSubscription();
     return sb;

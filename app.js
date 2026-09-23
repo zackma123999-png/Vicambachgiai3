@@ -3703,7 +3703,7 @@
         ${until}
         <small class="maintenance-note">ViCamBachGiai sẽ sớm trở lại</small>
         <div class="maintenance-admin">
-          <button type="button" class="maintenance-admin-toggle" id="maintAdminToggle" aria-expanded="false">Đăng nhập quản trị</button>
+          <button type="button" class="maintenance-admin-toggle" id="maintAdminToggle" aria-expanded="false">Đăng nhập</button>
           <div class="maintenance-admin-panel" id="maintAdminPanel" hidden>
             <div class="auth-google-direct" id="maintGoogleAuth" role="button" tabindex="0" aria-live="polite">
               <span class="google-g-mark" aria-hidden="true">G</span><span>Đăng nhập bằng Google</span>

@@ -3650,8 +3650,7 @@
     window.scrollTo(0, 0);
     try {
       const mode = effectiveSiteMode(VCBG.settings());
-      const authRoute = route.name === "login" || route.name === "forgot";
-      if (mode === "maintenance" && !VCBG.isAdmin() && !authRoute) {
+      if (mode === "maintenance" && !VCBG.isAdmin()) {
         pageMaintenance();
         return;
       }
@@ -3703,9 +3702,84 @@
         <p>${esc(st.maintenance_message || "Website đang được bảo trì. Vui lòng quay lại sau.")}</p>
         ${until}
         <small class="maintenance-note">ViCamBachGiai sẽ sớm trở lại</small>
-        <a class="maintenance-admin-link" href="#/dang-nhap">Đăng nhập quản trị</a>
+        <div class="maintenance-admin">
+          <button type="button" class="maintenance-admin-toggle" id="maintAdminToggle" aria-expanded="false">Đăng nhập quản trị</button>
+          <div class="maintenance-admin-panel" id="maintAdminPanel" hidden>
+            <div class="auth-google-direct" id="maintGoogleAuth" role="button" tabindex="0" aria-live="polite">
+              <span class="google-g-mark" aria-hidden="true">G</span><span>Đăng nhập bằng Google</span>
+            </div>
+            <p class="maintenance-admin-err" id="maintAuthErr"></p>
+          </div>
+        </div>
       </section>
     </main>`;
+
+    const toggle = $("#maintAdminToggle");
+    const panel = $("#maintAdminPanel");
+    let mounted = false;
+    if (toggle && panel) {
+      toggle.onclick = () => {
+        panel.hidden = !panel.hidden;
+        toggle.setAttribute("aria-expanded", panel.hidden ? "false" : "true");
+        if (!panel.hidden && !mounted) {
+          mounted = true;
+          mountMaintenanceGoogle();
+        }
+      };
+    }
+
+    function showMaintErr(msg) {
+      const el = $("#maintAuthErr");
+      if (el) el.textContent = msg || "";
+    }
+
+    async function mountMaintenanceGoogle() {
+      const btn = $("#maintGoogleAuth");
+      if (!btn) return;
+      let attempts = 0;
+      const tryMount = async () => {
+        if (!btn.isConnected) return;
+        if (!(window.google && google.accounts && google.accounts.id)) {
+          attempts += 1;
+          if (attempts >= 50) {
+            btn.textContent = "Google chưa tải được trên trình duyệt này.";
+            return;
+          }
+          setTimeout(tryMount, 200);
+          return;
+        }
+        const rawNonce = crypto.randomUUID
+          ? crypto.randomUUID()
+          : Array.from(crypto.getRandomValues(new Uint8Array(24)), (n) => n.toString(16).padStart(2, "0")).join("");
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawNonce));
+        const hashedNonce = Array.from(new Uint8Array(digest), (n) => n.toString(16).padStart(2, "0")).join("");
+        btn.textContent = "";
+        google.accounts.id.disableAutoSelect();
+        google.accounts.id.initialize({
+          client_id: "726540465981-pg5i7fnr26ljb0cpi22su28b1lhc4f6b.apps.googleusercontent.com",
+          nonce: hashedNonce,
+          auto_select: false,
+          itp_support: true,
+          callback: async (response) => {
+            showMaintErr("");
+            btn.classList.add("is-busy");
+            try {
+              await VCBG.loginWithGoogleIdToken({ token: response.credential, nonce: rawNonce });
+              toast(VCBG.isAdmin() ? "Đăng nhập thành công." : "Tài khoản này không có quyền quản trị.");
+              await render();
+            } catch (err) {
+              btn.classList.remove("is-busy");
+              showMaintErr(err.message || "Không thể đăng nhập bằng Google.");
+            }
+          },
+        });
+        google.accounts.id.renderButton(btn, { type: "icon", theme: "outline", size: "large", shape: "circle" });
+      };
+      tryMount().catch((err) => {
+        btn.textContent = "Google chưa tải được trên trình duyệt này.";
+        showMaintErr(err.message || "Không thể khởi tạo đăng nhập Google.");
+      });
+    }
   }
 
   document.addEventListener("click", (e) => {

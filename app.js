@@ -3698,7 +3698,6 @@
           <img src="brand/mark.png" alt="">
         </div>
         <img class="maintenance-wordmark" src="brand/word.png" alt="ViCamBachGiai">
-        <div class="maintenance-status"><span></span> ĐANG BẢO TRÌ</div>
         <p>${esc(st.maintenance_message || "Website đang được bảo trì. Vui lòng quay lại sau.")}</p>
         ${until}
         <small class="maintenance-note">ViCamBachGiai sẽ sớm trở lại</small>

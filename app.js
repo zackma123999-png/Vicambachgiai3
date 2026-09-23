@@ -3654,6 +3654,7 @@
         <p>${esc(st.maintenance_message || "Website đang được bảo trì. Vui lòng quay lại sau.")}</p>
         ${until}
         <small class="maintenance-note">ViCamBachGiai sẽ sớm trở lại</small>
+        <a class="maintenance-admin-link" href="#/dang-nhap">Đăng nhập quản trị</a>
       </section>
     </main>`;
   }

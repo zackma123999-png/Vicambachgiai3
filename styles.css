@@ -36,6 +36,8 @@ body {
 .maintenance-divider{width:76px;height:2px;background:linear-gradient(90deg,transparent,#a874ff 25%,#ff75df 52%,#63ddff 78%,transparent);box-shadow:0 0 12px rgba(198,103,255,.7)}
 .maintenance-card p{color:#e0e7f8;text-shadow:0 2px 18px rgba(79,172,255,.08)}
 .maintenance-note{color:#9faac5;background:linear-gradient(90deg,#938bba,#a9bddd);-webkit-background-clip:text;background-clip:text;color:transparent}
+.maintenance-admin-link{display:inline-block;margin-top:1.4rem;padding:.3rem .2rem;color:#5c6785;font-size:.72rem;letter-spacing:.03em;text-decoration:none;border-bottom:1px solid transparent;transition:color .18s ease,border-color .18s ease}
+.maintenance-admin-link:hover,.maintenance-admin-link:focus-visible{color:#a78bfa;border-color:rgba(167,139,250,.45)}
 @media(max-width:640px){.maintenance-wordmark{width:min(210px,74%)}}
 
 /* Maintenance typography — elegant editorial pairing */

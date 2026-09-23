@@ -3764,7 +3764,7 @@
             btn.classList.add("is-busy");
             try {
               await VCBG.loginWithGoogleIdToken({ token: response.credential, nonce: rawNonce });
-              toast(VCBG.isAdmin() ? "Đăng nhập thành công." : "Tài khoản này không có quyền quản trị.");
+              toast(VCBG.isAdmin() ? "Mời admin vào!" : "Vui lòng quay lại khi ViCamBachGiai đã sẵn sàng.");
               await render();
             } catch (err) {
               btn.classList.remove("is-busy");

@@ -1374,8 +1374,23 @@
     return `<option value="">${esc(label)}</option>` + items.map((x) => `<option value="${esc(x.slug)}" ${x.slug === cur ? "selected" : ""}>${esc(x.name)}</option>`).join("");
   }
 
-  function pageStory(route) {
-    const s = VCBG.getStoryBySlug(route.slug);
+  async function ensureStoryFresh(slug) {
+    let s = VCBG.getStoryBySlug(slug);
+    if (s) return s;
+    /* A local device can hold a stale or incomplete catalog snapshot (e.g. a
+       story published while this device only had a cached copy, or right
+       after the site comes back from maintenance mode). Before declaring the
+       story missing, force one fresh sync against the live catalog. */
+    if (VCBG.syncPublicContent) {
+      try {
+        await VCBG.syncPublicContent({ maxAge: 0 });
+      } catch (_) {}
+    }
+    return VCBG.getStoryBySlug(slug);
+  }
+
+  async function pageStory(route) {
+    const s = await ensureStoryFresh(route.slug);
     if (!s) {
       app().innerHTML = header() + `<div class="empty">Không tìm thấy truyện.</div>` + footer();
       bindChrome();
@@ -1665,7 +1680,7 @@
       goToLogin(`/truyen/${route.slug}/chuong-${route.number}`);
       return;
     }
-    const s = VCBG.getStoryBySlug(route.slug);
+    const s = await ensureStoryFresh(route.slug);
     if (!s) {
       app().innerHTML = `<div class="empty">Không tìm thấy truyện.</div>`;
       return;
@@ -3655,7 +3670,7 @@
       }
       if (route.name === "home") pageHome();
       else if (route.name === "explore") pageExplore(route);
-      else if (route.name === "story") pageStory(route);
+      else if (route.name === "story") await pageStory(route);
       else if (route.name === "read") await pageRead(route);
       else if (route.name === "login") pageAuth("login");
       else if (route.name === "register") pageAuth("register");

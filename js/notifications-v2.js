@@ -417,7 +417,7 @@
       $("[data-announcement-submit]", form).textContent = "Lưu chỉnh sửa";
       $("[data-announcement-cancel]", form).hidden = false;
       $("[data-announcement-heading]", host).textContent = "Chỉnh sửa thông báo";
-      $("[data-body-count]", form).textContent = item.body.length + " / 2000";
+      $("[data-body-count]", form).textContent = item.body.length + " ký tự";
       form.scrollIntoView({ behavior: "smooth", block: "start" });
     }));
 
@@ -454,14 +454,14 @@
       '<div data-announcement-audience><div class="field"><label>Người nhận</label><select name="audience"><option value="all">Tất cả thành viên</option><option value="user">Một thành viên</option><option value="story">Người theo dõi một truyện</option></select></div>' +
       '<div class="field vc-target-user" hidden><label>Thành viên</label><select name="user_id">' + users.filter((u) => u.role !== "admin").map((u) => '<option value="' + esc(u.id) + '">' + esc(u.profile.display_name) + ' · ' + esc(u.email) + '</option>').join("") + '</select></div>' +
       '<div class="field vc-target-story" hidden><label>Truyện</label><select name="story_id">' + stories.map((s) => '<option value="' + esc(s.id) + '">' + esc(s.title) + '</option>').join("") + '</select></div></div>' +
-      '<div class="field"><label>Tiêu đề</label><input name="title" maxlength="100" required></div><div class="field"><label>Nội dung</label><textarea name="body" maxlength="2000" required></textarea><small class="vc-body-count" data-body-count>0 / 2000</small></div>' +
+      '<div class="field"><label>Tiêu đề</label><input name="title" maxlength="100" required></div><div class="field"><label>Nội dung</label><textarea name="body" required></textarea><small class="vc-body-count" data-body-count>0 ký tự</small></div>' +
       '<p class="sub">Thông báo sẽ mở thành một cuộc trò chuyện riêng để thành viên có thể trả lời.</p><div class="vc-admin-form-actions"><button class="btn btn-primary" type="submit" data-announcement-submit>Gửi và mở hội thoại</button><button class="btn btn-ghost" type="button" data-announcement-cancel hidden>Hủy chỉnh sửa</button></div></form>' +
       '<section class="vc-admin-notif-history"><h2>Thông báo đã gửi</h2><div id="vcAdminNotifHistory"></div></section></section>';
     const form = $("form", host), audience = form.audience;
     const toggle = () => { $(".vc-target-user", form).hidden = audience.value !== "user"; $(".vc-target-story", form).hidden = audience.value !== "story"; };
     audience.onchange = toggle; toggle();
     const bodyField = $('[name="body"]', form);
-    bodyField.addEventListener("input", () => { $("[data-body-count]", form).textContent = bodyField.value.length + " / 2000"; });
+    bodyField.addEventListener("input", () => { $("[data-body-count]", form).textContent = bodyField.value.length + " ký tự"; });
     $("[data-announcement-cancel]", form).onclick = () => {
       editingAnnouncementId = "";
       form.reset(); toggle();
@@ -469,7 +469,7 @@
       $("[data-announcement-submit]", form).textContent = "Gửi và mở hội thoại";
       $("[data-announcement-cancel]", form).hidden = true;
       $("[data-announcement-heading]", host).textContent = "Gửi thông báo";
-      $("[data-body-count]", form).textContent = "0 / 2000";
+      $("[data-body-count]", form).textContent = "0 ký tự";
     };
     form.onsubmit = async (e) => {
       e.preventDefault();
@@ -479,7 +479,6 @@
         const title = String(fd.get("title") || "").trim();
         const body = String(fd.get("body") || "").trim();
         if (!title || !body) throw new Error("Vui lòng nhập đủ tiêu đề và nội dung.");
-        if (body.length > 2000) throw new Error("Nội dung không được vượt quá 2.000 ký tự.");
         if (editingAnnouncementId) {
           const updated = await client().rpc("update_manual_announcement", {
             p_announcement_id: editingAnnouncementId, p_title: title, p_body: body
@@ -511,7 +510,7 @@
         const sent = await client().from("conversation_messages").insert(messages);
         if (sent.error) throw sent.error;
         if (window.toast) toast("Đã gửi đến " + messages.length + " tài khoản.");
-        form.reset(); toggle(); $("[data-body-count]", form).textContent = "0 / 2000";
+        form.reset(); toggle(); $("[data-body-count]", form).textContent = "0 ký tự";
         await loadAdminAnnouncements(host);
       } catch (err) {
         if (window.toast) toast(err.message || "Không gửi được thông báo.");

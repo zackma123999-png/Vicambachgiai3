@@ -428,11 +428,10 @@
     const u = VCBG.currentUser();
     const mode = effectiveSiteMode(VCBG.settings());
     const modeBanner = mode === "readonly" ? `<div class="site-readonly-banner" role="status">Website đang ở chế độ chỉ đọc — bạn vẫn có thể đọc truyện, nhưng các thao tác gửi dữ liệu đang tạm dừng.</div>` : "";
-    const unread = u ? VCBG.unreadCount() : 0;
     const isAdmin = !!(u && VCBG.isAdmin());
     const admin = isAdmin ? `<a href="#/admin">Quản trị</a>` : "";
     const acc = u
-      ? `<a class="icon-btn" href="#/thong-bao" aria-label="Thông báo">${unread ? "●" : "○"}</a>
+      ? `<a class="icon-btn" href="#/thong-bao" aria-label="Thông báo"></a>
          <a class="avatar-chip" href="#/tai-khoan" title="${esc(u.profile.display_name)}">${esc(u.profile.avatar)}</a>`
       : `<a class="btn btn-login" href="#/dang-nhap">Đăng nhập</a>`;
     const mmLink = (href, icon, label) => `<a class="mm-item" href="${href}">${mmIcons[icon]}<span>${label}</span></a>`;

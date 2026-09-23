@@ -28,7 +28,8 @@
     const cfg = window.VCBG_CONFIG || {};
     if (!window.supabase || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return null;
     sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+      global: { fetch: (input, init) => fetch(input, Object.assign({}, init, { cache: "no-store" })) }
     });
     return sb;
   }

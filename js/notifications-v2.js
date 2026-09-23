@@ -510,6 +510,11 @@
         const messages = (created.data || []).map((thread) => ({ thread_id: thread.id, sender_id: adminId, body, announcement_id: batchId }));
         const sent = await client().from("conversation_messages").insert(messages);
         if (sent.error) throw sent.error;
+        const selfNotify = await client().from("notifications").insert({
+          user_id: adminId, notification_type: "manual", title, body,
+          href: "#/admin/thong-bao", announcement_id: batchId, read: false
+        });
+        if (selfNotify.error) console.error("[admin self notification]", selfNotify.error);
         if (window.toast) toast("Đã gửi đến " + messages.length + " tài khoản.");
         form.reset(); toggle(); $("[data-body-count]", form).textContent = "0 ký tự";
         await loadAdminAnnouncements(host);

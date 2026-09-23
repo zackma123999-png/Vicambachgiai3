@@ -4,6 +4,7 @@
 
   var HERO_KEY = "vicambachgiai.hero.v1";
   var CATALOG_KEY = "vicambachgiai.catalog.v1";
+  var MODE_KEY = "vicambachgiai.mode.v1";
   var originalInit = window.VCBG.init.bind(window.VCBG);
   var originalListStories = window.VCBG.listStories.bind(window.VCBG);
   var started = false;
@@ -97,6 +98,22 @@
     } catch (_) {}
   }
 
+  /* Remembers the last confirmed site_mode so the instant-paint shortcut below
+     can tell "known open" from "known under maintenance" from "never checked
+     on this device" — it must never assume "normal" for the latter two. */
+  function saveLiveMode() {
+    try {
+      var live = (window.VCBG.settings && window.VCBG.settings()) || null;
+      var mode = live && ["normal", "readonly", "maintenance"].includes(live.site_mode) ? live.site_mode : "normal";
+      localStorage.setItem(MODE_KEY, JSON.stringify({ at: Date.now(), mode: mode }));
+    } catch (_) {}
+  }
+
+  window.VCBG.cachedSiteMode = function cachedSiteMode() {
+    var m = readJson(MODE_KEY);
+    return (m && m.mode) || null;
+  };
+
   function startBackgroundRefresh() {
     if (started) return backgroundInit || Promise.resolve();
     started = true;
@@ -105,6 +122,7 @@
         .then(function () {
           backgroundDone = true;
           saveLiveFallback();
+          saveLiveMode();
           try { window.dispatchEvent(new CustomEvent("vcbg:data-ready")); } catch (_) {}
         })
         .catch(function (err) {

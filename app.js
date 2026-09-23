@@ -3577,9 +3577,20 @@
        render once it settles, so the placeholder set is replaced by the real
        catalog and the account state finishes resolving. Every other route
        always waits: they decide what to show from the live Supabase session,
-       never from a device-local snapshot. */
+       never from a device-local snapshot.
+       This must never let a device paint real content while the site is
+       actually under maintenance. The device only knows this from its own
+       last confirmed site_mode (VCBG.cachedSiteMode()) — if that says
+       "maintenance", or this device has never confirmed a mode at all, the
+       shortcut is skipped and the real check below decides, same as any
+       other route. */
     const PUBLIC_CONTENT_ROUTES = new Set(["home", "explore", "story"]);
-    const canPaintNow = PUBLIC_CONTENT_ROUTES.has(route.name) && !!(VCBG.listStories && VCBG.listStories().length);
+    const cachedMode = (VCBG.cachedSiteMode && VCBG.cachedSiteMode()) || null;
+    const canPaintNow =
+      PUBLIC_CONTENT_ROUTES.has(route.name) &&
+      !!(VCBG.listStories && VCBG.listStories().length) &&
+      cachedMode !== "maintenance" &&
+      cachedMode !== null;
     if (canPaintNow) {
       /* Attach the follow-up render only once per page load: VCBG.init() is
          idempotent and resolves instantly once bootstrapped, so re-attaching

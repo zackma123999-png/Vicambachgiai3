@@ -3546,6 +3546,7 @@
     renderLock = mine.catch(() => {});
     return mine;
   }
+  let backgroundInitWatchStarted = false;
   function paintShell() {
     if (app().querySelector(".site-header")) return;
     app().innerHTML =
@@ -3567,30 +3568,67 @@
         if (retry) retry.onclick = () => location.reload();
       }
     }, 9000);
-    try {
-      await VCBG.init();
-    } catch (e) {
-      clearTimeout(watchdog);
-      app().innerHTML =
-        header() +
-        `<div class="empty">Không khởi tạo được dữ liệu: ${esc(e.message)}<p><button type="button" class="btn btn-cyan" id="bootRetry">Thử lại</button></p></div>` +
-        footer();
-      bindChrome();
-      const retry = $("#bootRetry");
-      if (retry) retry.onclick = () => location.reload();
-      return;
+    const route = parseHash();
+    /* A route that is both public (no login required, unlike /doc, /thu-vien,
+       /tai-khoan, /admin…) and content-driven can paint immediately once any
+       story data is on hand — a real cached catalog, or the bundled hero
+       snapshot on a brand-new device — instead of sitting on the boot screen.
+       VCBG.init() keeps running in the background and triggers one more
+       render once it settles, so the placeholder set is replaced by the real
+       catalog and the account state finishes resolving. Every other route
+       always waits: they decide what to show from the live Supabase session,
+       never from a device-local snapshot. */
+    const PUBLIC_CONTENT_ROUTES = new Set(["home", "explore", "story"]);
+    const canPaintNow = PUBLIC_CONTENT_ROUTES.has(route.name) && !!(VCBG.listStories && VCBG.listStories().length);
+    if (canPaintNow) {
+      /* Attach the follow-up render only once per page load: VCBG.init() is
+         idempotent and resolves instantly once bootstrapped, so re-attaching
+         this on every subsequent render() call would re-render forever. */
+      if (!backgroundInitWatchStarted) {
+        backgroundInitWatchStarted = true;
+        VCBG.init().then(
+          () => render(),
+          (e) => console.error("[VCBG background init]", e)
+        );
+      }
+    } else {
+      try {
+        await VCBG.init();
+      } catch (e) {
+        clearTimeout(watchdog);
+        app().innerHTML =
+          header() +
+          `<div class="empty">Không khởi tạo được dữ liệu: ${esc(e.message)}<p><button type="button" class="btn btn-cyan" id="bootRetry">Thử lại</button></p></div>` +
+          footer();
+        bindChrome();
+        const retry = $("#bootRetry");
+        if (retry) retry.onclick = () => location.reload();
+        return;
+      }
     }
     clearTimeout(watchdog);
-    const route = parseHash();
-    /* The homepage must not stay on the bundled/local fallback catalog. This is
-       especially visible in in-app browsers (Facebook, Messenger), where the
-       initial Supabase request often finishes after the first paint. Wait for
-       the shared catalog on every direct homepage open as well as story pages. */
+    /* The homepage must not stay on the bundled/local fallback catalog forever.
+       But when a live catalog is already cached (returning visit), there is no
+       need to block the first paint on a fresh network round trip: paint now,
+       sync in the background, and re-render only if something actually changed.
+       Only a cold start with nothing cached still waits, since there is no
+       content to show otherwise. */
     if ((route.name === "home" || route.name === "story" || route.name === "read") && VCBG.syncPublicContent) {
-      try {
-        await VCBG.syncPublicContent({ maxAge: 5000 });
-      } catch (error) {
-        console.warn("[VCBG content sync]", error && error.message);
+      const hasCachedStories = !!(VCBG.listStories && VCBG.listStories().length);
+      if (hasCachedStories) {
+        VCBG.syncPublicContent({ maxAge: 5000 })
+          .then((changed) => {
+            if (changed) render();
+          })
+          .catch((error) => {
+            console.warn("[VCBG content sync]", error && error.message);
+          });
+      } else {
+        try {
+          await VCBG.syncPublicContent({ maxAge: 5000 });
+        } catch (error) {
+          console.warn("[VCBG content sync]", error && error.message);
+        }
       }
     }
     const pendingAuthReturn = authReturnSnapshot();

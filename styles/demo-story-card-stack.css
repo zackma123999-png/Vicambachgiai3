@@ -136,6 +136,7 @@
   border: none;
   background: var(--accent);
   color: #fff;
+  text-decoration: none;
   padding: 0 0.9rem 0 1rem;
   font-size: 0.85rem;
   font-weight: 500;

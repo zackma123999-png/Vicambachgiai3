@@ -1,12 +1,12 @@
 /* Demo: animated story card stack — vanilla port of a 21st.dev framer-motion component. */
 (function () {
   var stories = [
-    { title: "Hoang Thành", sub: "Thành cổ ngủ quên giữa sương mù", img: "covers/hoang-thanh.jpg" },
-    { title: "Huyền Kiếm", sub: "Kiếm khí ngàn năm, duyên nợ một đời", img: "covers/huyen-kiem.jpg" },
-    { title: "Biển Sương", sub: "Nơi sóng và mây cùng thì thầm", img: "covers/bien-suong.jpg" },
-    { title: "Đêm Muội", sub: "Đêm dài, ánh mắt không rời", img: "covers/dem-muoi.jpg" },
-    { title: "Rừng Xưa", sub: "Lối cũ, người xưa, chuyện chưa kể", img: "covers/rung-xua.jpg" },
-    { title: "Thu Trang", sub: "Ánh trăng thu soi bóng hai người", img: "covers/thu-trang.jpg" }
+    { title: "Sổ Đèn Lồng", author: "Từ Yên", slug: "so-den-long", img: "covers/hoang-thanh.jpg" },
+    { title: "Thư Không Gửi", author: "Lâm Dạ", slug: "thu-khong-gui", img: "covers/huyen-kiem.jpg" },
+    { title: "Biển Không Tên", author: "Hà Vũ", slug: "bien-khong-ten", img: "covers/bien-suong.jpg" },
+    { title: "Ga 1:17", author: "K. Trần", slug: "ga-mot-gio-muoi-bay", img: "covers/dem-muoi.jpg" },
+    { title: "Đường Không Gọi Tên", author: "Bạch Lộ", slug: "duong-khong-goi-ten", img: "covers/rung-xua.jpg" },
+    { title: "Ghế Bên Cửa Sổ", author: "Ngô An", slug: "ghe-ben-cua-so", img: "covers/thu-trang.jpg" }
   ];
 
   var positions = [
@@ -39,8 +39,8 @@
       '<div class="acs-card__inner">' +
       '  <div class="acs-card__cover"><img src="' + story.img + '" alt="' + story.title + '" /></div>' +
       '  <div class="acs-card__meta">' +
-      '    <div class="acs-card__text"><strong>' + story.title + "</strong><span>" + story.sub + "</span></div>" +
-      '    <button type="button" class="acs-read-btn">Đọc ' + readIcon() + "</button>" +
+      '    <div class="acs-card__text"><strong>' + story.title + "</strong><span>Tác giả: " + story.author + "</span></div>" +
+      '    <a class="acs-read-btn" href="index.html#/truyen/' + story.slug + '">Đọc ' + readIcon() + "</a>" +
       "  </div>" +
       "</div>";
     return el;

@@ -1,0 +1,177 @@
+/* Demo: animated story card stack (vanilla port of a 21st.dev framer-motion component) */
+.acs-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 3rem 1rem;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Be Vietnam Pro", "IBM Plex Sans", system-ui, sans-serif;
+}
+
+.acs-page__heading {
+  text-align: center;
+  max-width: 32rem;
+}
+
+.acs-page__heading h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  margin: 0 0 0.4rem;
+}
+
+.acs-page__heading p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.acs-shell {
+  display: flex;
+  width: 100%;
+  max-width: 644px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.acs-stage {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  overflow: hidden;
+}
+
+.acs-card {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 324px;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.75rem 0.75rem 0 0;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  background: var(--bg-2);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  padding: 0.25rem;
+  will-change: transform;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (min-width: 640px) {
+  .acs-stage { width: 644px; }
+  .acs-card { width: 512px; }
+}
+
+.acs-card__inner {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.acs-card__cover {
+  height: 200px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0.65rem;
+  outline: 1px solid var(--line);
+  outline-offset: -1px;
+}
+
+.acs-card__cover img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  user-select: none;
+  display: block;
+}
+
+.acs-card__meta {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.75rem 1.5rem;
+}
+
+.acs-card__text {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.acs-card__text strong {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.98rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.acs-card__text span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.acs-read-btn {
+  flex-shrink: 0;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  padding: 0 0.9rem 0 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.acs-controls {
+  position: relative;
+  z-index: 10;
+  margin-top: -1px;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--line);
+  padding: 1rem 0;
+}
+
+.acs-animate-btn {
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  padding: 0 0.9rem;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.acs-animate-btn:hover { background: var(--line); }
+.acs-animate-btn:active { transform: scale(0.98); }
+.acs-animate-btn:disabled { opacity: 0.5; cursor: default; }

@@ -30,6 +30,12 @@
 /js/signal-feed-window.js
   Cache-Control: no-cache, must-revalidate
 
+/styles/reader-comment-drawer-v2.css
+  Cache-Control: no-cache, must-revalidate
+
+/js/reader-comment-drawer-v2.js
+  Cache-Control: no-cache, must-revalidate
+
 
 /terms
   X-Robots-Tag: noindex, nofollow

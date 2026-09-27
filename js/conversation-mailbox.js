@@ -52,15 +52,17 @@
 
   async function loadThreads() {
     const out = await api().from("conversation_threads")
-      .select("id,member_id,subject,status,created_at,updated_at,profiles!conversation_threads_member_id_fkey(display_name,email,avatar)")
+      .select("id,member_id,subject,status,created_at,updated_at,last_message_body,last_message_at,last_sender_id,profiles!conversation_threads_member_id_fkey(display_name,email,avatar)")
       .order("updated_at", { ascending:false });
     if (out.error) throw out.error;
     return out.data || [];
   }
 
-  async function loadAllMessages() {
+  async function loadThreadMessages(threadId) {
+    if (!threadId) return [];
     const out = await api().from("conversation_messages")
       .select("id,thread_id,sender_id,body,created_at")
+      .eq("thread_id", threadId)
       .order("created_at", { ascending:true });
     if (out.error) throw out.error;
     return out.data || [];
@@ -119,26 +121,16 @@
       .subscribe();
   }
 
-  function groupMessages(messages) {
-    const grouped = {};
-    messages.forEach((message) => {
-      (grouped[message.thread_id] || (grouped[message.thread_id] = [])).push(message);
-    });
-    return grouped;
-  }
-
-  function threadCard(thread, messages, unread, adminView, activeId, me) {
+  function threadCard(thread, unread, adminView, activeId, me) {
     const profile = thread.profiles || {};
     const peerName = adminView ? (profile.display_name || profile.email || "Thành viên") : "Quản trị viên";
-    const list = messages[thread.id] || [];
-    const last = list[list.length - 1];
-    const preview = last ? last.body : "Chưa có tin nhắn";
-    const answered = !!(last && (adminView ? last.sender_id === me.id : last.sender_id !== me.id));
+    const preview = thread.last_message_body || "Chưa có tin nhắn";
+    const answered = !!(thread.last_sender_id && (adminView ? thread.last_sender_id === me.id : thread.last_sender_id !== me.id));
     const search = [peerName, thread.subject, preview].join(" ").toLowerCase();
     return '<a href="' + baseRoute(adminView) + '?thread=' + esc(thread.id) + '" class="vc-mail-thread' + (thread.id === activeId ? ' on' : '') + '"' +
       ' data-unread="' + (unread.has(String(thread.id)) ? 'true' : 'false') + '" data-answered="' + (answered ? 'true' : 'false') + '" data-search="' + esc(search) + '">' +
       avatarHtml(profile, !adminView) +
-      '<span class="vc-mail-thread-copy"><span class="vc-mail-thread-line"><b>' + esc(peerName) + '</b><time>' + esc(dateTime((last && last.created_at) || thread.updated_at)) + '</time></span>' +
+      '<span class="vc-mail-thread-copy"><span class="vc-mail-thread-line"><b>' + esc(peerName) + '</b><time>' + esc(dateTime(thread.last_message_at || thread.updated_at)) + '</time></span>' +
       '<strong>' + esc(thread.subject) + '</strong><span class="vc-mail-preview">' + esc(preview) + '</span></span>' +
       (unread.has(String(thread.id)) ? '<i class="vc-mail-unread" aria-label="Chưa đọc"></i>' : '') + '</a>';
   }
@@ -169,13 +161,12 @@
     if (!force && host.dataset.mailReady === paintKey) return;
     painting = true;
     try {
-      const [threads, allMessages, unread] = await Promise.all([loadThreads(), loadAllMessages(), loadUnread(me.id)]);
-      const messages = groupMessages(allMessages);
+      const [threads, unread] = await Promise.all([loadThreads(), loadUnread(me.id)]);
       const requestedId = params().get("thread") || "";
       let activeId = requestedId || (threads[0] && threads[0].id) || "";
       if (activeId && !threads.some((thread) => thread.id === activeId)) activeId = threads[0] ? threads[0].id : "";
       const active = threads.find((thread) => thread.id === activeId);
-      const activeMessages = active ? (messages[active.id] || []) : [];
+      const activeMessages = active ? await loadThreadMessages(active.id) : [];
       const showChatOnMobile = !!requestedId;
       const wideScreen = window.matchMedia("(min-width: 761px)").matches;
       if (active && (showChatOnMobile || wideScreen)) {
@@ -199,7 +190,7 @@
         '<div class="vc-mail-layout ' + (showChatOnMobile ? 'is-chat-view' : 'is-list-view') + '">' +
           '<aside class="vc-mail-threads-pane"><div class="vc-mail-tools"><label class="vc-mail-search"><span>⌕</span><input type="search" data-mail-search placeholder="Tìm người hoặc nội dung" aria-label="Tìm cuộc trò chuyện"></label>' +
           '<div class="vc-mail-filters"><button type="button" class="on" data-mail-filter="all">Tất cả</button><button type="button" data-mail-filter="unread">Chưa đọc</button><button type="button" data-mail-filter="answered">Đã trả lời</button></div></div>' +
-          '<div class="vc-mail-threads">' + (threads.length ? threads.map((thread) => threadCard(thread, messages, unread, adminView, (showChatOnMobile || wideScreen) ? activeId : "", me)).join('') : '<div class="vc-mail-empty">Chưa có cuộc trò chuyện.</div>') +
+          '<div class="vc-mail-threads">' + (threads.length ? threads.map((thread) => threadCard(thread, unread, adminView, (showChatOnMobile || wideScreen) ? activeId : "", me)).join('') : '<div class="vc-mail-empty">Chưa có cuộc trò chuyện.</div>') +
           '<div class="vc-mail-empty" data-mail-filter-empty hidden>Không tìm thấy cuộc trò chuyện phù hợp.</div></div></aside>' +
           '<section class="vc-mail-conversation">' + (active ?
             '<header><a class="vc-mail-back" href="' + baseRoute(adminView) + '" aria-label="Quay lại hộp thư">‹</a>' + avatarHtml(activeProfile, !adminView) + '<div><b>' + esc(peerName) + '</b><span>' + esc(active.subject) + '</span></div></header>' +

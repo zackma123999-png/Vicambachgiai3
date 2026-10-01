@@ -1703,9 +1703,7 @@
     const mine = VCBG.myRating(s.id);
     const favOn = VCBG.isFavorite(s.id);
     const bodyHtml = decorateParagraphs(sanitize(ch.body), comments);
-    // The player is part of the public reading experience. Uploading and
-    // editing audio remain protected inside the Admin chapter editor.
-    const audioHtml = chapterAudioPlayer(ch, s);
+    const ttsOpts = { cover: s.cover || "brand/mark.png", title: ch.number === 0 ? "Nghe phần mở đầu" : `Nghe chương ${ch.number}` };
     const chLabel = `${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
     app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
       <header class="reader-chrome reader-top" id="rTop">
@@ -1722,8 +1720,7 @@
       <article class="reader-body" id="rbody">
         <h2>${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
         <div class="r-orn" aria-hidden="true"></div>
-        ${audioHtml}
-        ${window.VCBGReaderTTS ? window.VCBGReaderTTS.html() : ""}
+        ${window.VCBGReaderTTS ? window.VCBGReaderTTS.html(ttsOpts) : ""}
         ${bodyHtml}
         <section class="r-engage" id="rEngage">
           <button type="button" id="btnLikeCh" class="${liked ? "on" : ""}"><span>♡</span><b>Thích chương này</b><em>${likeN}</em></button>
@@ -1775,8 +1772,7 @@
       progT = setTimeout(() => VCBG.saveProgress(s.id, ch.id, ch.number, window.scrollY), 400);
     };
     updateProg();
-    bindChapterAudio();
-    if (window.VCBGReaderTTS) window.VCBGReaderTTS.bind(page);
+    if (window.VCBGReaderTTS) window.VCBGReaderTTS.bind(page, ttsOpts);
     const autoScroll = createAutoScroll(page, next ? `#/truyen/${esc(s.slug)}/chuong-${next.number}` : "");
     $("#btnSet").onclick = (e) => {
       e.stopPropagation();
@@ -1834,73 +1830,6 @@
     };
     $("#btnCmtAll").onclick = () => openComments(s, ch, "", "");
     bindParagraphComments(s, ch, comments);
-  }
-  function chapterAudioPlayer(ch, story) {
-    const cover = story.cover || ch.audio_cover_url || "brand/mark.png";
-    const videoId = youtubeVideoId(ch.youtube_audio_url);
-    const title = ch.audio_title || (ch.number === 0 ? "Bản nghe phần mở đầu" : `Bản nghe chương ${ch.number}`);
-    return `<section class="chapter-youtube-audio${videoId ? "" : " is-empty"}" data-chapter-audio ${videoId ? `data-youtube-id="${esc(videoId)}"` : ""}>
-      <button type="button" class="chapter-youtube-bar" data-audio-toggle aria-expanded="false" ${videoId ? "" : "disabled"}>
-        <span class="chapter-youtube-cover" style="--audio-cover:url('${esc(cover)}')" aria-hidden="true"><i>${videoId ? "▶" : "♪"}</i></span>
-        <span class="chapter-youtube-copy"><small>${videoId ? "NGHE TRÊN YOUTUBE" : "BẢN NGHE"}</small><strong>${esc(videoId ? title : "Chưa có bản nghe")}</strong></span>
-        <span class="chapter-youtube-action" data-audio-action>${videoId ? "Mở trình phát" : "Chưa cập nhật"}</span>
-        <span class="chapter-youtube-chevron" aria-hidden="true">⌄</span>
-      </button>
-      <div class="chapter-youtube-player" data-audio-player hidden></div>
-    </section>`;
-  }
-  function youtubeVideoId(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    try {
-      const url = new URL(raw);
-      const host = url.hostname.toLowerCase().replace(/^www\./, "");
-      let id = "";
-      if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
-      else if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
-        id = url.searchParams.get("v") || "";
-        if (!id) {
-          const parts = url.pathname.split("/").filter(Boolean);
-          if (["shorts", "embed", "live"].includes(parts[0])) id = parts[1] || "";
-        }
-      }
-      return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : "";
-    } catch (_) {
-      return "";
-    }
-  }
-  function bindChapterAudio() {
-    $$('[data-chapter-audio]').forEach((box) => {
-      const toggle = box.querySelector('[data-audio-toggle]');
-      const player = box.querySelector('[data-audio-player]');
-      const action = box.querySelector('[data-audio-action]');
-      const videoId = box.dataset.youtubeId;
-      if (!toggle || !player || !videoId) return;
-      toggle.onclick = (event) => {
-        event.stopPropagation();
-        const open = toggle.getAttribute("aria-expanded") === "true";
-        if (open) {
-          player.replaceChildren();
-          player.hidden = true;
-          box.classList.remove("is-open");
-          toggle.setAttribute("aria-expanded", "false");
-          action.textContent = "Mở trình phát";
-          return;
-        }
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0`;
-        iframe.title = `Trình phát ${action.closest("button").querySelector("strong").textContent}`;
-        iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-        iframe.referrerPolicy = "strict-origin-when-cross-origin";
-        iframe.setAttribute("allowfullscreen", "");
-        player.replaceChildren(iframe);
-        player.hidden = false;
-        box.classList.add("is-open");
-        toggle.setAttribute("aria-expanded", "true");
-        action.textContent = "Thu gọn & dừng";
-        requestAnimationFrame(() => player.scrollIntoView({ behavior: "smooth", block: "nearest" }));
-      };
-    });
   }
   function decorateParagraphs(html, comments) {
     const box = document.createElement("div");
@@ -3302,12 +3231,6 @@
           </div>
           ${introMode ? `<div class="field intro-type-field"><label>Loại chương</label><div class="intro-type-value">◇ Mở đầu <small>Hiển thị trước Chương 1</small></div><input name="number" type="hidden" value="0"></div>` : `<div class="field"><label>Số chương</label><input name="number" type="number" min="1" value="${num}"></div>`}
           <div class="field"><label>Tiêu đề</label><input name="title" value="${esc((ch && ch.title) || "")}"></div>
-          <section class="admin-audio-box admin-youtube-audio-box">
-            <div class="admin-audio-head"><div class="admin-youtube-mark" aria-hidden="true">▶</div><div><b>Bản nghe YouTube của chương</b><small>Chỉ lưu liên kết, không tải video lên Supabase. Độc giả bấm thanh mảnh để mở trình phát ngay trong trang.</small></div></div>
-            <div class="field"><label>Liên kết YouTube</label><input name="youtube_audio_url" type="url" inputmode="url" value="${esc((ch && ch.youtube_audio_url) || "")}" placeholder="https://youtu.be/… hoặc https://www.youtube.com/watch?v=…"></div>
-            <div class="field"><label>Tên hiển thị</label><input name="audio_title" value="${esc((ch && ch.audio_title) || "")}" placeholder="Ví dụ: Nghe chương 12"></div>
-            <p class="admin-youtube-note">Có thể dùng video Công khai hoặc Không công khai. Để trống liên kết nếu chương chưa có bản nghe.</p>
-          </section>
           <div class="editor-toolbar" role="toolbar" aria-label="Định dạng văn bản">
             ${tools.map(([c, t, lab]) => `<button type="button" data-cmd="${c}" title="${esc(t)}">${lab}</button>`).join("")}
           </div>
@@ -3520,8 +3443,8 @@
           story_id: fd.get("story_id"),
           number: fd.get("number"),
           title: fd.get("title"),
-          audio_title: fd.get("audio_title"),
-          youtube_audio_url: fd.get("youtube_audio_url"),
+          audio_title: (ch && ch.audio_title) || "",
+          youtube_audio_url: (ch && ch.youtube_audio_url) || "",
           body: sanitize(applyParaGap(ed.innerHTML, edGap)),
           status: fd.get("status"),
           publish_at: at,

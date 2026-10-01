@@ -1723,6 +1723,7 @@
         <h2>${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
         <div class="r-orn" aria-hidden="true"></div>
         ${audioHtml}
+        ${window.VCBGReaderTTS ? window.VCBGReaderTTS.html() : ""}
         ${bodyHtml}
         <section class="r-engage" id="rEngage">
           <button type="button" id="btnLikeCh" class="${liked ? "on" : ""}"><span>♡</span><b>Thích chương này</b><em>${likeN}</em></button>
@@ -1775,6 +1776,7 @@
     };
     updateProg();
     bindChapterAudio();
+    if (window.VCBGReaderTTS) window.VCBGReaderTTS.bind(page);
     const autoScroll = createAutoScroll(page, next ? `#/truyen/${esc(s.slug)}/chuong-${next.number}` : "");
     $("#btnSet").onclick = (e) => {
       e.stopPropagation();

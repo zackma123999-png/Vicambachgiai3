@@ -1703,7 +1703,6 @@
     const mine = VCBG.myRating(s.id);
     const favOn = VCBG.isFavorite(s.id);
     const bodyHtml = decorateParagraphs(sanitize(ch.body), comments);
-    const ttsOpts = { cover: s.cover || "brand/mark.png", title: ch.number === 0 ? "Nghe phần mở đầu" : `Nghe chương ${ch.number}` };
     const chLabel = `${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? " · " + esc(ch.title) : ""}`;
     app().innerHTML = `<div class="reader-page" id="reader" data-theme="${esc(prefs.theme)}" data-font="${esc(prefs.font || "serif")}" style="--rsize:${prefs.size}rem">
       <header class="reader-chrome reader-top" id="rTop">
@@ -1720,7 +1719,6 @@
       <article class="reader-body" id="rbody">
         <h2>${ch.number === 0 ? "Mở đầu" : "Chương " + ch.number}${ch.title ? ": " + esc(ch.title) : ""}</h2>
         <div class="r-orn" aria-hidden="true"></div>
-        ${window.VCBGReaderTTS ? window.VCBGReaderTTS.html(ttsOpts) : ""}
         ${bodyHtml}
         <section class="r-engage" id="rEngage">
           <button type="button" id="btnLikeCh" class="${liked ? "on" : ""}"><span>♡</span><b>Thích chương này</b><em>${likeN}</em></button>
@@ -1772,7 +1770,6 @@
       progT = setTimeout(() => VCBG.saveProgress(s.id, ch.id, ch.number, window.scrollY), 400);
     };
     updateProg();
-    if (window.VCBGReaderTTS) window.VCBGReaderTTS.bind(page, ttsOpts);
     const autoScroll = createAutoScroll(page, next ? `#/truyen/${esc(s.slug)}/chuong-${next.number}` : "");
     $("#btnSet").onclick = (e) => {
       e.stopPropagation();

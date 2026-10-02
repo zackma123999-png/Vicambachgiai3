@@ -3729,6 +3729,26 @@
     toast(message);
     goToLogin("/");
   });
+  /* Pages paint from the cached catalog before the live counters (views, likes,
+     ratings, comments) arrive, so refresh them once they do — otherwise a first
+     visit, e.g. from a Facebook link, keeps showing zeros. */
+  let engagementTimer = 0;
+  window.addEventListener("vcbg:engagement-updated", () => {
+    clearTimeout(engagementTimer);
+    engagementTimer = setTimeout(() => {
+      const name = parseHash().name;
+      const el = document.activeElement;
+      if (el && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      if (name === "read") {
+        const drawer = document.querySelector("#rDraw");
+        if (window.scrollY > 120 || (drawer && drawer.children.length)) return;
+      } else if (!["home", "explore", "story", "library"].includes(name)) {
+        return;
+      }
+      const y = window.scrollY;
+      Promise.resolve(render()).then(() => window.scrollTo(0, y));
+    }, 150);
+  });
   let resumeSyncTimer = 0;
   function syncVisibleContent() {
     if (!/^#\/truyen\//.test(location.hash || "") || !VCBG.syncPublicContent) return;

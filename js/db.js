@@ -733,6 +733,23 @@
   let publicSyncPromise = null;
   let publicSyncedAt = 0;
 
+  function engagementSignature() {
+    const stats = Object.keys(cache.story_stats || {})
+      .sort()
+      .map((id) => {
+        const r = cache.story_stats[id] || {};
+        return [id, r.views, r.likes, r.rating_avg, r.week_views].join(",");
+      })
+      .join(";");
+    return [
+      stats,
+      (cache.comments || []).length,
+      (cache.comment_replies || []).length,
+      (cache.chapter_likes || []).length,
+      (cache.ratings || []).length,
+    ].join("|");
+  }
+
   function publicCatalogVersion() {
     const storyVersion = cache.stories.reduce((max, row) => Math.max(max, Number(row.updated_at || 0)), 0);
     const chapterVersion = cache.chapters.reduce((max, row) => Math.max(max, Number(row.updated_at || 0)), 0);
@@ -956,14 +973,22 @@
     cache.ready = true;
     writeSnap();
 
+    const engagementBefore = engagementSignature();
+    /* A failed or timed-out request resolves to null so it never wipes the
+       counts that were already cached; see the keep() calls below. */
+    const loadKeep = (name) =>
+      loadTable(name).catch((err) => {
+        console.warn("[VCBG optional]", name, err && err.message);
+        return null;
+      });
     Promise.all([
       loadCommunityProfiles(),
-      loadOptional("comments"),
-      loadOptional("comment_replies"),
-      loadOptional("comment_likes"),
-      loadOptional("chapter_likes"),
-      loadOptional("ratings"),
-      loadOptional("poll_votes"),
+      loadKeep("comments"),
+      loadKeep("comment_replies"),
+      loadKeep("comment_likes"),
+      loadKeep("chapter_likes"),
+      loadKeep("ratings"),
+      loadKeep("poll_votes"),
       withTimeout(Promise.resolve(sb.rpc("get_story_stats")), 8000, "thống kê")
         .then(({ data, error }) => {
           if (error) throw error;
@@ -971,7 +996,7 @@
         })
         .catch((err) => {
           console.warn("[VCBG optional] stats", err && err.message);
-          return [];
+          return null;
         }),
     ])
       .then(
@@ -996,35 +1021,54 @@
             status: p.status === "banned" ? "banned" : "active",
             created_at: p.created_at,
           }));
-          cache.comments = (comments || []).map((c) => ({
-            ...c,
-            likes: (comment_likes || []).filter((l) => l.comment_id === c.id).map((l) => l.user_id),
-            created_at: toMs(c.created_at),
-          }));
-          cache.comment_replies = (comment_replies || []).map((r) => ({
-            ...r,
-            created_at: toMs(r.created_at),
-          }));
-          cache.comment_likes = comment_likes || [];
-          cache.chapter_likes = (chapter_likes || []).map((l) => ({
-            ...l,
-            id: l.id || l.user_id + ":" + l.chapter_id,
-            at: toMs(l.at || l.created_at),
-          }));
-          cache.ratings = (ratings || []).map((r) => ({
-            ...r,
-            id: r.id || r.user_id + ":" + r.story_id,
-            at: toMs(r.at || r.created_at),
-          }));
-          cache.story_stats = {};
-          (storyStatsRows || []).forEach((row) => {
-            cache.story_stats[row.story_id] = row;
-          });
-          cache.poll_votes = (poll_votes || []).map((v) => ({
-            ...v,
-            at: toMs(v.at || v.created_at),
-          }));
+          if (comment_likes) cache.comment_likes = comment_likes;
+          if (comments) {
+            cache.comments = comments.map((c) => ({
+              ...c,
+              likes: cache.comment_likes.filter((l) => l.comment_id === c.id).map((l) => l.user_id),
+              created_at: toMs(c.created_at),
+            }));
+          }
+          if (comment_replies) {
+            cache.comment_replies = comment_replies.map((r) => ({
+              ...r,
+              created_at: toMs(r.created_at),
+            }));
+          }
+          if (chapter_likes) {
+            cache.chapter_likes = chapter_likes.map((l) => ({
+              ...l,
+              id: l.id || l.user_id + ":" + l.chapter_id,
+              at: toMs(l.at || l.created_at),
+            }));
+          }
+          if (ratings) {
+            cache.ratings = ratings.map((r) => ({
+              ...r,
+              id: r.id || r.user_id + ":" + r.story_id,
+              at: toMs(r.at || r.created_at),
+            }));
+          }
+          if (storyStatsRows) {
+            cache.story_stats = {};
+            storyStatsRows.forEach((row) => {
+              cache.story_stats[row.story_id] = row;
+            });
+          }
+          if (poll_votes) {
+            cache.poll_votes = poll_votes.map((v) => ({
+              ...v,
+              at: toMs(v.at || v.created_at),
+            }));
+          }
           writeSnap();
+          /* The page paints from the cached catalog before these counts arrive,
+             so tell the UI to refresh once they differ from what it showed. */
+          if (engagementSignature() !== engagementBefore) {
+            try {
+              global.dispatchEvent(new CustomEvent("vcbg:engagement-updated"));
+            } catch (_) {}
+          }
         }
       )
       .catch((err) => console.warn("[VCBG extras]", err && err.message));

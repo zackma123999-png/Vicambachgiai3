@@ -1,11 +1,11 @@
 # Vicambachgiai3
 
-Thư viện Bách Hợp độc lập: frontend tĩnh trên Vercel, dữ liệu dùng chung trên Supabase, mã nguồn trên GitHub.
+Thư viện Bách Hợp độc lập: frontend tĩnh trên Cloudflare Pages, dữ liệu dùng chung trên Supabase, mã nguồn trên GitHub.
 
 ## Stack
 
 - **GitHub** — repo `Vicambachgiai3`
-- **Vercel** — host `index.html` + assets
+- **Cloudflare Pages** — host `index.html` + assets (`_headers`, `_redirects`, `functions/`)
 - **Supabase** — Auth + Postgres + RLS
 
 Độc giả khác nhau thấy cùng catalog, bình luận, đánh giá, tủ truyện. Admin sửa truyện trên web là mọi người thấy ngay.
@@ -20,7 +20,7 @@ Supabase có thể yêu cầu email thật nếu Confirm email đang bật. Tắ
 
 1. Tạo project Supabase tên `Vicambachgiai3`
 2. SQL Editor → chạy `supabase/schema.sql`
-3. Authentication → URL Configuration: thêm domain Vercel vào Redirect URLs
+3. Authentication → URL Configuration: thêm domain site (Cloudflare Pages) vào Redirect URLs
 4. Điền `js/config.js`:
 
 ```js
@@ -30,7 +30,9 @@ window.VCBG_CONFIG = {
 };
 ```
 
-5. Đẩy repo lên GitHub, Import vào Vercel (framework: Other, output: root)
+5. Đẩy repo lên GitHub, kết nối vào Cloudflare Pages (không build, output: root). Mỗi lần push `main` sẽ tự deploy; deploy tay: `wrangler pages deploy . --project-name=<tên project>`
+
+Khi sửa file JS/CSS, nhớ đổi tham số `?v=` tương ứng trong `index.html` để trình duyệt tải bản mới.
 
 ## Seed catalog
 

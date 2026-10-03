@@ -70,6 +70,7 @@
     return '<div class="vc-cmt-reply">' +
       '<div class="vc-cmt-who"><b>' + esc(u.display_name || 'Độc giả') + '</b><span class="vc-cmt-time">' + esc(ago(r.created_at)) + '</span></div>' +
       '<div class="vc-cmt-body">' + esc(r.body || '') + '</div>' +
+      (VCBG.currentUser && VCBG.currentUser() ? '<div class="vc-cmt-actions"><button type="button" data-vreply="' + esc(r.comment_id) + '" data-vreply-to="' + esc(r.id) + '">Trả lời</button></div>' : '') +
     '</div>';
   }
   function renderComment(c) {
@@ -172,7 +173,7 @@
         var slot = item.querySelector('.vc-reply-slot');
         slot.innerHTML = '<form class="vc-reply-box"><input maxlength="1000" required placeholder="Viết trả lời…"><button>Gửi</button></form>';
         var f = slot.querySelector('form'); var inp = slot.querySelector('input'); inp.focus();
-        f.onsubmit = function(e){ e.preventDefault(); try { VCBG.replyComment(b.dataset.vreply, inp.value); refreshList(ctx); } catch(err){} };
+        f.onsubmit = function(e){ e.preventDefault(); try { VCBG.replyComment(b.dataset.vreply, inp.value, b.dataset.vreplyTo); refreshList(ctx); } catch(err){} };
       };
     });
     document.querySelectorAll('[data-vdel]').forEach(function(b){

@@ -118,7 +118,8 @@
     const visibleReplies = repliesOpen ? allReplies : allReplies.slice(0,2);
     const replies = visibleReplies.map(r => `<div class="vc-reply">
       <div class="vc-thread-line"></div><div class="vc-avatar vc-avatar-sm">${avatar(r.user || {})}</div>
-      <div class="vc-reply-body"><div class="vc-comment-meta"><b>${esc((r.user && r.user.display_name) || 'Độc giả')}</b><span>${relTime(r.created_at)}</span></div><p>${esc(r.body)}</p></div>
+      <div class="vc-reply-body"><div class="vc-comment-meta"><b>${esc((r.user && r.user.display_name) || 'Độc giả')}</b><span>${relTime(r.created_at)}</span></div><p>${esc(r.body)}</p>
+        <div class="vc-comment-actions"><button type="button" class="vc-action vc-reply-open" data-cid="${c.id}" data-rid="${r.id}" data-name="${esc((r.user && r.user.display_name) || 'Độc giả')}">Trả lời</button></div></div>
     </div>`).join('');
     return `<article class="vc-comment" data-comment-id="${c.id}">
       <div class="vc-avatar">${avatar(u)}</div>
@@ -192,6 +193,7 @@
           <form id="vcCommentForm" class="vc-composer">
             <textarea name="body" rows="1" maxlength="2000" placeholder="${VCBG.currentUser() ? 'Viết bình luận…' : 'Đăng nhập để bình luận'}" ${VCBG.currentUser() ? '' : 'disabled'}></textarea>
             <input type="hidden" name="parent" value="">
+            <input type="hidden" name="replyTo" value="">
             <button type="submit" ${VCBG.currentUser() ? '' : 'disabled'} aria-label="Gửi">↑</button>
           </form>
         </div>
@@ -249,8 +251,9 @@
     $$('.vc-reply-open',host).forEach(b => b.onclick = () => {
       const f = $('#vcCommentForm',host); if (!f) return;
       f.parent.value = b.dataset.cid;
+      f.replyTo.value = b.dataset.rid || '';
       const lab = $('#vcReplying',host); lab.hidden=false; lab.innerHTML=`Đang trả lời <b>${esc(b.dataset.name)}</b> <button type="button" id="vcCancelReply">×</button>`;
-      $('#vcCancelReply',host).onclick=()=>{f.parent.value='';lab.hidden=true;};
+      $('#vcCancelReply',host).onclick=()=>{f.parent.value='';f.replyTo.value='';lab.hidden=true;};
       f.body.focus();
     });
     const form = $('#vcCommentForm',host);
@@ -258,7 +261,7 @@
       e.preventDefault();
       const body = form.body.value.trim(); if (!body) return;
       try {
-        if (form.parent.value) VCBG.replyComment(form.parent.value,body);
+        if (form.parent.value) VCBG.replyComment(form.parent.value,body,form.replyTo.value);
         else VCBG.addComment({chapterId:ctx.ch.id,storyId:ctx.story.id,body,quote:quote||'',para_key:paraKey||''});
         form.body.value=''; toast(form.parent.value?'Đã trả lời.':'Đã đăng bình luận.');
         setTimeout(()=>openDrawer(ctx,quote,paraKey),120);

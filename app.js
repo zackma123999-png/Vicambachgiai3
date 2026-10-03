@@ -646,6 +646,8 @@
     const replyHTML = (c, r, hidden) => {
       const who = (r.user && r.user.display_name) || "Ẩn danh";
       const parent = (c.user && c.user.display_name) || "bạn";
+      const target = r.reply_to_id && (c.replies || []).find((x) => x.id === r.reply_to_id);
+      const toName = (target && target.user && target.user.display_name) || parent;
       return `<article class="sig-reply${hidden ? " is-more" : ""}" data-rid="${esc(r.id)}">
         ${avatarHTML(r.user, "sig-ava sm")}
         <div class="sig-reply-body">
@@ -654,10 +656,10 @@
             ${r.staff ? `<span class="sig-badge staff">ViCam</span>` : ""}
             <time>${esc(fmtRel(r.created_at))}</time>
           </div>
-          <p class="sig-to">Trả lời ${esc(parent)}</p>
+          <p class="sig-to">Trả lời ${esc(toName)}</p>
           <p class="sig-text">${esc(r.body)}</p>
           <div class="sig-acts">
-            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-to="${esc(who)}">Trả lời</button>
+            <button type="button" class="sig-act" data-reply="${esc(c.id)}" data-reply-to="${esc(r.id)}" data-to="${esc(who)}">Trả lời</button>
           </div>
         </div>
       </article>`;
@@ -796,7 +798,7 @@
       const fd = new FormData(e.target);
       try {
         if (opts.commentId) {
-          VCBG.replyComment(opts.commentId, fd.get("body"));
+          VCBG.replyComment(opts.commentId, fd.get("body"), opts.replyToId);
           toast("Đã trả lời.");
         } else {
           const sid = fd.get("story_id");
@@ -924,7 +926,8 @@
     });
     $$("[data-reply]").forEach((b) => {
       if (b.closest(".sig-board"))
-        b.onclick = () => openSignalBox({ commentId: b.dataset.reply, replyTo: b.dataset.to || "" });
+        b.onclick = () =>
+          openSignalBox({ commentId: b.dataset.reply, replyTo: b.dataset.to || "", replyToId: b.dataset.replyTo || "" });
     });
     $$("[data-quote]").forEach((b) => {
       b.onclick = () => {
@@ -2190,6 +2193,7 @@
           .map(
             (r) =>
               `<div class="comment" style="margin-left:1rem"><b>${esc((r.user && r.user.display_name) || "")}</b><p>${esc(r.body)}</p>
+              ${me ? `<button class="btn btn-ghost" data-reply="${c.id}" data-reply-to="${r.id}">Trả lời</button>` : ""}
               ${me && (me.id === r.user_id || VCBG.isAdmin()) ? `<button class="btn btn-ghost" data-delr="${r.id}">Xóa</button>` : ""}</div>`
           )
           .join("")}
@@ -2230,7 +2234,7 @@
           const body = prompt("Trả lời:");
           if (!body) return;
           try {
-            VCBG.replyComment(b.dataset.reply, body);
+            VCBG.replyComment(b.dataset.reply, body, b.dataset.replyTo);
             toast("Đã trả lời.");
             openComments(s, ch, "");
           } catch (e) {

@@ -2090,23 +2090,27 @@
       return rec;
     },
 
-    replyComment(commentId, body) {
+    replyComment(commentId, body, replyToId) {
       const u = requireUser();
       body = String(body || "").trim();
       if (body.length < 1) throw new Error("Nội dung trống.");
       if (!hitRate("cmt:" + u.id, 8, 60 * 1000)) throw new Error("Bạn bình luận quá nhanh.");
       const parent = cache.comments.find((c) => c.id === commentId);
       if (!parent) throw new Error("Không tìm thấy bình luận.");
+      const target = replyToId && cache.comment_replies.find((r) => r.id === replyToId && r.comment_id === commentId);
       const rec = { id: uid(), comment_id: commentId, user_id: u.id, body, status: "visible", created_at: now() };
+      if (target) rec.reply_to_id = target.id;
       cache.comment_replies.push(rec);
       persist(async () => {
-        const { error } = await sb.from("comment_replies").insert({
+        const row = {
           id: rec.id,
           comment_id: rec.comment_id,
           user_id: rec.user_id,
           body: rec.body,
           status: rec.status,
-        });
+        };
+        if (rec.reply_to_id) row.reply_to_id = rec.reply_to_id;
+        const { error } = await sb.from("comment_replies").insert(row);
         if (error) throw error;
       });
       return rec;

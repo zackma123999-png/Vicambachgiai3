@@ -1731,7 +1731,7 @@
         <section class="r-engage" id="rEngage">
           <button type="button" id="btnLikeCh" class="${liked ? "on" : ""}"><span>♡</span><b>Thích chương này</b><em>${likeN}</em></button>
           <button type="button" id="btnRate"><span>☆</span><b>Đánh giá</b><em>${ratingAvg ? ratingAvg + " ★" : "—"}</em></button>
-          <button type="button" id="btnCmtAll"><span>💬</span><b>Bình luận</b><em>${comments.length}</em></button>
+          <button type="button" id="btnCmtAll"><span>💬</span><b>Bình luận</b><em>${comments.length + comments.reduce((n, c) => n + (c.replies || []).length, 0)}</em></button>
         </section>
       </article>
       <nav class="reader-chrome reader-bot" id="rBot">

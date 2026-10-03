@@ -1748,7 +1748,10 @@
       return hydrateStory(cache.stories.find((s) => s.id === id));
     },
     storyCommentCount(storyId) {
-      return cache.comments.filter((c) => c.story_id === storyId && c.status !== "hidden").length;
+      const roots = cache.comments.filter((c) => c.story_id === storyId && c.status !== "hidden");
+      const ids = new Set(roots.map((c) => c.id));
+      const replies = cache.comment_replies.filter((r) => ids.has(r.comment_id) && r.status !== "hidden").length;
+      return roots.length + replies;
     },
     storiesByAuthor(author, exceptId) {
       if (!author) return [];

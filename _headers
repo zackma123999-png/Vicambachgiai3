@@ -52,3 +52,6 @@
 /privacy.html
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
+
+/js/notifications-v2.js
+  Cache-Control: no-cache, must-revalidate

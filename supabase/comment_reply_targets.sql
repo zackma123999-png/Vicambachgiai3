@@ -4,7 +4,7 @@
 begin;
 
 alter table public.comment_replies
-  add column if not exists reply_to_id text references public.comment_replies(id) on delete set null;
+  add column if not exists reply_to_id uuid references public.comment_replies(id) on delete set null;
 
 create index if not exists comment_replies_reply_to_idx
   on public.comment_replies(reply_to_id);

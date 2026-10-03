@@ -172,7 +172,9 @@
         var item = b.closest('.vc-cmt-item');
         var slot = item.querySelector('.vc-reply-slot');
         slot.innerHTML = '<form class="vc-reply-box"><input maxlength="1000" required placeholder="Viết trả lời…"><button>Gửi</button></form>';
-        var f = slot.querySelector('form'); var inp = slot.querySelector('input'); inp.focus();
+        var f = slot.querySelector('form'); var inp = slot.querySelector('input');
+        if (b.dataset.vreplyTo) { var rn = b.closest('.vc-cmt-reply').querySelector('.vc-cmt-who b'); if (rn) inp.value = '@' + rn.textContent + ' '; }
+        inp.focus();
         f.onsubmit = function(e){ e.preventDefault(); try { VCBG.replyComment(b.dataset.vreply, inp.value, b.dataset.vreplyTo); refreshList(ctx); } catch(err){} };
       };
     });

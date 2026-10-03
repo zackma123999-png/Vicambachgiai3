@@ -927,7 +927,12 @@
     $$("[data-reply]").forEach((b) => {
       if (b.closest(".sig-board"))
         b.onclick = () =>
-          openSignalBox({ commentId: b.dataset.reply, replyTo: b.dataset.to || "", replyToId: b.dataset.replyTo || "" });
+          openSignalBox({
+            commentId: b.dataset.reply,
+            replyTo: b.dataset.to || "",
+            replyToId: b.dataset.replyTo || "",
+            seed: b.dataset.replyTo && b.dataset.to ? "@" + b.dataset.to + " " : "",
+          });
     });
     $$("[data-quote]").forEach((b) => {
       b.onclick = () => {

@@ -252,6 +252,7 @@
       const f = $('#vcCommentForm',host); if (!f) return;
       f.parent.value = b.dataset.cid;
       f.replyTo.value = b.dataset.rid || '';
+      f.body.value = b.dataset.rid ? '@' + b.dataset.name + ' ' : '';
       const lab = $('#vcReplying',host); lab.hidden=false; lab.innerHTML=`Đang trả lời <b>${esc(b.dataset.name)}</b> <button type="button" id="vcCancelReply">×</button>`;
       $('#vcCancelReply',host).onclick=()=>{f.parent.value='';f.replyTo.value='';lab.hidden=true;};
       f.body.focus();

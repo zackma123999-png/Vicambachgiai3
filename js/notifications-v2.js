@@ -328,8 +328,19 @@
       userId = nextId;
       subscribe();
     }
-    const out = await api.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100);
-    if (!out.error) items = out.data || [];
+    // Latest 100 overall, plus latest 100 comment-type ones so a flood of
+    // chapter notifications can never push replies out of the Comments tab.
+    const base = () => api.from("notifications").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100);
+    const [out, cmt] = await Promise.all([
+      base(),
+      base().in("notification_type", ["comment_reply", "mention", "new_comment", "comment_report", "comment_moderation"]),
+    ]);
+    if (!out.error) {
+      const seen = new Set();
+      items = (out.data || []).concat(cmt.error ? [] : cmt.data || [])
+        .filter((n) => !seen.has(n.id) && seen.add(n.id))
+        .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+    }
     renderBell(); renderCenter();
   }
 
